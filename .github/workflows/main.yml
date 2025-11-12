@@ -27,8 +27,7 @@ jobs:
         run: npm ci
 
       - name: Connect to Nx Cloud (Optional but Recommended)
-        # Use a proper action or script for connecting to Nx Cloud
-        uses: nrwl/nx-cloud-setup@v1
+        uses: nx-guides/setup-nx-cloud@v1 # <--- CORRECTED ACTION
 
   # 2. Affected Tasks: Build & Test
   affected_tasks:
