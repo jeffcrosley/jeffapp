@@ -21,13 +21,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'npm' # Uses native GitHub Actions caching for node_modules
 
       - name: Install Dependencies & Nx
+        # If NX_CLOUD_ACCESS_TOKEN is set as a GitHub Secret,
+        # these commands will automatically use Nx Cloud's remote cache.
         run: npm ci
-
-      - name: Connect to Nx Cloud (Optional but Recommended)
-        uses: nx-guides/setup-nx-cloud@v1 # <--- CORRECTED ACTION
 
   # 2. Affected Tasks: Build & Test
   affected_tasks:
