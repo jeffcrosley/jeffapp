@@ -8,6 +8,7 @@ Architecture: Angular shell (nav-shell) + Node.js API Gateway (api-gateway) + fu
 # Copilot Instructions for jeffapp
 
 **jeffapp** is an **Nx monorepo** hosting a resume application with a modular microservices architecture:
+
 - **Frontend**: Angular standalone app (`nav-shell`) using standalone components and RxJS
 - **Backend**: Express.js API Gateway (`api-gateway`) that routes requests to sub-services
 - **Future**: Multiple FE (Angular, React) and BE (Node, Go, Python) microservices
@@ -32,20 +33,21 @@ jeffapp/
 
 ## Essential Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npx nx serve nav-shell` | Dev server for Angular shell (dev mode, live reload) |
-| `npx nx build nav-shell` | Production build of Angular shell → `dist/apps/nav-shell/` |
-| `npx nx serve api-gateway` | Dev server for Express gateway (port 3333) |
-| `npx nx test <project>` | Run Jest tests for a project |
-| `npx nx lint <project>` | Run ESLint + prettier check |
-| `npx nx graph` | Visual dependency graph (monorepo structure) |
-| `npx nx g @nx/angular:app <name>` | Generate new Angular app in `/apps/` |
-| `npx nx g @nx/node:app <name>` | Generate new Node.js app in `/apps/` |
+| Command                           | Purpose                                                    |
+| --------------------------------- | ---------------------------------------------------------- |
+| `npx nx serve nav-shell`          | Dev server for Angular shell (dev mode, live reload)       |
+| `npx nx build nav-shell`          | Production build of Angular shell → `dist/apps/nav-shell/` |
+| `npx nx serve api-gateway`        | Dev server for Express gateway (port 3333)                 |
+| `npx nx test <project>`           | Run Jest tests for a project                               |
+| `npx nx lint <project>`           | Run ESLint + prettier check                                |
+| `npx nx graph`                    | Visual dependency graph (monorepo structure)               |
+| `npx nx g @nx/angular:app <name>` | Generate new Angular app in `/apps/`                       |
+| `npx nx g @nx/node:app <name>`    | Generate new Node.js app in `/apps/`                       |
 
 ## Project Structure & Conventions
 
 ### Angular Shell (`apps/nav-shell/`)
+
 - **Type**: Standalone Angular 20 app (bootstrapApplication pattern)
 - **Entry**: `src/main.ts` → `src/app/app.ts` (root component)
 - **Routing**: Standalone components + `RouterModule` for future lazy-loaded sub-app routes
@@ -56,6 +58,7 @@ jeffapp/
 **Pattern**: Use standalone components; avoid NgModule. Import `RouterModule` in root for micro-frontend routing.
 
 ### API Gateway (`apps/api-gateway/`)
+
 - **Type**: Express.js Node.js app
 - **Port**: `:3333` (or `process.env.PORT` if set, e.g., on Render)
 - **Current state**: Basic health check at `/health`; proxy routes commented out (template for sub-services)
@@ -71,6 +74,7 @@ jeffapp/
 - **Playwright**: E2E tests in `/apps/*-e2e/` (auto-generated). Run `npx nx e2e <project>-e2e`.
 
 Config files:
+
 - `jest.config.ts` (root) + per-project `jest.config.ts`
 - `eslint.config.mjs` (root, flat config format)
 - `.prettierrc` (root)
@@ -84,6 +88,7 @@ npx nx g @nx/node:app todo-api --directory apps/services
 ```
 
 Then in `api-gateway/src/main.ts`, uncomment and update the proxy:
+
 ```typescript
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
@@ -108,11 +113,13 @@ Then import in shell: `import { SharedButton } from '@jeffapp/ui/shared-ui';`
 ## Code Patterns
 
 ### Angular Shell Pattern
+
 - **Entry point**: `bootstrapApplication(App, appConfig)` in `main.ts`
 - **Root component**: Export default component with standalone + imports
 - **Routing**: `provideRouter(routes)` in `appConfig`; lazy load sub-app routes
 
 ### Express Gateway Pattern
+
 - **Health check**: Always implement `/health` endpoint (for Render/K8s liveness probes)
 - **Proxying**: Use `http-proxy-middleware` with `changeOrigin: true` to avoid CORS issues
 - **Port**: Read from `process.env.PORT` for cloud deployments
@@ -126,13 +133,13 @@ Then import in shell: `import { SharedButton } from '@jeffapp/ui/shared-ui';`
 
 ## File Locations for Common Tasks
 
-| Task | File(s) |
-|------|---------|
-| Add a route to Angular shell | `apps/nav-shell/src/app/app.config.ts` (add to routes array) |
-| Add an Express endpoint | `apps/api-gateway/src/main.ts` (add `app.get/post/...`) |
-| Change shell build output | `apps/nav-shell/project.json` → `targets.build.options.outputPath` |
-| Adjust Jest coverage thresholds | `jest.config.ts` (root) |
-| Update shared TS config | `tsconfig.base.json` → `compilerOptions` or `paths` |
+| Task                            | File(s)                                                            |
+| ------------------------------- | ------------------------------------------------------------------ |
+| Add a route to Angular shell    | `apps/nav-shell/src/app/app.config.ts` (add to routes array)       |
+| Add an Express endpoint         | `apps/api-gateway/src/main.ts` (add `app.get/post/...`)            |
+| Change shell build output       | `apps/nav-shell/project.json` → `targets.build.options.outputPath` |
+| Adjust Jest coverage thresholds | `jest.config.ts` (root)                                            |
+| Update shared TS config         | `tsconfig.base.json` → `compilerOptions` or `paths`                |
 
 ## Git & CI/CD
 

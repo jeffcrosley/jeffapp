@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-about',
@@ -29,19 +29,22 @@ export class AboutComponent {
       title: 'Senior Software Engineer',
       company: 'Your Company',
       duration: '2020 - Present',
-      description: 'Led development of full-stack applications and mentored junior developers.',
+      description:
+        'Led development of full-stack applications and mentored junior developers.',
     },
     {
       title: 'Full Stack Developer',
       company: 'Previous Company',
       duration: '2018 - 2020',
-      description: 'Developed and maintained multiple web applications using modern tech stack.',
+      description:
+        'Developed and maintained multiple web applications using modern tech stack.',
     },
     {
       title: 'Junior Developer',
       company: 'First Company',
       duration: '2016 - 2018',
-      description: 'Started career building web applications and learning best practices.',
+      description:
+        'Started career building web applications and learning best practices.',
     },
   ];
 }

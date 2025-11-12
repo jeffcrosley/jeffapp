@@ -4,7 +4,11 @@
     <nav class="navbar">
       <ul class="nav-links">
         <li *ngFor="let link of navigationLinks">
-          <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+          <a
+            [routerLink]="link.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+          >
             {{ link.label }}
           </a>
         </li>

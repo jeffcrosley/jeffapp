@@ -12,7 +12,9 @@
     <div class="skills-section">
       <h3>Skills & Technologies</h3>
       <div class="skills-grid">
-        <span *ngFor="let skill of skills" class="skill-badge">{{ skill }}</span>
+        <span *ngFor="let skill of skills" class="skill-badge">{{
+          skill
+        }}</span>
       </div>
     </div>
 
@@ -20,7 +22,11 @@
     <div class="experience-section">
       <h3>Professional Experience</h3>
       <div class="timeline">
-        <div *ngFor="let job of experience; let last = last" class="timeline-item" [class.last]="last">
+        <div
+          *ngFor="let job of experience; let last = last"
+          class="timeline-item"
+          [class.last]="last"
+        >
           <div class="timeline-dot"></div>
           <div class="timeline-content">
             <h4>{{ job.title }}</h4>
