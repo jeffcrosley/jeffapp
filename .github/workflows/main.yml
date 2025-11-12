@@ -1,0 +1,119 @@
+# .github/workflows/main.yml
+name: Nx Monorepo CI/CD
+
+# Trigger the workflow on pushes to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 1. Install Dependencies and Build Cache (Runs first)
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for correct 'nx affected' comparison
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' # Use native GitHub Actions caching for speed
+
+      - name: Install Dependencies & Nx
+        run: npm ci
+
+      - name: Connect to Nx Cloud (Optional but Recommended)
+        uses: nrwl/nx-cloud-setup@v1 # Replace this with your actual connection script if not using the official action
+
+  # 2. Affected Tasks: Build & Test (Runs after install)
+  affected_tasks:
+    needs: [install]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node (Re-use cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Run Affected Lint and Test
+        run: |
+          npx nx affected --target=lint --parallel=3
+          npx nx affected --target=test --parallel=3
+
+      - name: Run Affected Build
+        run: npx nx affected --target=build --parallel=3
+
+  # 3. Deploy API Gateway (Conditional Deployment)
+  deploy_api_gateway:
+    needs: [affected_tasks]
+    runs-on: ubuntu-latest
+    # Define a condition for the job to run only if the 'api-gateway' project was affected
+    if: |
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      steps.check_affected.outputs.affected_projects != ''
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Use Nx to check if 'api-gateway' was affected
+      - name: Check if 'api-gateway' was affected
+        id: check_affected
+        run: |
+          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'api-gateway' || true)
+          echo "affected_projects=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+
+      - name: Trigger Render Deploy Hook
+        if: steps.check_affected.outputs.affected_projects != ''
+        run: |
+          echo "✅ API Gateway was affected. Triggering Render deploy hook..."
+          # Use the secret stored in GitHub Secrets
+          curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
+        env:
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+
+  # 4. Deploy Angular Shell (Conditional Deployment)
+  deploy_angular_shell:
+    needs: [affected_tasks]
+    runs-on: ubuntu-latest
+    # Define a condition for the job to run only if the 'angular-shell' project was affected
+    if: |
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      steps.check_affected_shell.outputs.affected_projects != ''
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Use Nx to check if 'angular-shell' was affected
+      - name: Check if 'angular-shell' was affected
+        id: check_affected_shell
+        run: |
+          # Note: Adjust 'angular-shell' if you named it 'nav-shell'
+          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'angular-shell' || true)
+          echo "affected_projects=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+
+      - name: Trigger Render Deploy Hook
+        if: steps.check_affected_shell.outputs.affected_projects != ''
+        run: |
+          echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
+          curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
+        env:
+          RENDER_SHELL_DEPLOY_HOOK: ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
