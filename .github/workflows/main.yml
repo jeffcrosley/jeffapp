@@ -24,11 +24,9 @@ jobs:
           cache: 'npm' # Uses native GitHub Actions caching for node_modules
 
       - name: Install Dependencies & Nx
-        # If NX_CLOUD_ACCESS_TOKEN is set as a GitHub Secret,
-        # these commands will automatically use Nx Cloud's remote cache.
         run: npm ci
 
-  # 2. Affected Tasks: Build & Test
+  # 2. Affected Tasks: Build & Test (Runs after install)
   affected_tasks:
     needs: [install]
     runs-on: ubuntu-latest
@@ -44,6 +42,9 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Install Dependencies
+        run: npm ci
+
       - name: Run Affected Lint and Test
         run: |
           npx nx affected --target=lint --parallel=3
@@ -51,8 +52,6 @@ jobs:
 
       - name: Run Affected Build
         run: npx nx affected --target=build --parallel=3
-
-  # --- Deploy Jobs (Conditional Logic Moved Inside Steps) ---
 
   # 3. Deploy API Gateway (Conditional Deployment)
   deploy_api_gateway:
@@ -73,7 +72,6 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # FIX: Check for affected status and store result in a step output
       - name: Check if 'api-gateway' was affected
         id: check_affected_api
         run: |
@@ -82,7 +80,6 @@ jobs:
           # Set the output for the next step's condition
           echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
 
-      # FIX: Use the step output from above to conditionally run the curl command
       - name: Trigger Render Deploy Hook
         if: steps.check_affected_api.outputs.is_affected != ''
         run: |
@@ -111,7 +108,6 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # FIX: Check for affected status and store result in a step output
       - name: Check if 'angular-shell' was affected
         id: check_affected_shell
         run: |
@@ -120,7 +116,6 @@ jobs:
           # Set the output for the next step's condition
           echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
 
-      # FIX: Use the step output from above to conditionally run the curl command
       - name: Trigger Render Deploy Hook
         if: steps.check_affected_shell.outputs.is_affected != ''
         run: |
