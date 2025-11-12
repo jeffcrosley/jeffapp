@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './app.scss',
 })
 export class App {
-  protected portfolioTitle = 'My SE Portfolio Platform';
+  protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
     { label: 'Dashboard', route: '/dashboard' },
     { label: 'About Me', route: '/about' },
