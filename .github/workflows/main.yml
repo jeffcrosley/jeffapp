@@ -8,29 +8,29 @@ on:
       - main
 
 jobs:
-  # 1. Install Dependencies and Build Cache (Runs first)
+  # 1. Install Dependencies and Build Cache
   install:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          # Fetch full history for correct 'nx affected' comparison
           fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # Use native GitHub Actions caching for speed
+          cache: 'npm'
 
       - name: Install Dependencies & Nx
         run: npm ci
 
       - name: Connect to Nx Cloud (Optional but Recommended)
-        uses: nrwl/nx-cloud-setup@v1 # Replace this with your actual connection script if not using the official action
+        # Use a proper action or script for connecting to Nx Cloud
+        uses: nrwl/nx-cloud-setup@v1
 
-  # 2. Affected Tasks: Build & Test (Runs after install)
+  # 2. Affected Tasks: Build & Test
   affected_tasks:
     needs: [install]
     runs-on: ubuntu-latest
@@ -54,15 +54,14 @@ jobs:
       - name: Run Affected Build
         run: npx nx affected --target=build --parallel=3
 
+  # --- Deploy Jobs (Conditional Logic Moved Inside Steps) ---
+
   # 3. Deploy API Gateway (Conditional Deployment)
   deploy_api_gateway:
     needs: [affected_tasks]
+    # The overall job only runs if it's a push and not skipped
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
-    # Define a condition for the job to run only if the 'api-gateway' project was affected
-    if: |
-      github.event_name == 'push' &&
-      !contains(github.event.head_commit.message, '[skip ci]') &&
-      steps.check_affected.outputs.affected_projects != ''
 
     steps:
       - name: Checkout Code
@@ -70,31 +69,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Use Nx to check if 'api-gateway' was affected
-      - name: Check if 'api-gateway' was affected
-        id: check_affected
-        run: |
-          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'api-gateway' || true)
-          echo "affected_projects=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+      - name: Setup Node (Required to run Nx commands)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
+      # FIX: Check for affected status and store result in a step output
+      - name: Check if 'api-gateway' was affected
+        id: check_affected_api
+        run: |
+          # The command checks if 'api-gateway' is in the list of affected apps
+          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'api-gateway' || true)
+          # Set the output for the next step's condition
+          echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+
+      # FIX: Use the step output from above to conditionally run the curl command
       - name: Trigger Render Deploy Hook
-        if: steps.check_affected.outputs.affected_projects != ''
+        if: steps.check_affected_api.outputs.is_affected != ''
         run: |
           echo "✅ API Gateway was affected. Triggering Render deploy hook..."
           # Use the secret stored in GitHub Secrets
           curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
-        env:
-          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+
+  # --------------------------------------------------------------------------
 
   # 4. Deploy Angular Shell (Conditional Deployment)
   deploy_angular_shell:
     needs: [affected_tasks]
+    # The overall job only runs if it's a push and not skipped
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
-    # Define a condition for the job to run only if the 'angular-shell' project was affected
-    if: |
-      github.event_name == 'push' &&
-      !contains(github.event.head_commit.message, '[skip ci]') &&
-      steps.check_affected_shell.outputs.affected_projects != ''
 
     steps:
       - name: Checkout Code
@@ -102,18 +107,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Use Nx to check if 'angular-shell' was affected
+      - name: Setup Node (Required to run Nx commands)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # FIX: Check for affected status and store result in a step output
       - name: Check if 'angular-shell' was affected
         id: check_affected_shell
         run: |
-          # Note: Adjust 'angular-shell' if you named it 'nav-shell'
+          # The command checks if 'angular-shell' is in the list of affected apps
           AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'angular-shell' || true)
-          echo "affected_projects=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          # Set the output for the next step's condition
+          echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
 
+      # FIX: Use the step output from above to conditionally run the curl command
       - name: Trigger Render Deploy Hook
-        if: steps.check_affected_shell.outputs.affected_projects != ''
+        if: steps.check_affected_shell.outputs.is_affected != ''
         run: |
           echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
           curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
-        env:
-          RENDER_SHELL_DEPLOY_HOOK: ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
