@@ -1,169 +1,54 @@
-<!--
-Project: jeffapp (Resume App - Nx Monorepo)
-Purpose: concise guidance for AI coding agents (Copilot/Assistants) working in this repo.
-Updated: 2025-11-12
-Architecture: Angular shell (nav-shell) + Node.js API Gateway (api-gateway) + future microservices
--->
+```markdown
+<!-- Copilot instructions: concise, actionable guidance for AI agents working in the jeffapp monorepo -->
 
-# Copilot Instructions for jeffapp
+# Copilot instructions — jeffapp (Nx monorepo)
 
-**jeffapp** is an **Nx monorepo** hosting a resume application with a modular microservices architecture:
+Core idea: this repo is an Nx monorepo hosting an Angular standalone shell (`apps/nav-shell`) and an Express API Gateway (`apps/api-gateway`). Sub-services live under `apps/` and are integrated via the gateway or Nx projects.
 
-- **Frontend**: Angular standalone app (`nav-shell`) using standalone components and RxJS
-- **Backend**: Express.js API Gateway (`api-gateway`) that routes requests to sub-services
-- **Future**: Multiple FE (Angular, React) and BE (Node, Go, Python) microservices
+- Frontend: `apps/nav-shell` — Angular 20, standalone components, bootstrapApplication pattern (entry: `src/main.ts` → `src/app/app.ts`).
+- Backend: `apps/api-gateway` — Express gateway with a `/health` endpoint; proxy templates are in `src/main.ts` (port defaults to 3333).
+- Tooling: Nx (v22), Jest for unit tests, Playwright for e2e, ESLint + Prettier, Webpack for Node builds.
 
-## Architecture Overview
+Quick commands you can suggest or run:
 
-```
-jeffapp/
-├── apps/
-│   ├── nav-shell/                    # Angular 20 standalone shell (port 4200)
-│   │   └── src/app/                  # standalone components + routing
-│   ├── api-gateway/                  # Express.js gateway (port 3333)
-│   │   └── src/main.ts               # health check + future proxy routes
-│   ├── [future sub-app-1]/           # e.g., Go To-Do service
-│   └── [future sub-app-2]/
-├── nx.json                           # Nx monorepo config + plugins
-├── package.json                      # Angular 20, Express, RxJS, Jest, Playwright
-└── tsconfig.base.json                # shared TypeScript config
-```
+- npx nx serve nav-shell # dev server for Angular shell (port per project.json)
+- npx nx serve api-gateway # dev server for Express gateway (port 3333 by default)
+- npx nx build nav-shell # production build → dist/apps/nav-shell/
+- npx nx test <project> # run Jest unit tests for a project (passes with no tests)
+- npx nx e2e <project>-e2e # run Playwright e2e tests
+- npx nx graph # view dependency graph
 
-**Key insight**: The API Gateway uses Express and can proxy to external sub-services. Future sub-apps will live in `/apps/` and be orchestrated by Nx.
+Repository-specific patterns and examples (do not change unless you inspected files):
 
-## Essential Commands
+- nav-shell uses standalone components and Router setup in `apps/nav-shell/src/app/app.config.ts`. Prefer adding routes in `app.config.ts` and lazy-loading sub-apps via router configuration.
+- api-gateway exposes `/health` in `apps/api-gateway/src/main.ts`. Proxy middleware examples are commented there — when adding a sub-service, uncomment and set `target` to the sub-service URL and pathRewrite as needed.
+- Project ports: `nav-shell` normally uses 4200 for Angular dev (follow `project.json`), `api-gateway` uses 3333 or `process.env.PORT` for cloud.
 
-| Command                           | Purpose                                                    |
-| --------------------------------- | ---------------------------------------------------------- |
-| `npx nx serve nav-shell`          | Dev server for Angular shell (dev mode, live reload)       |
-| `npx nx build nav-shell`          | Production build of Angular shell → `dist/apps/nav-shell/` |
-| `npx nx serve api-gateway`        | Dev server for Express gateway (port 3333)                 |
-| `npx nx test <project>`           | Run Jest tests for a project                               |
-| `npx nx lint <project>`           | Run ESLint + prettier check                                |
-| `npx nx graph`                    | Visual dependency graph (monorepo structure)               |
-| `npx nx g @nx/angular:app <name>` | Generate new Angular app in `/apps/`                       |
-| `npx nx g @nx/node:app <name>`    | Generate new Node.js app in `/apps/`                       |
+Files that capture primary conventions:
 
-## Project Structure & Conventions
+- `apps/nav-shell/src/main.ts` and `apps/nav-shell/src/app/` — Angular entry + routing pattern.
+- `apps/api-gateway/src/main.ts` — Express entry, health check, proxy templates.
+- `nx.json` — caching/target defaults (tests run with passWithNoTests; builds cache enabled).
+- `package.json` — dependency matrix (Angular v20, Nx v22). Use Nx generators where possible (`@nx/angular`, `@nx/node`).
 
-### Angular Shell (`apps/nav-shell/`)
+Practical advice for AI edits in this repo:
 
-- **Type**: Standalone Angular 20 app (bootstrapApplication pattern)
-- **Entry**: `src/main.ts` → `src/app/app.ts` (root component)
-- **Routing**: Standalone components + `RouterModule` for future lazy-loaded sub-app routes
-- **Styles**: SCSS (configured in `angular.json`)
-- **Output**: `dist/apps/nav-shell/browser/` (production build)
-- **Port**: `:4200` (default dev server)
+- Prefer updating files under `apps/*` and `libs/*` and run `npx nx test` afterwards. Keep changes minimal and localized to a single project when possible.
+- When adding a new app or lib, use Nx generators (examples in `package.json`/nx.json). Avoid hand-editing workspace manifests unless necessary.
+- Do not check in built artifacts under `dist/`.
 
-**Pattern**: Use standalone components; avoid NgModule. Import `RouterModule` in root for micro-frontend routing.
+Edge cases & verification steps:
 
-### API Gateway (`apps/api-gateway/`)
+- Tests: Jest is configured at the root and per-project. `npx nx test <project>` will pass with no tests by design (see `nx.json` targetDefaults).
+- Lint: use `npx nx lint <project>`; root uses `eslint.config.mjs` (flat config).
 
-- **Type**: Express.js Node.js app
-- **Port**: `:3333` (or `process.env.PORT` if set, e.g., on Render)
-- **Current state**: Basic health check at `/health`; proxy routes commented out (template for sub-services)
-- **Future**: Uncomment `createProxyMiddleware` examples and swap `target` to deployed sub-service URLs
-- **Pattern**: One proxy route per sub-service (e.g., `/api/todo`, `/api/resume`)
+If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.config.ts`, `nx.json`, `package.json`, and `apps/*/project.json`.
 
-**Build**: Compiles to `dist/apps/api-gateway/` with Webpack; NX automatically prunes lockfile for deployment.
-
-## Testing & Quality
-
-- **Jest**: Unit tests. Run `npx nx test <project>` or `npx nx test --all` for all.
-- **ESLint + Prettier**: Linting + code formatting. Run `npx nx lint <project>`.
-- **Playwright**: E2E tests in `/apps/*-e2e/` (auto-generated). Run `npx nx e2e <project>-e2e`.
-
-Config files:
-
-- `jest.config.ts` (root) + per-project `jest.config.ts`
-- `eslint.config.mjs` (root, flat config format)
-- `.prettierrc` (root)
-
-## Adding a New Microservice
-
-### Example: Adding a Node.js sub-service (Go To-Do backend)
-
-```bash
-npx nx g @nx/node:app todo-api --directory apps/services
-```
-
-Then in `api-gateway/src/main.ts`, uncomment and update the proxy:
-
-```typescript
-import { createProxyMiddleware } from 'http-proxy-middleware';
-
-app.use(
-  '/api/todo',
-  createProxyMiddleware({
-    target: 'http://localhost:3001', // or deployed URL
-    changeOrigin: true,
-    pathRewrite: { '^/api/todo': '' },
-  })
-);
-```
-
-### Example: Adding a sub-component library (shared UI)
-
-```bash
-npx nx g @nx/angular:lib shared-ui --directory libs/ui
-```
-
-Then import in shell: `import { SharedButton } from '@jeffapp/ui/shared-ui';`
-
-## Code Patterns
-
-### Angular Shell Pattern
-
-- **Entry point**: `bootstrapApplication(App, appConfig)` in `main.ts`
-- **Root component**: Export default component with standalone + imports
-- **Routing**: `provideRouter(routes)` in `appConfig`; lazy load sub-app routes
-
-### Express Gateway Pattern
-
-- **Health check**: Always implement `/health` endpoint (for Render/K8s liveness probes)
-- **Proxying**: Use `http-proxy-middleware` with `changeOrigin: true` to avoid CORS issues
-- **Port**: Read from `process.env.PORT` for cloud deployments
-
-## Nx-Specific Notes
-
-- **Dependency graph**: Nx infers dependencies. Use `npx nx graph` to see the project topology.
-- **Caching**: Enabled by default for build/test/lint. Use `nx.json` → `targetDefaults` to configure.
-- **Plugins**: Active plugins include `@nx/webpack`, `@nx/angular`, `@nx/node`, `@nx/jest`, `@nx/playwright`.
-- **Workspace root**: All relative paths assume the root is `/Users/jeffcrosley/Coding/jeffapp/`.
-
-## File Locations for Common Tasks
-
-| Task                            | File(s)                                                            |
-| ------------------------------- | ------------------------------------------------------------------ |
-| Add a route to Angular shell    | `apps/nav-shell/src/app/app.config.ts` (add to routes array)       |
-| Add an Express endpoint         | `apps/api-gateway/src/main.ts` (add `app.get/post/...`)            |
-| Change shell build output       | `apps/nav-shell/project.json` → `targets.build.options.outputPath` |
-| Adjust Jest coverage thresholds | `jest.config.ts` (root)                                            |
-| Update shared TS config         | `tsconfig.base.json` → `compilerOptions` or `paths`                |
-
-## Git & CI/CD
-
-- **Repo**: GitHub, branch `main`
-- **CI config**: `.gitlab-ci.yml` (GitLab CI setup; review for deployment steps)
-- **Node.js**: v20.x (from `package.json` node field or `.nvmrc` if present)
-- **Package manager**: npm (lock file: `package-lock.json`)
-
-## What NOT to do
-
-- ❌ Don't modify `package.json` scripts directly; use Nx generators for new apps/libs.
-- ❌ Don't add new top-level dependencies without checking if an Nx plugin already provides them.
-- ❌ Don't assume ports (e.g., don't hardcode 4200). Reference `project.json` configurations.
-- ❌ Don't mix NgModule and standalone components in the same app; nav-shell uses standalone only.
-- ❌ Don't check in build artifacts (`dist/`, `.angular/`); ensure `.gitignore` includes them.
-
-## When in Doubt
-
-1. Run `npx nx graph` to visualize project structure.
-2. Run `npx nx show project <project-name>` to see all targets (build, serve, test, lint).
-3. Check `apps/<project>/project.json` for project-specific config.
-4. Look at `.gitlab-ci.yml` for deployment / CI patterns.
-5. Use `npx nx --help` or consult [Nx docs](https://nx.dev) for advanced features.
+If you want me to expand any section or add examples (e.g., a sample proxy config, or a guide for adding a new Nx app + tests), tell me which part to expand.
 
 ---
 
-**Next steps**: Update the README with dev setup instructions (npm install, `nx serve nav-shell`, `nx serve api-gateway`), deployment targets, and sub-service onboarding guide. Let me know if any section needs clarification.
+Updated: 2025-11-12
+```
+
+- **Entry**: `src/main.ts` → `src/app/app.ts` (root component)
