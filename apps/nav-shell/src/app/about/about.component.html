@@ -1,0 +1,35 @@
+<section class="about-container">
+  <div class="about-header">
+    <h2>About Me</h2>
+    <div class="about-intro">
+      <h3>{{ name }}</h3>
+      <p class="bio">{{ bio }}</p>
+    </div>
+  </div>
+
+  <div class="about-content">
+    <!-- Skills Section -->
+    <div class="skills-section">
+      <h3>Skills & Technologies</h3>
+      <div class="skills-grid">
+        <span *ngFor="let skill of skills" class="skill-badge">{{ skill }}</span>
+      </div>
+    </div>
+
+    <!-- Experience Section -->
+    <div class="experience-section">
+      <h3>Professional Experience</h3>
+      <div class="timeline">
+        <div *ngFor="let job of experience; let last = last" class="timeline-item" [class.last]="last">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <h4>{{ job.title }}</h4>
+            <p class="company">{{ job.company }}</p>
+            <p class="duration">{{ job.duration }}</p>
+            <p class="description">{{ job.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

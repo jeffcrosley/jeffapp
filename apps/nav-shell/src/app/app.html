@@ -1,2 +1,18 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<header class="portfolio-header">
+  <div class="header-container">
+    <h1 class="portfolio-title">{{ portfolioTitle }}</h1>
+    <nav class="navbar">
+      <ul class="nav-links">
+        <li *ngFor="let link of navigationLinks">
+          <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+            {{ link.label }}
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>

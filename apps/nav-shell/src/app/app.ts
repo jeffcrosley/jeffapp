@@ -1,13 +1,17 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [CommonModule, RouterModule],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
-  protected title = 'nav-shell';
+  protected portfolioTitle = 'My SE Portfolio Platform';
+  protected navigationLinks = [
+    { label: 'Dashboard', route: '/dashboard' },
+    { label: 'About Me', route: '/about' },
+  ];
 }

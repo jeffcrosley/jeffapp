@@ -1,0 +1,15 @@
+<section class="dashboard-container">
+  <div class="dashboard-header">
+    <h2>{{ welcomeMessage }}</h2>
+    <p class="subtitle">{{ description }}</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <div *ngFor="let item of dashboardItems" class="dashboard-card">
+      <div class="card-icon">{{ item.icon }}</div>
+      <h3>{{ item.title }}</h3>
+      <p>{{ item.description }}</p>
+      <a href="#" class="card-link">Explore →</a>
+    </div>
+  </div>
+</section>
