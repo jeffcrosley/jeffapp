@@ -56,7 +56,7 @@ affected_tasks:
     paths:
       - node_modules
       - .nx/cache
-    policy: pull # Reuse cache from install stage
+    policy: pull-push # Reuse cache from install stage
 
 # --- 3. Deploy Stage (Only run if a project was affected and needs deployment) ---
 
@@ -65,19 +65,19 @@ deploy_api_gateway:
   stage: deploy
   image: alpine/curl:latest # A minimal image with curl to trigger the deploy hook
   needs: [affected_tasks]
-  script:
-    - echo "Checking if API Gateway was affected..."
+  script: |
+    echo "Checking if API Gateway was affected..."
     # The 'print-affected' command checks if the project was touched
-    - AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --base=$NX_BASE --head=$NX_HEAD --plain | tr -d '\n' | grep 'api-gateway' || true)
-    
+    AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --base=$NX_BASE --head=$NX_HEAD --plain | tr -d '\n' | grep 'api-gateway' || true)
+
     # Check if the project name is in the affected list
-    - if [ -n "$AFFECTED_PROJECTS" ]; then
-        echo "✅ API Gateway was affected. Triggering Render deploy hook...";
-        # Use the secret environment variable to call the Render Web Service Deploy Hook
-        curl -X POST "$RENDER_API_DEPLOY_HOOK";
-      else
-        echo "❌ API Gateway was NOT affected. Skipping deployment.";
-      fi
+    if [ -n "$AFFECTED_PROJECTS" ]; then
+      echo "✅ API Gateway was affected. Triggering Render deploy hook..."
+      # Use the secret environment variable to call the Render Web Service Deploy Hook
+      curl -X POST "$RENDER_API_DEPLOY_HOOK"
+    else
+      echo "❌ API Gateway was NOT affected. Skipping deployment."
+    fi
   # This rule ensures the job ONLY runs if any file changes
   # (though the script handles which hook to call based on the specific change)
   rules:
@@ -89,17 +89,18 @@ deploy_angular_shell:
   stage: deploy
   image: alpine/curl:latest
   needs: [affected_tasks]
-  script:
-    - echo "Checking if Angular Shell was affected..."
-    - AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --base=$NX_BASE --head=$NX_HEAD --plain | tr -d '\n' | grep 'angular-shell' || true)
-    
-    - if [ -n "$AFFECTED_PROJECTS" ]; then
-        echo "✅ Angular Shell was affected. Triggering Render deploy hook...";
-        # Use the secret environment variable to call the Render Static Site Deploy Hook
-        curl -X POST "$RENDER_SHELL_DEPLOY_HOOK";
-      else
-        echo "❌ Angular Shell was NOT affected. Skipping deployment.";
-      fi
+  script: |
+    echo "Checking if Angular Shell was affected..."
+    # Note: the app in this repo is named 'nav-shell' (apps/nav-shell)
+    AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --base=$NX_BASE --head=$NX_HEAD --plain | tr -d '\n' | grep 'nav-shell' || true)
+
+    if [ -n "$AFFECTED_PROJECTS" ]; then
+      echo "✅ Angular Shell (nav-shell) was affected. Triggering Render deploy hook..."
+      # Use the secret environment variable to call the Render Static Site Deploy Hook
+      curl -X POST "$RENDER_SHELL_DEPLOY_HOOK"
+    else
+      echo "❌ Angular Shell (nav-shell) was NOT affected. Skipping deployment."
+    fi
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
