@@ -55,8 +55,6 @@ jobs:
       - name: Run Affected Build
         run: npx nx affected --target=build --parallel=3
 
-  # --- Deploy Jobs (Conditional Logic is Crucial Here) ---
-
   # 3. Deploy API Gateway (Web Service)
   deploy_api_gateway:
     needs: [affected_tasks]
@@ -78,17 +76,16 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # Check Affected and Trigger Hook (FINAL CORRECTION)
       - name: Check Affected and Trigger Hook
         run: |
           # Use --base=HEAD~1 to reliably compare current commit against previous commit
-          AFFECTED=$(npx nx print-affected --type=app --plain --base=HEAD~1 | grep -c 'angular-shell' || true)
+          AFFECTED=$(npx nx print-affected --type=app --plain --base=HEAD~1 | grep -c 'api-gateway' || true)
 
           if [ "$AFFECTED" -ge 1 ]; then
-            echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
-            curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
+            echo "✅ API Gateway was affected. Triggering Render deploy hook..."
+            curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
           else
-            echo "❌ Angular Shell NOT affected. Skipping deployment."
+            echo "❌ API Gateway NOT affected. Skipping deployment."
           fi
 
   # --------------------------------------------------------------------------
@@ -114,11 +111,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # FIX: Run the check and hook trigger in one step for stability
       - name: Check Affected and Trigger Hook
         run: |
-          # Changed --type=apps to --type=app
-          AFFECTED=$(npx nx print-affected --type=app --plain | grep -c 'angular-shell' || true)
+          # Use --base=HEAD~1 to reliably compare current commit against previous commit
+          AFFECTED=$(npx nx print-affected --type=app --plain --base=HEAD~1 | grep -c 'angular-shell' || true)
 
           if [ "$AFFECTED" -ge 1 ]; then
             echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
