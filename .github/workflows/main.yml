@@ -1,5 +1,5 @@
 # .github/workflows/main.yml
-name: Nx Monorepo CI/CD
+name: Nx Monorepo CI/CD - Simple Deploy
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  # 1. Install Dependencies and Build Cache
+  # 1. Install Dependencies and Cache
   install:
     runs-on: ubuntu-latest
     steps:
@@ -25,8 +25,10 @@ jobs:
       - name: Install Dependencies & Nx
         run: npm ci
 
-  # 2. Affected Tasks: Build & Test
-  affected_tasks:
+  # 2. Build and Test All Projects
+  # This job will build and test ALL projects in the monorepo,
+  # ensuring a stable state before deployment.
+  build_test_all:
     needs: [install]
     runs-on: ubuntu-latest
     steps:
@@ -44,76 +46,37 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run Affected Lint and Test
+      - name: Run ALL Lint and Test
+        # We run --all here since we've removed the complexity of 'affected'
         run: |
-          npx nx affected --target=lint --parallel=3
-          npx nx affected --target=test --parallel=3
+          npx nx run-many --target=lint --all --parallel=3
+          npx nx run-many --target=test --all --parallel=3
 
-      - name: Run Affected Build
-        run: npx nx affected --target=build --parallel=3
+      - name: Run ALL Build
+        run: npx nx run-many --target=build --all --parallel=3
 
-  # 3. Deploy API Gateway (Web Service)
+  # 3. Deploy API Gateway (UNCONDITIONAL DEPLOYMENT)
   deploy_api_gateway:
-    needs: [affected_tasks]
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
+    needs: [build_test_all]
+    # This job now runs if the previous job succeeded.
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node (Required for Nx commands)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Check Affected and Trigger Hook
+      - name: Trigger Render Deploy Hook
         run: |
-          # Uses --base=HEAD~1 to reliably detect changes
-          AFFECTED=$(npx nx print-affected --type=app --plain --base=HEAD~1 | grep -c 'api-gateway' || true)
+          echo "✅ Build/Test passed. Triggering Render deploy hook for API Gateway..."
+          # The job now runs unconditionally after build_test_all
+          curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
 
-          if [ "$AFFECTED" -ge 1 ]; then
-            echo "✅ API Gateway was affected. Triggering Render deploy hook..."
-            curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
-          else
-            echo "❌ API Gateway NOT affected. Skipping deployment."
-          fi
-
-  # 4. Deploy Angular Shell (Static Site)
+  # 4. Deploy Angular Shell (UNCONDITIONAL DEPLOYMENT)
   deploy_angular_shell:
-    needs: [affected_tasks]
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
+    needs: [build_test_all]
+    # This job now runs if the previous job succeeded.
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node (Required for Nx commands)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Check Affected and Trigger Hook
+      - name: Trigger Render Deploy Hook
         run: |
-          # Uses --base=HEAD~1 to reliably detect changes
-          AFFECTED=$(npx nx print-affected --type=app --plain --base=HEAD~1 | grep -c 'angular-shell' || true)
-
-          if [ "$AFFECTED" -ge 1 ]; then
-            echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
-            curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
-          else
-            echo "❌ Angular Shell NOT affected. Skipping deployment."
-          fi
+          echo "✅ Build/Test passed. Triggering Render deploy hook for Angular Shell..."
+          # The job now runs unconditionally after build_test_all
+          curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
