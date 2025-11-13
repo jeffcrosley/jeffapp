@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # Uses native GitHub Actions caching for node_modules
+          cache: 'npm'
 
       - name: Install Dependencies & Nx
         run: npm ci
@@ -53,10 +53,11 @@ jobs:
       - name: Run Affected Build
         run: npx nx affected --target=build --parallel=3
 
+  # --- Deploy Jobs (Conditional Logic Corrected) ---
+
   # 3. Deploy API Gateway (Conditional Deployment)
   deploy_api_gateway:
     needs: [affected_tasks]
-    # The overall job only runs if it's a push and not skipped
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
 
@@ -72,19 +73,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      # FIX: Add npm ci here for Nx commands to work
+      - name: Install Dependencies
+        run: npm ci
+
       - name: Check if 'api-gateway' was affected
         id: check_affected_api
         run: |
-          # The command checks if 'api-gateway' is in the list of affected apps
           AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'api-gateway' || true)
-          # Set the output for the next step's condition
           echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
 
       - name: Trigger Render Deploy Hook
         if: steps.check_affected_api.outputs.is_affected != ''
         run: |
           echo "✅ API Gateway was affected. Triggering Render deploy hook..."
-          # Use the secret stored in GitHub Secrets
           curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
 
   # --------------------------------------------------------------------------
@@ -92,7 +94,6 @@ jobs:
   # 4. Deploy Angular Shell (Conditional Deployment)
   deploy_angular_shell:
     needs: [affected_tasks]
-    # The overall job only runs if it's a push and not skipped
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
 
@@ -108,14 +109,17 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      # FIX: Add npm ci here for Nx commands to work
+      - name: Install Dependencies
+        run: npm ci
+
       - name: Check if 'angular-shell' was affected
         id: check_affected_shell
         run: |
-          # The command checks if 'angular-shell' is in the list of affected apps
           AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'angular-shell' || true)
-          # Set the output for the next step's condition
           echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
 
+      # FIX: Use the correct step ID, echo message, and secret for the shell
       - name: Trigger Render Deploy Hook
         if: steps.check_affected_shell.outputs.is_affected != ''
         run: |
