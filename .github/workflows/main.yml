@@ -1,35 +1,60 @@
 # .github/workflows/main.yml
-name: Nx Monorepo CI/CD - Simple Deploy
+name: Nx Monorepo CI/CD - Affected Deploy
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  # 1. Install Dependencies and Cache
-  install:
+  # --- 1. SETUP and AFFECTED CALCULATION ---
+  # This job installs dependencies and identifies projects affected by the changes.
+  setup_and_find_affected:
     runs-on: ubuntu-latest
+    outputs:
+      affected_projects: ${{ steps.affected.outputs.affected_projects }}
+      affected_apps: ${{ steps.affected.outputs.affected_apps }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required for calculating changes between commits
 
-      - name: Setup Node
+      - name: Setup Node (and Cache)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies & Nx
+      - name: Install Dependencies
         run: npm ci
 
-  # 2. Build and Test All Projects
-  # This job will build and test ALL projects in the monorepo,
-  # ensuring a stable state before deployment.
-  build_test_all:
-    needs: [install]
+      # --- Nx Setup ---
+      # This sets the BASE and HEAD commits for the affected calculation.
+      - name: Set Nx Affected SHAs
+        uses: nrwl/nx-set-shas@v3
+
+      # --- Determine Affected Projects and Apps ---
+      - name: Find Affected Projects
+        id: affected
+        run: |
+          # Get a comma-separated list of ALL affected projects (used for lint/test)
+          AFFECTED_PROJECTS=$(npx nx print-affected --select=projects)
+
+          # Get a comma-separated list of affected APPS (used for conditional deploy)
+          AFFECTED_APPS=$(npx nx print-affected --target=build --type=app --select=projects)
+
+          echo "affected_projects=${AFFECTED_PROJECTS}" >> $GITHUB_OUTPUT
+          echo "affected_apps=${AFFECTED_APPS}" >> $GITHUB_OUTPUT
+          echo "Affected Apps for Deploy: ${AFFECTED_APPS}"
+
+  # ----------------------------------------------------
+  # --- 2. BUILD, LINT, and TEST (AFFECTED ONLY) ---
+  # This job runs targets ONLY on the subset of projects calculated in the previous step.
+  build_test_affected:
+    needs: [setup_and_find_affected]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -46,37 +71,38 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run ALL Lint and Test
-        # We run --all here since we've removed the complexity of 'affected'
+      - name: Run AFFECTED Lint and Test
+        # The environment variables are set by nrwl/nx-set-shas and used automatically by nx
         run: |
-          npx nx run-many --target=lint --all --parallel=3
-          npx nx run-many --target=test --all --parallel=3
+          npx nx affected --target=lint --parallel=3
+          npx nx affected --target=test --parallel=3
 
-      - name: Run ALL Build
-        run: npx nx run-many --target=build --all --parallel=3
+      - name: Run AFFECTED Build
+        # We run affected build here to ensure all code is ready and cached
+        run: npx nx affected --target=build --parallel=3
 
-  # 3. Deploy API Gateway (UNCONDITIONAL DEPLOYMENT)
+  # ----------------------------------------------------
+  # --- 3. CONDITIONAL DEPLOYMENT JOBS ---
+  # These jobs ONLY run if their corresponding project name is in the affected_apps list.
+
   deploy_api_gateway:
-    needs: [build_test_all]
-    # This job now runs if the previous job succeeded.
+    needs: [build_test_affected, setup_and_find_affected]
     runs-on: ubuntu-latest
-
+    # Check if the affected_apps string contains the project name 'api-gateway'
+    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
     steps:
-      - name: Trigger Render Deploy Hook
+      - name: Trigger Render Deploy Hook for API Gateway
         run: |
-          echo "✅ Build/Test passed. Triggering Render deploy hook for API Gateway..."
-          # The job now runs unconditionally after build_test_all
+          echo "✅ Deploying API Gateway (affected by changes)..."
           curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
 
-  # 4. Deploy Angular Shell (UNCONDITIONAL DEPLOYMENT)
   deploy_angular_shell:
-    needs: [build_test_all]
-    # This job now runs if the previous job succeeded.
+    needs: [build_test_affected, setup_and_find_affected]
     runs-on: ubuntu-latest
-
+    # Check if the affected_apps string contains the project name 'nav-shell'
+    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
     steps:
-      - name: Trigger Render Deploy Hook
+      - name: Trigger Render Deploy Hook for Angular Shell
         run: |
-          echo "✅ Build/Test passed. Triggering Render deploy hook for Angular Shell..."
-          # The job now runs unconditionally after build_test_all
+          echo "✅ Deploying Angular Shell (affected by changes)..."
           curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
