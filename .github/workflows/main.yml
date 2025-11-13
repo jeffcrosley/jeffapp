@@ -81,7 +81,8 @@ jobs:
       # FIX: Run the check and hook trigger in one step for stability
       - name: Check Affected and Trigger Hook
         run: |
-          AFFECTED=$(npx nx print-affected --type=apps --plain | grep -c 'api-gateway' || true)
+          # Changed --type=apps to --type=app
+          AFFECTED=$(npx nx print-affected --type=app --plain | grep -c 'api-gateway' || true)
 
           if [ "$AFFECTED" -ge 1 ]; then
             echo "✅ API Gateway was affected. Triggering Render deploy hook..."
@@ -116,7 +117,8 @@ jobs:
       # FIX: Run the check and hook trigger in one step for stability
       - name: Check Affected and Trigger Hook
         run: |
-          AFFECTED=$(npx nx print-affected --type=apps --plain | grep -c 'angular-shell' || true)
+          # Changed --type=apps to --type=app
+          AFFECTED=$(npx nx print-affected --type=app --plain | grep -c 'angular-shell' || true)
 
           if [ "$AFFECTED" -ge 1 ]; then
             echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
