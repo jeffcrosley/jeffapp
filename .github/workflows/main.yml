@@ -41,11 +41,11 @@ jobs:
         id: affected
         run: |
           # 1. Get a comma-separated list of ALL affected projects (used for lint/test)
-          AFFECTED_PROJECTS=$(npx nx print-affected --select=projects)
+          # We append '|| true' to prevent the step from failing if no projects are affected.
+          AFFECTED_PROJECTS=$(npx nx print-affected --select=projects || true)
 
           # 2. Get a comma-separated list of affected APPS that have a 'build' target (used for conditional deploy)
-          # We remove the problematic --type=app flag here.
-          AFFECTED_APPS=$(npx nx print-affected --target=build --select=projects)
+          AFFECTED_APPS=$(npx nx print-affected --target=build --select=projects || true)
 
           echo "affected_projects=${AFFECTED_PROJECTS}" >> $GITHUB_OUTPUT
           echo "affected_apps=${AFFECTED_APPS}" >> $GITHUB_OUTPUT
