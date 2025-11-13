@@ -60,7 +60,6 @@ jobs:
   # 3. Deploy API Gateway (Web Service)
   deploy_api_gateway:
     needs: [affected_tasks]
-    # Only run the job if it's a push to main and not explicitly skipped
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
 
@@ -76,23 +75,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # FIX: Install dependencies so npx nx works
       - name: Install Dependencies
         run: npm ci
 
-      # Check for 'api-gateway' and set an output
-      - name: Check if 'api-gateway' was affected
-        id: check_affected_api
+      # FIX: Run the check and hook trigger in one step for stability
+      - name: Check Affected and Trigger Hook
         run: |
-          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'api-gateway' || true)
-          echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          AFFECTED=$(npx nx print-affected --type=apps --plain | grep -c 'api-gateway' || true)
 
-      # FIX: Trigger Render Hook only if the check passed
-      - name: Trigger Render Deploy Hook
-        if: steps.check_affected_api.outputs.is_affected != ''
-        run: |
-          echo "✅ API Gateway was affected. Triggering Render deploy hook..."
-          curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
+          if [ "$AFFECTED" -ge 1 ]; then
+            echo "✅ API Gateway was affected. Triggering Render deploy hook..."
+            curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
+          else
+            echo "❌ API Gateway NOT affected. Skipping deployment."
+          fi
 
   # --------------------------------------------------------------------------
 
@@ -114,20 +110,17 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      # FIX: Install dependencies so npx nx works
       - name: Install Dependencies
         run: npm ci
 
-      # Check for 'angular-shell' and set an output
-      - name: Check if 'angular-shell' was affected
-        id: check_affected_shell
+      # FIX: Run the check and hook trigger in one step for stability
+      - name: Check Affected and Trigger Hook
         run: |
-          AFFECTED_PROJECTS=$(npx nx print-affected --type=apps --plain | tr -d '\n' | grep 'angular-shell' || true)
-          echo "is_affected=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          AFFECTED=$(npx nx print-affected --type=apps --plain | grep -c 'angular-shell' || true)
 
-      # FIX: Trigger Render Hook only if the check passed, using the correct secret
-      - name: Trigger Render Deploy Hook
-        if: steps.check_affected_shell.outputs.is_affected != ''
-        run: |
-          echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
-          curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
+          if [ "$AFFECTED" -ge 1 ]; then
+            echo "✅ Angular Shell was affected. Triggering Render deploy hook..."
+            curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
+          else
+            echo "❌ Angular Shell NOT affected. Skipping deployment."
+          fi
