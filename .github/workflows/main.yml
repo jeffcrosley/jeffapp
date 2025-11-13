@@ -42,9 +42,6 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm ci
-
       - name: Run Affected Lint and Test
         run: |
           npx nx affected --target=lint --parallel=3
