@@ -5,11 +5,14 @@
 FROM node:lts-alpine as build
 WORKDIR /app
 
-# Install project-wide dependencies using the root package.json and lockfile
-COPY package.json package-lock.json ./
+# Copy project-wide dependency files from the monorepo root
+COPY ../../package.json ./
+COPY ../../package-lock.json ./
+
+# Install dependencies (they will be installed in /app)
 RUN npm install
 
-# Copy the entire workspace (only necessary for the build stage)
+# Copy the source code for the API Gateway project (relative to the Dockerfile)
 COPY . .
 
 # Use Nx to build the specific API Gateway application
