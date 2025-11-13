@@ -137,6 +137,6 @@ export class App {
   protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
     { label: 'Dashboard', route: '/dashboard' },
-    { label: 'About Me', route: '/about' },
+    { label: 'About Jeff', route: '/about' },
   ];
 }
