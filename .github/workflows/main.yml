@@ -45,7 +45,7 @@ jobs:
           AFFECTED_PROJECTS=$(npx nx show projects --affected --select=projects || true)
 
           # 2. Get a comma-separated list of affected APPS that have a 'build' target (used for conditional deploy)
-          AFFECTED_APPS=$(npx nx show projects --affected --target=build --select=projects || true)
+          AFFECTED_APPS=$(npx nx show projects --affected --target=build --exclude='*-e2e'--select=projects || true)
 
           echo "affected_projects=${AFFECTED_PROJECTS}" >> $GITHUB_OUTPUT
           echo "affected_apps=${AFFECTED_APPS}" >> $GITHUB_OUTPUT
