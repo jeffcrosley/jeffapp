@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './app.scss',
 })
 export class App {
-  protected portfolioTitle = 'JeffApp';
+  protected portfolioTitle = 'All About Jeff';
   protected navigationLinks = [
     { label: 'Dashboard', route: '/dashboard' },
     { label: 'About Me', route: '/about' },
