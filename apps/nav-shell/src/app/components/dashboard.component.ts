@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <section class="dashboard-container">
       <div class="dashboard-header">
@@ -17,7 +18,7 @@ import { Component } from '@angular/core';
           <div class="card-icon">{{ item.icon }}</div>
           <h3>{{ item.title }}</h3>
           <p>{{ item.description }}</p>
-          <a href="#" class="card-link">Explore →</a>
+          <a [routerLink]="item.route" class="card-link">Explore →</a>
         </div>
       </div>
     </section>
@@ -108,30 +109,34 @@ import { Component } from '@angular/core';
   ],
 })
 export class DashboardComponent {
-  protected welcomeMessage = 'Welcome to your Portfolio Dashboard';
+  protected welcomeMessage = 'For All your Jeff Crosley Needs';
   protected description =
-    'This is your central hub for showcasing your software engineering work, projects, and skills.';
+    'Thank you for visitting!  This is a rapidly-changing work in progress.  Please feel free to reach out with any questions or feedback.';
 
   protected dashboardItems = [
     {
       title: 'Projects',
       icon: '📁',
-      description: 'View your completed and ongoing projects',
+      description: 'View my completed and ongoing projects',
+      route: '/projects',
     },
     {
       title: 'Skills',
       icon: '🛠️',
-      description: 'Showcase your technical skills and expertise',
+      description: 'Technical skills and expertise',
+      route: '/skills',
     },
     {
       title: 'Experience',
       icon: '💼',
-      description: 'Highlight your professional background',
+      description: 'Professional background',
+      route: '/experience',
     },
     {
       title: 'Contact',
       icon: '📧',
-      description: 'Get in touch with you',
+      description: 'Get in touch',
+      route: '/contact',
     },
   ];
 }
