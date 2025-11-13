@@ -6,8 +6,9 @@ FROM node:lts-alpine as build
 WORKDIR /app
 
 # Copy project-wide dependency files from the monorepo root
-COPY ../../package.json ./
-COPY ../../package-lock.json ./
+# Since Render's Root Directory is now /, the COPY source path starts at /
+COPY package.json ./
+COPY package-lock.json ./
 
 # Install dependencies (they will be installed in /app)
 RUN npm install
