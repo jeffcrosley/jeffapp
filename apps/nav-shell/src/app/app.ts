@@ -133,7 +133,8 @@ import { RouterModule } from '@angular/router';
   ],
 })
 export class App {
-  protected portfolioTitle = 'Welcome to JeffApp!';
+  protected portfolioTitle =
+    'Welcome to JeffApp, for all things Jeff Crosley (apps, resume, etc).  This is a work in progress and will be growing and changing rapidly.  Thanks for visiting!';
   protected navigationLinks = [
     { label: 'Dashboard', route: '/dashboard' },
     { label: 'About Me', route: '/about' },
