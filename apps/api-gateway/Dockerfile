@@ -26,15 +26,13 @@ RUN npx nx build ${PROJECT_NAME} --prod
 FROM node:lts-slim as production
 WORKDIR /app
 
-# Copy only the necessary files for running the application from the build stage
-# 1. Copy the built artifact from the build stage's dist folder
-COPY --from=build /app/dist/apps/api-gateway ./
+# 1. Copy the production-ready node_modules from the build stage
+# We copy the *entire* node_modules folder from the build stage.
+# This contains 'tslib' and any other production dependencies.
+COPY --from=build /app/node_modules ./node_modules
 
-# 2. Re-create node_modules for production-only dependencies for security/size
-#    This assumes your dependency management is clean and only production deps are needed at runtime
-#    We only need the dependencies of the API Gateway, which should be included in its build output's package.json
-#    In a complex monorepo, you might copy the root package.json and run 'npm install --production'
-#    For simplicity here, we assume the built output has its own necessary structure.
+# 2. Copy the built artifact (main.js, etc.) from the build stage's dist folder
+COPY --from=build /app/dist/apps/api-gateway ./
 
 # Set the environment variable for Node.js
 ENV NODE_ENV production
