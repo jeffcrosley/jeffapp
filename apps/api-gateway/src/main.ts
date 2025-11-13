@@ -7,7 +7,7 @@ const port = process.env.PORT || 3333; // Render will set process.env.PORT
 
 // --- Health Check / Core Route ---
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'API Gateway' });
+  res.status(200).json({ status: 'healthy', service: 'API Gateway' });
 });
 
 // --- API Route Proxy (Initial Setup for First Sub-App) ---
