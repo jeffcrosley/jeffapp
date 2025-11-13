@@ -68,4 +68,44 @@ jobs:
       - name: Setup Node (Restore cache)
         uses: actions/setup-node@v4
         with:
-          node-version:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run AFFECTED Lint and Test
+        # The environment variables are set by nrwl/nx-set-shas and used automatically by nx
+        run: |
+          npx nx affected --target=lint --parallel=3
+          npx nx affected --target=test --parallel=3
+
+      - name: Run AFFECTED Build
+        # We run affected build here to ensure all code is ready and cached
+        run: npx nx affected --target=build --parallel=3
+
+  # ----------------------------------------------------
+  # --- 3. CONDITIONAL DEPLOYMENT JOBS ---
+  # These jobs ONLY run if their corresponding project name is in the affected_apps list.
+
+  deploy_api_gateway:
+    needs: [build_test_affected, setup_and_find_affected]
+    runs-on: ubuntu-latest
+    # Check if the affected_apps string contains the project name 'api-gateway'
+    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
+    steps:
+      - name: Trigger Render Deploy Hook for API Gateway
+        run: |
+          echo "✅ Deploying API Gateway (affected by changes)..."
+          curl -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}"
+
+  deploy_angular_shell:
+    needs: [build_test_affected, setup_and_find_affected]
+    runs-on: ubuntu-latest
+    # Check if the affected_apps string contains the project name 'nav-shell'
+    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
+    steps:
+      - name: Trigger Render Deploy Hook for Angular Shell
+        run: |
+          echo "✅ Deploying Angular Shell (affected by changes)..."
+          curl -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}"
