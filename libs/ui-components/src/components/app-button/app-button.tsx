@@ -6,9 +6,9 @@ import { Component, Prop, h } from '@stencil/core';
   shadow: true,
 })
 export class AppButton {
-  @Prop() label: string = 'Click me';
+  @Prop() label = 'Click me';
   @Prop() variant: 'primary' | 'secondary' = 'primary';
-  @Prop() disabled: boolean = false;
+  @Prop() disabled = false;
 
   render() {
     return (

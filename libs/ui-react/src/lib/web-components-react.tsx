@@ -1,4 +1,5 @@
 import React from 'react';
+import '../types';
 
 /**
  * React utilities for integrating Web Components from @jeffapp/ui-components and @jeffapp/ui-components-native
@@ -7,49 +8,18 @@ import React from 'react';
  * This file provides type-safe wrappers and utilities for using Web Components in React.
  */
 
-// Extend JSX IntrinsicElements to include custom elements
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      'app-button': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          label?: string;
-          variant?: 'primary' | 'secondary';
-          disabled?: boolean;
-        },
-        HTMLElement
-      >;
-      'native-card': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          title?: string;
-          description?: string;
-        },
-        HTMLElement
-      >;
-      'native-badge': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          status?: 'success' | 'warning' | 'error' | 'info';
-          label?: string;
-        },
-        HTMLElement
-      >;
-    }
-  }
-}
-
 /**
  * Load Web Components libraries
  * Call this in your React app's entry point (e.g., main.tsx) to register all custom elements
+ *
+ * Note: The actual import statements should be added by the consuming application:
+ * import '@jeffapp/ui-components';
+ * import '@jeffapp/ui-components-native';
  */
 export function loadWebComponents() {
-  // Dynamic imports to avoid bundling issues
-  import('@jeffapp/ui-components').catch((err) =>
-    console.warn('Failed to load Stencil components:', err)
-  );
-  import('@jeffapp/ui-components-native').catch((err) =>
-    console.warn('Failed to load native components:', err)
-  );
+  // This function is a placeholder for documentation purposes
+  // The consuming application should import the component libraries directly
+  console.log('Web Components should be imported in your app entry point');
 }
 
 /**

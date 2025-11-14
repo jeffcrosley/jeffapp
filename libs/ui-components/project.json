@@ -6,12 +6,11 @@
   "tags": ["type:ui", "platform:web"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/loader"],
       "options": {
-        "outputPath": "dist/libs/ui-components",
-        "main": "libs/ui-components/src/index.ts",
-        "tsConfig": "libs/ui-components/tsconfig.json"
+        "command": "npm run build",
+        "cwd": "libs/ui-components"
       }
     },
     "test": {

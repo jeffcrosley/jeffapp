@@ -14,6 +14,14 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome');
+    expect(compiled.querySelector('h1')?.textContent).toContain('JeffApp');
+  });
+
+  it('should have navigation links', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const navLinks = compiled.querySelectorAll('.nav-links a');
+    expect(navLinks.length).toBeGreaterThan(0);
   });
 });

@@ -1,0 +1,2 @@
+import{p as a,b as t}from"./p-uR1dRdM6.js";export{s as setNonce}from"./p-uR1dRdM6.js";import{g as r}from"./p-DQuL1Twl.js";var o=()=>{const t=import.meta.url;const r={};if(t!==""){r.resourcesUrl=new URL(".",t).href}return a(r)};o().then((async a=>{await r();return t([["p-f39ac5ed",[[257,"app-button",{label:[1],variant:[1],disabled:[4]}]]]],a)}));
+//# sourceMappingURL=ui-components.esm.js.map
