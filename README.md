@@ -19,14 +19,17 @@ This project serves as both a showcase for prospective employers and a learning 
 ### Microfrontend + Microservices
 
 **Frontend:**
+
 - `apps/nav-shell` — Angular 20 shell orchestrating multiple microfrontend sub-apps
 - Future sub-apps in various frameworks (React, Vue, Svelte, etc.) to showcase versatility
 
 **Backend:**
+
 - `apps/api-gateway` — Express.js gateway routing to multiple microservice backends
 - Future microservices in varied languages (Python, Go, Rust, etc.) to demonstrate full-stack capabilities
 
 **Component Libraries:**
+
 - `@jeffapp/ui-components` — Stencil-based Web Components for production use
 - `@jeffapp/ui-components-native` — Vanilla Web Components showcasing fundamentals
 - `@jeffapp/ui-angular` — Angular-specific utilities and wrappers
@@ -42,7 +45,6 @@ This project serves as both a showcase for prospective employers and a learning 
 - **CI/CD:** GitHub Actions with Nx Cloud caching
 - **Deployment:** Render (with webhook-based deployments)
 - **Code Quality:** ESLint, Prettier, TypeScript strict mode
-
 
 ## 🚀 Getting Started
 
@@ -60,21 +62,25 @@ npm install
 ### Development
 
 **Start the Angular shell:**
+
 ```bash
 npx nx serve nav-shell
 ```
 
 **Start the API gateway:**
+
 ```bash
 npx nx serve api-gateway
 ```
 
 **Run affected tests:**
+
 ```bash
 npx nx affected --target=test
 ```
 
 **View dependency graph:**
+
 ```bash
 npx nx graph
 ```
@@ -82,11 +88,13 @@ npx nx graph
 ### Building
 
 **Build specific project:**
+
 ```bash
 npx nx build nav-shell
 ```
 
 **Build all affected projects:**
+
 ```bash
 npx nx affected --target=build
 ```
@@ -96,6 +104,7 @@ npx nx affected --target=build
 ### Using Web Components
 
 **In Angular apps:**
+
 ```typescript
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import '@jeffapp/ui-components';
@@ -107,6 +116,7 @@ import '@jeffapp/ui-components';
 ```
 
 **In React apps:**
+
 ```typescript
 import { loadWebComponents, AppButton } from '@jeffapp/ui-react';
 
@@ -120,11 +130,13 @@ function App() {
 ### Building Component Libraries
 
 **Build Stencil components:**
+
 ```bash
 npx nx run ui-components:build
 ```
 
 **Build all libraries:**
+
 ```bash
 npx nx run-many --target=build --projects=ui-*
 ```
@@ -134,6 +146,7 @@ npx nx run-many --target=build --projects=ui-*
 ### Test-Driven Development (TDD)
 
 This project follows TDD principles:
+
 - Features are built test-first when feasible
 - Tests guide implementation and architecture
 - All changes must pass affected tests before deployment
@@ -198,4 +211,4 @@ Built by Jeff Crosley as a demonstration of full-pipeline engineering capabiliti
 
 ---
 
-*Powered by [Nx](https://nx.dev) • Deployed on [Render](https://render.com)*
+_Powered by [Nx](https://nx.dev) • Deployed on [Render](https://render.com)_
