@@ -3,7 +3,20 @@
 
 # Copilot instructions — jeffapp (Nx monorepo)
 
-Core idea: this repo is an Nx monorepo hosting an Angular standalone shell (`apps/nav-shell`) and an Express API Gateway (`apps/api-gateway`). Sub-services live under `apps/` and are integrated via the gateway or Nx projects.
+## Project Vision & Purpose
+
+This is a **portfolio/resume application** for Jeff Crosley, a full-pipeline AI-forward engineer, designed to:
+- Demonstrate technical capabilities and proficiency across multiple languages and frameworks
+- Serve as a living showcase for prospective employers
+- Provide a platform for learning and practicing new patterns and technologies
+
+## Architecture Overview
+
+**Microfrontend + Microservices Architecture:**
+- `apps/nav-shell` — Angular 20 shell that orchestrates navigation between multiple **microfrontend sub-apps** (each in different languages/frameworks to showcase variety)
+- `apps/api-gateway` — Express gateway that routes requests to multiple **microservice backends** (also in varied languages to demonstrate proficiency)
+- Future sub-apps will be added under `apps/` and integrated via the shell and gateway
+- Shared UI component libraries in `libs/` (may need language-specific versions for different frontend frameworks)
 
 - Frontend: `apps/nav-shell` — Angular 20, standalone components, bootstrapApplication pattern (entry: `src/main.ts` → `src/app/app.ts`).
 - Backend: `apps/api-gateway` — Express gateway with a `/health` endpoint; proxy templates are in `src/main.ts` (port defaults to 3333).
@@ -60,25 +73,54 @@ export class MyComponent {
 
 Then import and add to `app.routes.ts` or use in other components' template.
 
+## Development Philosophy & AI Agent Role
+
+**Test-Driven Development (TDD):**
+- Most features should be built TDD-first: define functionality and tests, then implement to satisfy tests
+- **Before implementing**: Discuss and confirm test requirements and expected behaviors with the user
+- **Alert user when**: Logic becomes untestable or unnecessarily complex
+- Tests guide the structure; components and services should emerge from test requirements
+
+**Modularity & Loose Coupling:**
+- **Alert user when**: Components/services become too tightly coupled
+- Prioritize flexibility and scalability; raise concerns if decisions restrict future growth
+- Keep changes minimal and localized to single projects when possible
+
+**AI Agent Responsibilities:**
+1. Execute straightforward organization/refactoring tasks
+2. Construct and implement tests and components that satisfy them (after discussion/confirmation)
+3. Proactively raise concerns about best practices, scalability, coupling, and testability
+4. Suggest better approaches when user decisions may limit future flexibility
+
 Practical advice for AI edits in this repo:
 
-- Prefer updating files under `apps/*` and `libs/*` and run `npx nx test` afterwards. Keep changes minimal and localized to a single project when possible.
-- When adding a new component, create it in `apps/nav-shell/src/app/components/` with inline template and styles (see example above).
-- When adding a new app or lib, use Nx generators (examples in `package.json`/nx.json). Avoid hand-editing workspace manifests unless necessary.
-- Do not check in built artifacts under `dist/`.
+- Prefer updating files under `apps/*` and `libs/*` and run `npx nx test` afterwards
+- When adding a new component, create it in `apps/nav-shell/src/app/components/` with inline template and styles (see example above)
+- When adding a new app or lib, use Nx generators (examples in `package.json`/nx.json). Avoid hand-editing workspace manifests unless necessary
+- Do not check in built artifacts under `dist/`
+- **Before implementing features**: Discuss test requirements and expected behavior with user
 
 Edge cases & verification steps:
 
-- Tests: Jest is configured at the root and per-project. `npx nx test <project>` will pass with no tests by design (see `nx.json` targetDefaults).
-- Lint: use `npx nx lint <project>`; root uses `eslint.config.mjs` (flat config).
+- Tests: Jest is configured at the root and per-project. `npx nx test <project>` will pass with no tests by design (see `nx.json` targetDefaults)
+- Lint: use `npx nx lint <project>`; root uses `eslint.config.mjs` (flat config)
 
-If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+## Nx Affected Architecture (v22)
 
-If you want me to expand any section or add examples (e.g., a sample proxy config, or a guide for adding a new Nx app + tests), tell me which part to expand.
+**Important**: Nx v22 does NOT have `print-affected`. Use `nx affected` commands instead:
+- `npx nx affected:build` — build only affected projects
+- `npx nx affected:test` — test only affected projects
+- `npx nx affected --target=<target>` — run any target on affected projects
+
+In CI/CD, use these commands to ensure only changed apps are built, tested, and deployed.
 
 ---
 
-Updated: 2025-11-12
+If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+
+---
+
+Updated: 2025-11-13
 
 ```
 
