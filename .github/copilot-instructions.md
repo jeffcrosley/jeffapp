@@ -114,7 +114,7 @@ Edge cases & verification steps:
 
 **Hybrid Architecture for Cross-Framework Support:**
 
-Three complementary libraries demonstrate different approaches:
+Four complementary libraries demonstrate different approaches:
 
 1. **`@jeffapp/ui-components`** (Stencil - Production Use)
 
@@ -134,16 +134,24 @@ Three complementary libraries demonstrate different approaches:
    - Example: `<native-card title="Title" description="Description"></native-card>`
 
 3. **`@jeffapp/ui-angular`** (Angular-Specific Wrappers)
+
    - Angular module with CUSTOM_ELEMENTS_SCHEMA for Web Components integration
    - Type-safe directives/pipes/utilities for Angular apps
    - Use this for: Angular-specific features that don't translate to other frameworks
    - Location: `libs/ui-angular/`
+
+4. **`@jeffapp/ui-react`** (React-Specific Wrappers)
+   - React utilities and type-safe wrappers for Web Components
+   - JSX type declarations for custom elements
+   - Use this for: React-specific features, React component wrappers
+   - Location: `libs/ui-react/`
 
 **When to use each library:**
 
 - Need cross-framework component? → Use `@jeffapp/ui-components` (Stencil)
 - Demonstrating Web Components fundamentals? → Use `@jeffapp/ui-components-native`
 - Angular-only feature (pipes, directives, services)? → Use `@jeffapp/ui-angular`
+- React-only feature (hooks, context, React wrappers)? → Use `@jeffapp/ui-react`
 
 **Integration in Angular apps:**
 
@@ -162,13 +170,36 @@ import '@jeffapp/ui-components-native'; // Load native components
 })
 ```
 
+**Integration in React apps:**
+
+```typescript
+// In main.tsx or App.tsx entry point
+import { loadWebComponents, AppButton, NativeCard } from '@jeffapp/ui-react';
+
+// Load Web Components once at app startup
+loadWebComponents();
+
+// Use type-safe React wrappers or direct JSX
+function App() {
+  return (
+    <>
+      <AppButton label="Stencil" variant="primary" onClick={() => alert('clicked')} />
+      <NativeCard title="Native" description="Vanilla">
+        <p>Card content</p>
+      </NativeCard>
+    </>
+  );
+}
+```
+
 **Path mappings in `tsconfig.base.json`:**
 
 ```json
 "paths": {
   "@jeffapp/ui-components": ["libs/ui-components/src/index.ts"],
   "@jeffapp/ui-components-native": ["libs/ui-components-native/src/index.ts"],
-  "@jeffapp/ui-angular": ["libs/ui-angular/src/index.ts"]
+  "@jeffapp/ui-angular": ["libs/ui-angular/src/index.ts"],
+  "@jeffapp/ui-react": ["libs/ui-react/src/index.ts"]
 }
 ```
 
