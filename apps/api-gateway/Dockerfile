@@ -1,46 +1,52 @@
 # apps/api-gateway/Dockerfile
 
 # ----------------- STAGE 1: Build Stage -----------------
-# Uses a full Node image to handle all build tasks (installing dependencies, running Nx build)
-FROM node:lts-alpine as build
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy project-wide dependency files from the monorepo root
-# Since Render's Root Directory is now /, the COPY source path starts at /
-COPY package.json ./
-COPY package-lock.json ./
+# Copy dependency files first for better caching
+COPY package.json package-lock.json ./
 
-# Install dependencies (they will be installed in /app)
-RUN npm install
+# Install ALL dependencies (needed for build)
+RUN npm ci
 
-# Copy the source code for the API Gateway project (relative to the Dockerfile)
+# Copy source code
 COPY . .
 
-# Use Nx to build the specific API Gateway application
-# Nx outputs the production-ready code to a specific directory (e.g., dist/apps/api-gateway)
-ARG PROJECT_NAME=api-gateway
-RUN npx nx build ${PROJECT_NAME} --prod
+# Build the API Gateway with Nx
+RUN npx nx build api-gateway --configuration=production
 
 # ----------------- STAGE 2: Production Stage -----------------
-# Uses a lean, production-optimized image (alpine for size)
-FROM node:lts-slim as production
+FROM node:20-alpine AS production
 WORKDIR /app
 
-# 1. Copy the production-ready node_modules from the build stage
-# We copy the *entire* node_modules folder from the build stage.
-# This contains 'tslib' and any other production dependencies.
-COPY --from=build /app/node_modules ./node_modules
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3333
 
-# 2. Copy the built artifact (main.js, etc.) from the build stage's dist folder
+# Copy dependency files
+COPY package.json package-lock.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy built artifact from build stage
 COPY --from=build /app/dist/apps/api-gateway ./
 
-# Set the environment variable for Node.js
-ENV NODE_ENV production
-ENV PORT 3333
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
 
-# Expose the internal port (Render manages the external port)
+# Switch to non-root user
+USER nodejs
+
+# Expose port
 EXPOSE 3333
 
-# Define the command to start the application
-CMD [ "node", "main.js" ] 
-# Note: The 'main.js' here refers to the final bundled/compiled entry point in the 'dist' folder.
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3333/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Start application
+CMD ["node", "main.js"]

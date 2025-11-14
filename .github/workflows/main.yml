@@ -5,8 +5,23 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'package*.json'
+      - 'nx.json'
+      - '.github/workflows/**'
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'package*.json'
+      - 'nx.json'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # --- 1. SETUP and AFFECTED CALCULATION ---
@@ -27,6 +42,15 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+
+      - name: Cache Nx
+        uses: actions/cache@v3
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            nx-${{ runner.os }}-
 
       - name: Install Dependencies
         run: npm ci
@@ -71,18 +95,23 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Cache Nx
+        uses: actions/cache@v3
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            nx-${{ runner.os }}-
+
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run AFFECTED Lint and Test
-        # The environment variables are set by nrwl/nx-set-shas and used automatically by nx
-        run: |
-          npx nx affected --target=lint --parallel=3
-          npx nx affected --target=test --parallel=3
+      - name: Set Nx Affected SHAs
+        uses: nrwl/nx-set-shas@v3
 
-      - name: Run AFFECTED Build
-        # We run affected build here to ensure all code is ready and cached
-        run: npx nx affected --target=build --parallel=3
+      - name: Run AFFECTED Lint, Test, and Build
+        run: npx nx affected --target=lint,test,build --parallel=3
 
   # ----------------------------------------------------
   # --- 3. CONDITIONAL DEPLOYMENT JOBS ---
@@ -91,8 +120,8 @@ jobs:
   deploy_api_gateway:
     needs: [build_test_affected, setup_and_find_affected]
     runs-on: ubuntu-latest
-    # Check if the affected_apps string contains the project name 'api-gateway'
-    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
+    # Only deploy on push to main (not PRs) and if api-gateway is affected
+    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
     steps:
       - name: Trigger Render Deploy Hook for API Gateway
         run: |
@@ -102,8 +131,8 @@ jobs:
   deploy_angular_shell:
     needs: [build_test_affected, setup_and_find_affected]
     runs-on: ubuntu-latest
-    # Check if the affected_apps string contains the project name 'nav-shell'
-    if: contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
+    # Only deploy on push to main (not PRs) and if nav-shell is affected
+    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
     steps:
       - name: Trigger Render Deploy Hook for Angular Shell
         run: |
