@@ -21,4 +21,8 @@ export const appRoutes: Route[] = [
     path: 'contact',
     component: ContactComponent,
   },
+  {
+    path: '**',
+    redirectTo: '/dashboard',
+  },
 ];
