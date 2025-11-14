@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@jeffapp/ui-components": ["libs/ui-components/src/index.ts"],
+      "@jeffapp/ui-components-native": ["libs/ui-components-native/src/index.ts"],
+      "@jeffapp/ui-angular": ["libs/ui-angular/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

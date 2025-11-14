@@ -6,6 +6,7 @@
 ## Project Vision & Purpose
 
 This is a **portfolio/resume application** for Jeff Crosley, a full-pipeline AI-forward engineer, designed to:
+
 - Demonstrate technical capabilities and proficiency across multiple languages and frameworks
 - Serve as a living showcase for prospective employers
 - Provide a platform for learning and practicing new patterns and technologies
@@ -13,6 +14,7 @@ This is a **portfolio/resume application** for Jeff Crosley, a full-pipeline AI-
 ## Architecture Overview
 
 **Microfrontend + Microservices Architecture:**
+
 - `apps/nav-shell` — Angular 20 shell that orchestrates navigation between multiple **microfrontend sub-apps** (each in different languages/frameworks to showcase variety)
 - `apps/api-gateway` — Express gateway that routes requests to multiple **microservice backends** (also in varied languages to demonstrate proficiency)
 - Future sub-apps will be added under `apps/` and integrated via the shell and gateway
@@ -76,17 +78,20 @@ Then import and add to `app.routes.ts` or use in other components' template.
 ## Development Philosophy & AI Agent Role
 
 **Test-Driven Development (TDD):**
+
 - Most features should be built TDD-first: define functionality and tests, then implement to satisfy tests
 - **Before implementing**: Discuss and confirm test requirements and expected behaviors with the user
 - **Alert user when**: Logic becomes untestable or unnecessarily complex
 - Tests guide the structure; components and services should emerge from test requirements
 
 **Modularity & Loose Coupling:**
+
 - **Alert user when**: Components/services become too tightly coupled
 - Prioritize flexibility and scalability; raise concerns if decisions restrict future growth
 - Keep changes minimal and localized to single projects when possible
 
 **AI Agent Responsibilities:**
+
 1. Execute straightforward organization/refactoring tasks
 2. Construct and implement tests and components that satisfy them (after discussion/confirmation)
 3. Proactively raise concerns about best practices, scalability, coupling, and testability
@@ -105,9 +110,72 @@ Edge cases & verification steps:
 - Tests: Jest is configured at the root and per-project. `npx nx test <project>` will pass with no tests by design (see `nx.json` targetDefaults)
 - Lint: use `npx nx lint <project>`; root uses `eslint.config.mjs` (flat config)
 
+## Component Libraries
+
+**Hybrid Architecture for Cross-Framework Support:**
+
+Three complementary libraries demonstrate different approaches:
+
+1. **`@jeffapp/ui-components`** (Stencil - Production Use)
+
+   - Built with Stencil for production-quality Web Components
+   - Outputs: Custom Elements, dist bundles, loader
+   - Use this for: Real application features requiring cross-framework compatibility
+   - Location: `libs/ui-components/`
+   - Build: `npx nx build ui-components`
+   - Example: `<app-button label="Click me" variant="primary"></app-button>`
+
+2. **`@jeffapp/ui-components-native`** (Vanilla Web Components - Portfolio Showcase)
+
+   - Pure Web Components API (no frameworks/tools)
+   - Demonstrates fundamental Web Components knowledge
+   - Use this for: Portfolio showcase examples, learning documentation
+   - Location: `libs/ui-components-native/`
+   - Example: `<native-card title="Title" description="Description"></native-card>`
+
+3. **`@jeffapp/ui-angular`** (Angular-Specific Wrappers)
+   - Angular module with CUSTOM_ELEMENTS_SCHEMA for Web Components integration
+   - Type-safe directives/pipes/utilities for Angular apps
+   - Use this for: Angular-specific features that don't translate to other frameworks
+   - Location: `libs/ui-angular/`
+
+**When to use each library:**
+
+- Need cross-framework component? → Use `@jeffapp/ui-components` (Stencil)
+- Demonstrating Web Components fundamentals? → Use `@jeffapp/ui-components-native`
+- Angular-only feature (pipes, directives, services)? → Use `@jeffapp/ui-angular`
+
+**Integration in Angular apps:**
+
+```typescript
+// Import CUSTOM_ELEMENTS_SCHEMA to use Web Components
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@jeffapp/ui-components'; // Load Stencil components
+import '@jeffapp/ui-components-native'; // Load native components
+
+@Component({
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `
+    <app-button label="Stencil" variant="primary"></app-button>
+    <native-card title="Native" description="Vanilla"></native-card>
+  `
+})
+```
+
+**Path mappings in `tsconfig.base.json`:**
+
+```json
+"paths": {
+  "@jeffapp/ui-components": ["libs/ui-components/src/index.ts"],
+  "@jeffapp/ui-components-native": ["libs/ui-components-native/src/index.ts"],
+  "@jeffapp/ui-angular": ["libs/ui-angular/src/index.ts"]
+}
+```
+
 ## Nx Affected Architecture (v22)
 
 **Important**: Nx v22 does NOT have `print-affected`. Use `nx affected` commands instead:
+
 - `npx nx affected:build` — build only affected projects
 - `npx nx affected:test` — test only affected projects
 - `npx nx affected --target=<target>` — run any target on affected projects
@@ -116,13 +184,8 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
 
 ---
 
-If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
 
 ---
 
 Updated: 2025-11-13
-
-```
-
-- **Entry**: `src/main.ts` → `src/app/app.ts` (root component)
-```

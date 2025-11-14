@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2017",
+    "lib": ["dom", "es2017"],
+    "declaration": true,
+    "outDir": "../../dist/libs/ui-components-native"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}
