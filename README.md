@@ -1,82 +1,201 @@
-# Jeffapp
+# JeffApp
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+> A full-pipeline portfolio application showcasing modern web development practices, microfrontend architecture, and cross-framework component design.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+## 🎯 Purpose
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+JeffApp is a living portfolio and resume application for Jeff Crosley, built to demonstrate:
 
-## Finish your remote caching setup
+- **Technical proficiency** across multiple languages and frameworks
+- **Modern architecture patterns** including microfrontends and microservices
+- **AI-forward engineering** with test-driven development (TDD)
+- **Cross-framework component libraries** using Web Components
+- **Production-grade CI/CD** with automated testing and deployment
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/5pkEOtSbXR)
+This project serves as both a showcase for prospective employers and a learning platform for exploring new technologies and patterns.
+
+## 🏗️ Architecture
+
+### Microfrontend + Microservices
+
+**Frontend:**
+- `apps/nav-shell` — Angular 20 shell orchestrating multiple microfrontend sub-apps
+- Future sub-apps in various frameworks (React, Vue, Svelte, etc.) to showcase versatility
+
+**Backend:**
+- `apps/api-gateway` — Express.js gateway routing to multiple microservice backends
+- Future microservices in varied languages (Python, Go, Rust, etc.) to demonstrate full-stack capabilities
+
+**Component Libraries:**
+- `@jeffapp/ui-components` — Stencil-based Web Components for production use
+- `@jeffapp/ui-components-native` — Vanilla Web Components showcasing fundamentals
+- `@jeffapp/ui-angular` — Angular-specific utilities and wrappers
+- `@jeffapp/ui-react` — React-specific utilities and wrappers
+
+### Technology Stack
+
+- **Build System:** Nx 22 monorepo with affected-based CI/CD
+- **Frontend:** Angular 20 (standalone components), React 18+
+- **Backend:** Node.js with Express
+- **Components:** Stencil, Web Components API
+- **Testing:** Jest (unit), Playwright (e2e)
+- **CI/CD:** GitHub Actions with Nx Cloud caching
+- **Deployment:** Render (with webhook-based deployments)
+- **Code Quality:** ESLint, Prettier, TypeScript strict mode
 
 
-## Run tasks
+## 🚀 Getting Started
 
-To run the dev server for your app, use:
+### Prerequisites
 
-```sh
+- Node.js 20+
+- npm or yarn
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+**Start the Angular shell:**
+```bash
 npx nx serve nav-shell
 ```
 
-To create a production bundle:
+**Start the API gateway:**
+```bash
+npx nx serve api-gateway
+```
 
-```sh
+**Run affected tests:**
+```bash
+npx nx affected --target=test
+```
+
+**View dependency graph:**
+```bash
+npx nx graph
+```
+
+### Building
+
+**Build specific project:**
+```bash
 npx nx build nav-shell
 ```
 
-To see all available targets to run for a project, run:
-
-```sh
-npx nx show project nav-shell
+**Build all affected projects:**
+```bash
+npx nx affected --target=build
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 🧩 Component Libraries
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Using Web Components
 
-## Add new projects
+**In Angular apps:**
+```typescript
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@jeffapp/ui-components';
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/angular:app demo
+@Component({
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `<app-button label="Click me" variant="primary"></app-button>`
+})
 ```
 
-To generate a new library, use:
+**In React apps:**
+```typescript
+import { loadWebComponents, AppButton } from '@jeffapp/ui-react';
 
-```sh
-npx nx g @nx/angular:lib mylib
+loadWebComponents();
+
+function App() {
+  return <AppButton label="Click me" variant="primary" />;
+}
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Building Component Libraries
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+**Build Stencil components:**
+```bash
+npx nx run ui-components:build
+```
 
+**Build all libraries:**
+```bash
+npx nx run-many --target=build --projects=ui-*
+```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🧪 Development Philosophy
 
-## Install Nx Console
+### Test-Driven Development (TDD)
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+This project follows TDD principles:
+- Features are built test-first when feasible
+- Tests guide implementation and architecture
+- All changes must pass affected tests before deployment
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Modularity & Loose Coupling
 
-## Useful links
+- Components and services are kept loosely coupled
+- Changes are localized to single projects when possible
+- Architecture prioritizes flexibility and scalability
 
-Learn more:
+### AI-Assisted Development
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- AI agents are guided by `.github/copilot-instructions.md`
+- Agents raise concerns about testability and coupling
+- Human oversight ensures architectural consistency
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🚢 CI/CD Pipeline
+
+### GitHub Actions Workflow
+
+- **Automated testing** on all pull requests
+- **Affected-based execution** (only tests/builds changed projects)
+- **Nx Cloud caching** for faster builds
+- **Deployment hooks** to Render on successful merges to main
+
+### Deployment
+
+- **Frontend:** `nav-shell` deployed to Render
+- **Backend:** `api-gateway` deployed to Render
+- **Libraries:** Published as npm packages (future)
+
+## 📚 Project Structure
+
+```
+jeffapp/
+├── apps/
+│   ├── nav-shell/              # Angular 20 shell app
+│   ├── nav-shell-e2e/          # Playwright e2e tests
+│   ├── api-gateway/            # Express.js API gateway
+│   └── api-gateway-e2e/        # API e2e tests
+├── libs/
+│   ├── ui-components/          # Stencil Web Components
+│   ├── ui-components-native/   # Vanilla Web Components
+│   ├── ui-angular/             # Angular utilities
+│   └── ui-react/               # React utilities
+└── .github/
+    ├── copilot-instructions.md # AI agent guidance
+    └── workflows/              # CI/CD pipelines
+```
+
+## 🤝 Contributing
+
+This is a personal portfolio project, but feedback and suggestions are welcome! Please open an issue to discuss any changes.
+
+## 📄 License
+
+MIT License - feel free to use this as inspiration for your own portfolio projects!
+
+## 👨‍💻 About
+
+Built by Jeff Crosley as a demonstration of full-pipeline engineering capabilities. For more information, visit the deployed application or check out the [contact page](apps/nav-shell/src/app/components/contact.component.ts).
+
+---
+
+*Powered by [Nx](https://nx.dev) • Deployed on [Render](https://render.com)*

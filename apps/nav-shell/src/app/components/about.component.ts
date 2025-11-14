@@ -223,42 +223,50 @@ import { Component } from '@angular/core';
   ],
 })
 export class AboutComponent {
-  protected name = 'Software Engineer';
+  protected name = 'Full-Pipeline AI-Forward Engineer';
   protected bio =
-    'Passionate about building scalable, maintainable software solutions and creating engaging user experiences.';
+    'Building modern web applications with microfrontend architecture, cross-framework component libraries, and test-driven development. This portfolio demonstrates proficiency across multiple languages, frameworks, and the full software development lifecycle.';
 
   protected skills = [
-    'Angular',
+    'Angular 20',
+    'React 18+',
     'TypeScript',
+    'Stencil',
+    'Web Components',
     'Node.js',
-    'Express',
-    'RxJS',
+    'Express.js',
     'Nx Monorepo',
-    'SCSS',
+    'Jest',
+    'Playwright',
+    'GitHub Actions',
+    'Docker',
+    'Render',
+    'TDD',
+    'Microfrontends',
     'REST APIs',
   ];
 
   protected experience = [
     {
-      title: 'Senior Software Engineer',
-      company: 'Your Company',
-      duration: '2020 - Present',
+      title: 'Microfrontend Architecture',
+      company: 'JeffApp Project',
+      duration: '2025',
       description:
-        'Led development of full-stack applications and mentored junior developers.',
+        'Designed and implemented a microfrontend shell with Angular 20 to orchestrate multiple sub-apps in varied frameworks, demonstrating architectural versatility and framework expertise.',
     },
     {
-      title: 'Full Stack Developer',
-      company: 'Previous Company',
-      duration: '2018 - 2020',
+      title: 'Cross-Framework Component System',
+      company: 'JeffApp Project',
+      duration: '2025',
       description:
-        'Developed and maintained multiple web applications using modern tech stack.',
+        'Built a hybrid component library system using Stencil Web Components, vanilla Web Components, and framework-specific wrappers for Angular and React, showcasing deep understanding of web standards.',
     },
     {
-      title: 'Junior Developer',
-      company: 'First Company',
-      duration: '2016 - 2018',
+      title: 'CI/CD & DevOps Pipeline',
+      company: 'JeffApp Project',
+      duration: '2025',
       description:
-        'Started career building web applications and learning best practices.',
+        'Implemented automated testing and deployment pipelines with GitHub Actions, Nx Cloud caching, and Render webhooks, demonstrating full-stack DevOps capabilities and modern best practices.',
     },
   ];
 }
