@@ -111,7 +111,7 @@ import { RouterModule } from '@angular/router';
 export class DashboardComponent {
   protected welcomeMessage = 'For All your Jeff Crosley Needs';
   protected description =
-    'Thank you for visitting!  This is a rapidly-changing work in progress.  Please feel free to reach out with any questions or feedback.';
+    'Thank you for visiting!  This is a rapidly-changing work in progress.  Please feel free to reach out with any questions or feedback.';
 
   protected dashboardItems = [
     {
