@@ -213,10 +213,28 @@ function App() {
 
 In CI/CD, use these commands to ensure only changed apps are built, tested, and deployed.
 
+## Deployment Configuration
+
+**Render.com Infrastructure**: The project uses `render.yaml` at the repository root to define all services:
+
+- **jeffapp-api-gateway**: Node.js web service running Express (port 3333)
+
+  - Build: `npx nx build api-gateway --configuration=production`
+  - Start: `node dist/apps/api-gateway/main.js`
+  - Health check: `/health`
+
+- **jeffapp-nav-shell**: Static site hosting for Angular SPA
+  - Build: `npx nx build nav-shell --configuration=production`
+  - Publish path: `dist/apps/nav-shell/browser`
+  - **Critical for SPA routing**: Uses `routes` with `type: rewrite` to serve `index.html` for all routes
+  - This ensures direct navigation to `/dashboard`, `/about`, etc. works in production
+
+**SPA Routing Solution**: The `routes` section in `render.yaml` rewrites all requests to `index.html`, allowing Angular to handle client-side routing. Without this, direct navigation to routes like `/dashboard` returns 404 in production.
+
 ---
 
-If anything is ambiguous, read these files first: `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+If anything is ambiguous, read these files first: `render.yaml`, `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
 
 ---
 
-Updated: 2025-11-13
+Updated: 2025-11-18
