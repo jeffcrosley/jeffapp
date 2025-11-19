@@ -213,28 +213,76 @@ function App() {
 
 In CI/CD, use these commands to ensure only changed apps are built, tested, and deployed.
 
-## Deployment Configuration
+## Deployment Architecture
 
-**Render.com Infrastructure**: The project uses `render.yaml` at the repository root to define all services:
+**GitHub Actions + Render Webhooks**: Clean separation of concerns with affected-only deploys
 
-- **jeffapp-api-gateway**: Node.js web service running Express (port 3333)
+**CI/CD Pipeline** (`.github/workflows/main.yml`):
 
-  - Build: `npx nx build api-gateway --configuration=production`
-  - Start: `node dist/apps/api-gateway/main.js`
-  - Health check: `/health`
+1. **Affected Detection**: Uses `npx nx show projects --affected` to identify changed apps
+2. **Build & Test**: Runs `nx affected --target=lint,test,build` on affected projects only
+3. **Deploy Trigger**: On successful build, triggers Render deploy hooks for affected apps only
+   - Only runs on push to `main` branch (not PRs)
+   - Conditional jobs: `deploy_api_gateway` and `deploy_nav_shell` only run if respective app is affected
 
-- **jeffapp-nav-shell**: Static site hosting for Angular SPA
-  - Build: `npx nx build nav-shell --configuration=production`
-  - Publish path: `dist/apps/nav-shell/browser`
-  - **Critical for SPA routing**: Uses `routes` with `type: rewrite` to serve `index.html` for all routes
+**Render Configuration** (configured in Render dashboard, not code):
+
+- **jeffapp-api-gateway** (Node.js Web Service):
+
+  - Build Command: `npx nx build api-gateway --configuration=production`
+  - Start Command: `node dist/apps/api-gateway/main.js`
+  - Port: 3333 (or `process.env.PORT` for Render)
+  - Health Check: `/health`
+  - Deploy Hook: Set in GitHub secrets as `RENDER_API_DEPLOY_HOOK`
+
+- **jeffapp-nav-shell** (Static Site):
+  - Build Command: `npx nx build nav-shell --configuration=production`
+  - Publish Directory: `dist/apps/nav-shell/browser`
+  - **Critical for SPA Routing**: Configure rewrite rules in Render dashboard:
+    - Source: `/*`
+    - Destination: `/index.html`
+    - Type: `rewrite`
   - This ensures direct navigation to `/dashboard`, `/about`, etc. works in production
+  - Deploy Hook: Set in GitHub secrets as `RENDER_SHELL_DEPLOY_HOOK`
 
-**SPA Routing Solution**: The `routes` section in `render.yaml` rewrites all requests to `index.html`, allowing Angular to handle client-side routing. Without this, direct navigation to routes like `/dashboard` returns 404 in production.
+**Why This Architecture?**
+
+- Single source of truth: GitHub Actions orchestrates the entire pipeline
+- Affected-only deploys: Only changed apps trigger deployments (efficient CI/CD)
+- Render focuses on hosting: Receives webhook, pulls code, builds from source, serves
+- No render.yaml or Dockerfiles needed: Render builds directly from source using configured commands
+
+## Render Dashboard Checklist
+
+Before deployments work correctly, verify these settings in Render dashboard:
+
+**api-gateway service:**
+
+- [ ] Build Command: `npx nx build api-gateway --configuration=production`
+- [ ] Start Command: `node dist/apps/api-gateway/main.js`
+- [ ] Environment: Node
+- [ ] Health Check Path: `/health`
+- [ ] Deploy Hook URL copied to GitHub secrets as `RENDER_API_DEPLOY_HOOK`
+
+**nav-shell service:**
+
+- [ ] Build Command: `npx nx build nav-shell --configuration=production`
+- [ ] Publish Directory: `dist/apps/nav-shell/browser`
+- [ ] Rewrite Rules configured:
+  - Source: `/*`
+  - Destination: `/index.html`
+  - Type: `rewrite`
+- [ ] Deploy Hook URL copied to GitHub secrets as `RENDER_SHELL_DEPLOY_HOOK`
+
+**Both services:**
+
+- [ ] Auto-Deploy: **OFF** (we use webhooks from GitHub Actions)
+- [ ] Branch: `main`
 
 ---
 
-If anything is ambiguous, read these files first: `render.yaml`, `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+If anything is ambiguous, read these files first: `.github/workflows/main.yml`, `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
 
 ---
 
-Updated: 2025-11-18
+Updated: 2025-01-18
