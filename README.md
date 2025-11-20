@@ -23,6 +23,8 @@ This project serves as both a showcase for prospective employers and a learning 
 - `apps/nav-shell` — Angular 20 shell orchestrating multiple microfrontend sub-apps
 - Future sub-apps in various frameworks (React, Vue, Svelte, etc.) to showcase versatility
 
+Nav shell uses a condensed pages architecture: page components live in `src/app/pages/` with inline templates and styles, and compose UI from shared Nx libraries.
+
 **Backend:**
 
 - `apps/api-gateway` — Express.js gateway routing to multiple microservice backends
@@ -184,6 +186,7 @@ This project follows TDD principles:
 jeffapp/
 ├── apps/
 │   ├── nav-shell/              # Angular 20 shell app
+│   │   └── src/app/pages/      # Page components (inline template + styles)
 │   ├── nav-shell-e2e/          # Playwright e2e tests
 │   ├── api-gateway/            # Express.js API gateway
 │   └── api-gateway-e2e/        # API e2e tests
@@ -207,7 +210,7 @@ MIT License - feel free to use this as inspiration for your own portfolio projec
 
 ## 👨‍💻 About
 
-Built by Jeff Crosley as a demonstration of full-pipeline engineering capabilities. For more information, visit the deployed application or check out the [contact page](apps/nav-shell/src/app/components/contact.component.ts).
+Built by Jeff Crosley as a demonstration of full-pipeline engineering capabilities. For more information, visit the deployed application or check out the [contact page](apps/nav-shell/src/app/pages/contact.component.ts).
 
 ---
 
