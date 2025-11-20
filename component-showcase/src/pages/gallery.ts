@@ -118,13 +118,13 @@ function setupInteractivity(container: HTMLElement): void {
     button.addEventListener('buttonClick', (event: Event) => {
       const customEvent = event as CustomEvent;
       console.log('Button clicked:', customEvent.detail);
-      
+
       // Visual feedback
       const feedback = document.createElement('div');
       feedback.className = 'click-feedback';
       feedback.textContent = `✓ ${customEvent.detail.label} clicked`;
       container.querySelector('.gallery-header')?.appendChild(feedback);
-      
+
       setTimeout(() => feedback.remove(), 2000);
     });
   });
