@@ -29,6 +29,11 @@ export class EnvironmentService {
    * In production, loads from config.json
    */
   getShowcaseUrl(): string {
+    // Dev: if running on localhost, always use local showcase
+    if (this.isLocalDevelopment()) {
+      return 'http://localhost:4300';
+    }
+
     // Production: use config.json
     if (this.config?.showcaseUrl) {
       return this.config.showcaseUrl;
@@ -39,7 +44,7 @@ export class EnvironmentService {
       return (globalThis as any).SHOWCASE_URL;
     }
 
-    // Dev: direct URL to showcase dev server
+    // Fallback
     return 'http://localhost:4300';
   }
 
@@ -47,6 +52,11 @@ export class EnvironmentService {
    * Get the API gateway URL
    */
   getApiGatewayUrl(): string {
+    // Dev: if running on localhost, always use local gateway
+    if (this.isLocalDevelopment()) {
+      return 'http://localhost:3333';
+    }
+
     // Production: use config.json
     if (this.config?.apiGatewayUrl) {
       return this.config.apiGatewayUrl;
@@ -58,6 +68,15 @@ export class EnvironmentService {
     }
 
     return 'http://localhost:3333';
+  }
+
+  /**
+   * Check if running in local development mode
+   */
+  private isLocalDevelopment(): boolean {
+    return typeof window !== 'undefined' && 
+           (window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1');
   }
 
   /**
