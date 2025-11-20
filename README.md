@@ -20,15 +20,28 @@ This project serves as both a showcase for prospective employers and a learning 
 
 **Frontend:**
 
-- `apps/nav-shell` — Angular 20 shell orchestrating multiple microfrontend sub-apps
-- Future sub-apps in various frameworks (React, Vue, Svelte, etc.) to showcase versatility
-
 Nav shell uses a condensed pages architecture: page components live in `src/app/pages/` with inline templates and styles, and compose UI from shared Nx libraries.
 
-**Backend:**
+### Pages Architecture & Angular Control Flow
 
-- `apps/api-gateway` — Express.js gateway routing to multiple microservice backends
-- Future microservices in varied languages (Python, Go, Rust, etc.) to demonstrate full-stack capabilities
+All frontend apps (Angular shell, Vite showcase) use a `/pages` directory pattern where each page component keeps its inline template and styles inside the `.ts` file. This keeps navigation wiring simple and co-locates view logic.
+
+Angular pages now use the **new control flow syntax** (`@if`, `@for`, `@switch`) introduced in Angular 17+ instead of structural directives (`*ngIf`, `*ngFor`). Examples:
+
+```html
+@for (link of navigationLinks; track link.label) {
+<li>
+  @if (link.route.startsWith('/')) {
+  <a [routerLink]="link.route">{{ link.label }}</a>
+  } @else {
+  <a [href]="link.route" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+  }
+</li>
+}
+```
+
+Benefits: better performance, clearer scoping, improved ergonomics. Use `$index`, `$count`, `$first`, `$last`, `$even`, `$odd` for loop state (e.g., `let last = $last`).
+**Backend:**
 
 **Component Libraries:**
 

@@ -14,12 +14,14 @@ import { RouterModule } from '@angular/router';
       </div>
 
       <div class="dashboard-grid">
-        <div *ngFor="let item of dashboardItems" class="dashboard-card">
+        @for (item of dashboardItems; track item.title) {
+        <div class="dashboard-card">
           <div class="card-icon">{{ item.icon }}</div>
           <h3>{{ item.title }}</h3>
           <p>{{ item.description }}</p>
           <a [routerLink]="item.route" class="card-link">Explore →</a>
         </div>
+        }
       </div>
     </section>
   `,

@@ -45,8 +45,8 @@ Repository-specific patterns and examples (do not change unless you inspected fi
 
 Files that capture primary conventions:
 
-- `apps/nav-shell/src/app/pages/` — condensed page architecture (template + styles inline in .ts).
-- `apps/nav-shell/src/app/app.ts` — root component with inline template and styles.
+- `apps/nav-shell/src/app/pages/` — condensed page architecture (template + styles inline in .ts) using modern `@if/@for` control flow.
+- `apps/nav-shell/src/app/app.ts` — root component with inline template and styles; navigation uses `@for` and `@if/@else` control flow.
 - `apps/nav-shell/src/app/app.routes.ts` — route definitions importing from `./pages/`.
 - `apps/api-gateway/src/main.ts` — Express entry, health check, proxy templates.
 - `nx.json` — caching/target defaults (tests run with passWithNoTests; builds cache enabled).
@@ -54,7 +54,7 @@ Files that capture primary conventions:
 
 Creating new pages:
 
-Create a `.ts` file in `apps/nav-shell/src/app/pages/` with inline template and styles. Pages should render UI composed from Nx libraries (e.g., `@jeffapp/ui-components`, `@jeffapp/ui-angular`).
+Create a `.ts` file in `apps/nav-shell/src/app/pages/` with inline template and styles. Prefer Angular's modern control flow syntax (`@if`, `@for`, `@switch`) rather than legacy structural directives. Pages should render UI composed from Nx libraries (e.g., `@jeffapp/ui-components`, `@jeffapp/ui-angular`).
 
 ```typescript
 import { Component, CommonModule } from '@angular/core';
@@ -63,13 +63,30 @@ import { Component, CommonModule } from '@angular/core';
   selector: 'app-my-component',
   standalone: true,
   imports: [CommonModule],
-  template: \`<div class="my-class">{{ data }}</div>\`,
-  styles: [\`
-    .my-class { color: blue; }
-  \`],
+  template: `
+    @if (show) {
+    <div class="my-class">{{ data }}</div>
+    } @else {
+    <div class="my-class">Hidden</div>
+    }
+    <ul>
+      @for (item of items; track item) {
+      <li>{{ item }}</li>
+      }
+    </ul>
+  `,
+  styles: [
+    `
+      .my-class {
+        color: blue;
+      }
+    `,
+  ],
 })
 export class MyPage {
   protected data = 'Hello';
+  protected show = true;
+  protected items = ['One', 'Two', 'Three'];
 }
 ```
 ````
@@ -243,7 +260,7 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
     - Source: `/*`
     - Destination: `/index.html`
     - Type: `rewrite`
-  - This ensures direct navigation to `/dashboard`, `/about`, etc. works in production
+  - This ensures direct navigation to `/home`, `/about`, etc. works in production
   - Deploy Hook: Set in GitHub secrets as `RENDER_SHELL_DEPLOY_HOOK`
 
 **Why This Architecture?**

@@ -20,9 +20,9 @@ import { Component } from '@angular/core';
         <div class="skills-section">
           <h3>Skills & Technologies</h3>
           <div class="skills-grid">
-            <span *ngFor="let skill of skills" class="skill-badge">{{
-              skill
-            }}</span>
+            @for (skill of skills; track skill) {
+            <span class="skill-badge">{{ skill }}</span>
+            }
           </div>
         </div>
 
@@ -30,11 +30,8 @@ import { Component } from '@angular/core';
         <div class="experience-section">
           <h3>Professional Experience</h3>
           <div class="timeline">
-            <div
-              *ngFor="let job of experience; let last = last"
-              class="timeline-item"
-              [class.last]="last"
-            >
+            @for (job of experience; track job.title; let last = $last) {
+            <div class="timeline-item" [class.last]="last">
               <div class="timeline-dot"></div>
               <div class="timeline-content">
                 <h4>{{ job.title }}</h4>
@@ -43,6 +40,7 @@ import { Component } from '@angular/core';
                 <p class="description">{{ job.description }}</p>
               </div>
             </div>
+            }
           </div>
         </div>
       </div>

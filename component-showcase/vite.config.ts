@@ -9,6 +9,10 @@ export default defineConfig(() => ({
   server: {
     port: 4300,
     host: 'localhost',
+    cors: {
+      origin: ['http://localhost:4200'],
+      credentials: true,
+    },
   },
   preview: {
     port: 4301,

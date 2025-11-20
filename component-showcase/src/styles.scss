@@ -3,6 +3,8 @@
  * Modern, clean design for showcasing Web Components
  */
 
+@use 'sass:color';
+
 // Design tokens
 $primary-color: #2c3e50;
 $secondary-color: #3498db;
@@ -60,7 +62,8 @@ body {
 
   .subtitle {
     font-size: 1.25rem;
-    color: lighten($text-color, 20%);
+    // Replaced deprecated lighten() with color.scale for consistent lightening
+    color: color.scale($text-color, $lightness: 20%);
     max-width: 700px;
     margin: 0 auto;
 
@@ -104,7 +107,7 @@ body {
   }
 
   .section-description {
-    color: lighten($text-color, 20%);
+    color: color.scale($text-color, $lightness: 20%);
     margin-bottom: 30px;
     font-size: 1.1rem;
   }
@@ -166,7 +169,7 @@ body {
       user-select: none;
 
       &:hover {
-        background: lighten($primary-color, 5%);
+        background: color.scale($primary-color, $lightness: 5%);
       }
     }
 
@@ -190,8 +193,8 @@ body {
 .integration-notes {
   background: linear-gradient(
     135deg,
-    lighten($secondary-color, 35%),
-    lighten($secondary-color, 40%)
+    color.scale($secondary-color, $lightness: 35%),
+    color.scale($secondary-color, $lightness: 40%)
   );
 
   .integration-grid {
@@ -219,7 +222,7 @@ body {
 
     p {
       margin-bottom: 10px;
-      color: lighten($text-color, 15%);
+      color: color.scale($text-color, $lightness: 15%);
     }
 
     .inline-code {
@@ -240,7 +243,7 @@ body {
   margin-top: 60px;
   padding-top: 30px;
   border-top: 2px solid $border-color;
-  color: lighten($text-color, 25%);
+  color: color.scale($text-color, $lightness: 25%);
 
   p {
     margin-bottom: 8px;

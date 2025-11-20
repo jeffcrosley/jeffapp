@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -11,30 +11,29 @@ import { RouterModule } from '@angular/router';
         <h1 class="portfolio-title">{{ portfolioTitle }}</h1>
         <nav class="navbar">
           <ul class="nav-links">
-            <li *ngFor="let link of navigationLinks">
+            @for (link of navigationLinks; track link.label) {
+            <li>
+              @if (link.route.startsWith('/')) {
               <a
-                *ngIf="!link.external"
                 [routerLink]="link.route"
                 routerLinkActive="active"
                 [routerLinkActiveOptions]="{ exact: false }"
               >
                 {{ link.label }}
               </a>
-              <a
-                *ngIf="link.external"
-                [href]="link.route"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              } @else {
+              <a [href]="link.route" target="_blank" rel="noopener noreferrer">
                 {{ link.label }}
               </a>
+              }
             </li>
+            }
           </ul>
         </nav>
       </div>
     </header>
 
-    <main class="main-content">
+    <main class="main-content" [class.subapp-mode]="isSubappRoute()">
       <router-outlet></router-outlet>
     </main>
   `,
@@ -134,19 +133,40 @@ import { RouterModule } from '@angular/router';
         max-width: 1200px;
         margin: 0 auto;
         padding: 40px 20px;
+        min-height: calc(100vh - 60px); // Ensure content extends to bottom
 
         @media (max-width: 768px) {
           padding: 20px 15px;
+        }
+
+        // Subapp mode: remove all padding/margin and fill viewport
+        &.subapp-mode {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+          height: calc(100vh - 60px); // Full height minus header
+          overflow: hidden;
         }
       }
     `,
   ],
 })
 export class App {
+  private router = inject(Router);
+
   protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
     { label: 'Home', route: '/home' },
-    { label: 'Components', route: 'http://localhost:4300', external: true },
+    { label: 'Components', route: '/components' },
     { label: 'Contact', route: '/contact' },
   ];
+
+  /**
+   * Check if current route is a subapp (microfrontend) route
+   * Subapp routes should fill the entire space below the header
+   */
+  protected isSubappRoute(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/components');
+  }
 }
