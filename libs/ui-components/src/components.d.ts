@@ -20,6 +20,34 @@ export namespace Components {
          */
         "variant": 'primary' | 'secondary';
     }
+    interface AppCard {
+        /**
+          * The card description text
+         */
+        "description": string;
+        /**
+          * Alt text for the image (defaults to "Card image")
+          * @default 'Card image'
+         */
+        "imageAlt": string;
+        /**
+          * Optional image URL to display at the top of the card
+         */
+        "imageUrl"?: string;
+        /**
+          * The card title
+         */
+        "title": string;
+        /**
+          * Card variant: default, highlighted, or compact
+          * @default 'default'
+         */
+        "variant": 'default' | 'highlighted' | 'compact';
+    }
+}
+export interface AppCardCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLAppCardElement;
 }
 declare global {
     interface HTMLAppButtonElement extends Components.AppButton, HTMLStencilElement {
@@ -28,8 +56,26 @@ declare global {
         prototype: HTMLAppButtonElement;
         new (): HTMLAppButtonElement;
     };
+    interface HTMLAppCardElementEventMap {
+        "cardClick": { title: string };
+    }
+    interface HTMLAppCardElement extends Components.AppCard, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLAppCardElementEventMap>(type: K, listener: (this: HTMLAppCardElement, ev: AppCardCustomEvent<HTMLAppCardElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLAppCardElementEventMap>(type: K, listener: (this: HTMLAppCardElement, ev: AppCardCustomEvent<HTMLAppCardElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLAppCardElement: {
+        prototype: HTMLAppCardElement;
+        new (): HTMLAppCardElement;
+    };
     interface HTMLElementTagNameMap {
         "app-button": HTMLAppButtonElement;
+        "app-card": HTMLAppCardElement;
     }
 }
 declare namespace LocalJSX {
@@ -47,8 +93,37 @@ declare namespace LocalJSX {
          */
         "variant"?: 'primary' | 'secondary';
     }
+    interface AppCard {
+        /**
+          * The card description text
+         */
+        "description": string;
+        /**
+          * Alt text for the image (defaults to "Card image")
+          * @default 'Card image'
+         */
+        "imageAlt"?: string;
+        /**
+          * Optional image URL to display at the top of the card
+         */
+        "imageUrl"?: string;
+        /**
+          * Emitted when the card is clicked
+         */
+        "onCardClick"?: (event: AppCardCustomEvent<{ title: string }>) => void;
+        /**
+          * The card title
+         */
+        "title": string;
+        /**
+          * Card variant: default, highlighted, or compact
+          * @default 'default'
+         */
+        "variant"?: 'default' | 'highlighted' | 'compact';
+    }
     interface IntrinsicElements {
         "app-button": AppButton;
+        "app-card": AppCard;
     }
 }
 export { LocalJSX as JSX };
@@ -56,6 +131,7 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "app-button": LocalJSX.AppButton & JSXBase.HTMLAttributes<HTMLAppButtonElement>;
+            "app-card": LocalJSX.AppCard & JSXBase.HTMLAttributes<HTMLAppCardElement>;
         }
     }
 }
