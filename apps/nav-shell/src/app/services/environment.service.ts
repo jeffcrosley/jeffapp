@@ -8,13 +8,33 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class EnvironmentService {
+  private config: any = null;
+
+  /**
+   * Load runtime configuration from config.json
+   * Call this during app initialization
+   */
+  async loadConfig(): Promise<void> {
+    try {
+      const response = await fetch('/config.json');
+      this.config = await response.json();
+    } catch (error) {
+      console.warn('Could not load config.json, using defaults:', error);
+    }
+  }
+
   /**
    * Get the component showcase URL
    * In dev, uses direct URL to localhost:4300
-   * In production, this should be set via build-time replacement or runtime config
+   * In production, loads from config.json
    */
   getShowcaseUrl(): string {
-    // Check for build-time injected value first (via fileReplacements or define)
+    // Production: use config.json
+    if (this.config?.showcaseUrl) {
+      return this.config.showcaseUrl;
+    }
+
+    // Check for build-time injected value (legacy support)
     if (typeof (globalThis as any).SHOWCASE_URL === 'string') {
       return (globalThis as any).SHOWCASE_URL;
     }
@@ -27,6 +47,12 @@ export class EnvironmentService {
    * Get the API gateway URL
    */
   getApiGatewayUrl(): string {
+    // Production: use config.json
+    if (this.config?.apiGatewayUrl) {
+      return this.config.apiGatewayUrl;
+    }
+
+    // Check for build-time injected value (legacy support)
     if (typeof (globalThis as any).API_GATEWAY_URL === 'string') {
       return (globalThis as any).API_GATEWAY_URL;
     }

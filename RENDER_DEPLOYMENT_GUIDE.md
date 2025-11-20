@@ -13,7 +13,7 @@
 
 ### Production iframe URL Configuration
 
-- [ ] Get deployed showcase URL from Render (e.g., `https://component-showcase.onrender.com`)
+- [ ] Get deployed showcase URL from Render (e.g., `https://components.jeffcrosley.com`)
 - [ ] Choose configuration method:
   - **Option 1 (Recommended):** Create `apps/nav-shell/public/config.json` with `showcaseUrl`
   - **Option 2 (Simpler):** Set `SHOWCASE_URL` environment variable in Render for nav-shell
@@ -78,7 +78,7 @@ npx nx build nav-shell --configuration=production
 **Environment Variables (optional):**
 
 - `SHOWCASE_URL`: Full URL to component-showcase Render site
-  - Example: `https://component-showcase.onrender.com`
+  - Example: `https://components.jeffcrosley.com`
   - Used by `EnvironmentService` for iframe src in production
 
 ---
@@ -126,7 +126,7 @@ deploy_component_showcase:
 
    ```json
    {
-     "showcaseUrl": "https://component-showcase.onrender.com"
+    "showcaseUrl": "https://components.jeffcrosley.com"
    }
    ```
 
@@ -152,7 +152,7 @@ deploy_component_showcase:
 1. Update `.env.production`:
 
    ```
-   SHOWCASE_URL=https://component-showcase.onrender.com
+  SHOWCASE_URL=https://components.jeffcrosley.com
    ```
 
 2. Inject at build time via Angular's `fileReplacements` or define
@@ -177,7 +177,7 @@ npx nx serve nav-shell
 **Production URLs:**
 
 - Shell: `https://nav-shell.onrender.com`
-- Showcase: `https://component-showcase.onrender.com`
+- Showcase: `https://components.jeffcrosley.com`
 - Iframe src: Full showcase URL (set via env or config.json)
 
 ---

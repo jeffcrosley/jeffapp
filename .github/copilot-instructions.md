@@ -273,8 +273,10 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
   - Build Command: `npx nx build component-showcase --configuration=production`
   - Publish Directory: `dist/apps/component-showcase`
   - **Critical for SPA Routing**: Same rewrite rule as nav-shell (see above)
+    - **Custom Domain**: `https://components.jeffcrosley.com` (configured in Render)
   - Deploy Hook: Set in GitHub secrets as `RENDER_SHOWCASE_DEPLOY_HOOK`
   - Purpose: Standalone gallery of UI components, embedded via iframe in nav-shell's `/components` page
+  - **Important**: Update `apps/nav-shell/public/config.json` with production URL for iframe src
 
 **Why This Architecture?**
 
