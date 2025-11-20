@@ -35,6 +35,7 @@ class NativeBadge extends HTMLElement {
     const label = this.getAttribute('label') || 'Badge';
     const color = this.getStatusColor(status);
 
+    if (!this.shadowRoot) return;
     this.shadowRoot.innerHTML = `
       <style>
         :host {

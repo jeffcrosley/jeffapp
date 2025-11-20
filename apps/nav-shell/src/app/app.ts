@@ -13,9 +13,18 @@ import { RouterModule } from '@angular/router';
           <ul class="nav-links">
             <li *ngFor="let link of navigationLinks">
               <a
+                *ngIf="!link.external"
                 [routerLink]="link.route"
                 routerLinkActive="active"
                 [routerLinkActiveOptions]="{ exact: false }"
+              >
+                {{ link.label }}
+              </a>
+              <a
+                *ngIf="link.external"
+                [href]="link.route"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 {{ link.label }}
               </a>
@@ -137,6 +146,7 @@ export class App {
   protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
     { label: 'Home', route: '/dashboard' },
+    { label: 'Components', route: 'http://localhost:4200', external: true },
     { label: 'Contact', route: '/contact' },
   ];
 }

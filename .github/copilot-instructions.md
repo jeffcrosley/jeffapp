@@ -22,7 +22,8 @@ This is a **portfolio/resume application** for Jeff Crosley, a full-pipeline AI-
 
 - Frontend: `apps/nav-shell` — Angular 20, standalone components, bootstrapApplication pattern (entry: `src/main.ts` → `src/app/app.ts`).
 - Backend: `apps/api-gateway` — Express gateway with a `/health` endpoint; proxy templates are in `src/main.ts` (port defaults to 3333).
-- Tooling: Nx (v22), Jest for unit tests, Playwright for e2e, ESLint + Prettier, Webpack for Node builds.
+- Tooling: Nx (v22), Jest for unit tests, Vitest (v3.2.4) for Vite apps, Playwright for e2e, ESLint + Prettier, Webpack for Node builds.
+- **Important**: Vitest v3.2.4 is required for Angular 20 compatibility. When Nx adds Angular 21 support, upgrade to vitest@^4.0.0.
 
 Quick commands you can suggest or run:
 

@@ -16,7 +16,7 @@ class NativeCard extends HTMLElement {
     this.render();
   }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(_name: string, oldValue: string, newValue: string) {
     if (oldValue !== newValue) {
       this.render();
     }
@@ -26,6 +26,7 @@ class NativeCard extends HTMLElement {
     const title = this.getAttribute('title') || 'Card Title';
     const description = this.getAttribute('description') || 'Card description';
 
+    if (!this.shadowRoot) return;
     this.shadowRoot.innerHTML = `
       <style>
         :host {
