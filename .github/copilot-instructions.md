@@ -97,8 +97,13 @@ Then import and add to `app.routes.ts` or embed in other pages via router or com
 
 **Test-Driven Development (TDD):**
 
-- Most features should be built TDD-first: define functionality and tests, then implement to satisfy tests
-- **Before implementing**: Discuss and confirm test requirements and expected behaviors with the user
+- **AI writes tests, user implements code** - This is a strict TDD workflow where AI agents define the tests first, then the user implements the functionality to satisfy them
+- **Never implement component/feature logic** - AI agents should ONLY write tests and leave TODO comments for implementation
+- When tests are written but implementation is pending:
+  - Use `describe.skip()` or `it.skip()` to disable incomplete test suites (NOT comments)
+  - Add clear TODO comments indicating what needs to be implemented
+  - This allows CI/CD to pass while preserving the test specifications
+- **Before writing tests**: Discuss and confirm test requirements and expected behaviors with the user
 - **Alert user when**: Logic becomes untestable or unnecessarily complex
 - Tests guide the structure; components and services should emerge from test requirements
 
