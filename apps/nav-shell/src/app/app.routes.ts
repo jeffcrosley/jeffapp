@@ -1,7 +1,7 @@
 import { Route } from '@angular/router';
-import { AboutComponent } from './components/about.component';
-import { ContactComponent } from './components/contact.component';
-import { DashboardComponent } from './components/dashboard.component';
+import { AboutComponent } from './pages/about.component';
+import { ContactComponent } from './pages/contact.component';
+import { DashboardComponent } from './pages/dashboard.component';
 
 export const appRoutes: Route[] = [
   {

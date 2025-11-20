@@ -35,25 +35,25 @@ Quick commands you can suggest or run:
 
 Repository-specific patterns and examples (do not change unless you inspected files):
 
-- nav-shell uses a **condensed component architecture**: all component .ts files live in `/components/` with **inline templates (template property) and styles (styles property)**.
-  - Example: `apps/nav-shell/src/app/components/about.component.ts` contains the template string and SCSS styles array inline.
-  - Routes are defined in `app.routes.ts` and import components from `./components/`.
+- nav-shell uses a **condensed page architecture**: all page .ts files live in `/pages/` with **inline templates (template property) and styles (styles property)**. Pages compose UI from shared libraries in `libs/`.
+  - Example: `apps/nav-shell/src/app/pages/about.component.ts` contains the template string and SCSS styles array inline.
+  - Routes are defined in `app.routes.ts` and import pages from `./pages/`.
   - Root component (`app.ts`) also uses the condensed pattern with inline template and styles.
 - api-gateway exposes `/health` in `apps/api-gateway/src/main.ts`. Proxy middleware examples are commented there — when adding a sub-service, uncomment and set `target` to the sub-service URL and pathRewrite as needed.
 - Project ports: `nav-shell` normally uses 4200 for Angular dev (follow `project.json`), `api-gateway` uses 3333 or `process.env.PORT` for cloud.
 
 Files that capture primary conventions:
 
-- `apps/nav-shell/src/app/components/` — condensed component architecture (template + styles inline in .ts).
+- `apps/nav-shell/src/app/pages/` — condensed page architecture (template + styles inline in .ts).
 - `apps/nav-shell/src/app/app.ts` — root component with inline template and styles.
-- `apps/nav-shell/src/app/app.routes.ts` — route definitions importing from `./components/`.
+- `apps/nav-shell/src/app/app.routes.ts` — route definitions importing from `./pages/`.
 - `apps/api-gateway/src/main.ts` — Express entry, health check, proxy templates.
 - `nx.json` — caching/target defaults (tests run with passWithNoTests; builds cache enabled).
 - `package.json` — dependency matrix (Angular v20, Nx v22). Use Nx generators where possible (`@nx/angular`, `@nx/node`).
 
-Creating new components:
+Creating new pages:
 
-Create `.ts` file in `apps/nav-shell/src/app/components/` with inline template and styles:
+Create a `.ts` file in `apps/nav-shell/src/app/pages/` with inline template and styles. Pages should render UI composed from Nx libraries (e.g., `@jeffapp/ui-components`, `@jeffapp/ui-angular`).
 
 ```typescript
 import { Component, CommonModule } from '@angular/core';
@@ -67,13 +67,13 @@ import { Component, CommonModule } from '@angular/core';
     .my-class { color: blue; }
   \`],
 })
-export class MyComponent {
+export class MyPage {
   protected data = 'Hello';
 }
 ```
 ````
 
-Then import and add to `app.routes.ts` or use in other components' template.
+Then import and add to `app.routes.ts` or embed in other pages via router or composition.
 
 ## Development Philosophy & AI Agent Role
 
@@ -281,7 +281,7 @@ Before deployments work correctly, verify these settings in Render dashboard:
 
 ---
 
-If anything is ambiguous, read these files first: `.github/workflows/main.yml`, `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/components/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
+If anything is ambiguous, read these files first: `.github/workflows/main.yml`, `apps/api-gateway/src/main.ts`, `apps/nav-shell/src/app/app.ts`, `apps/nav-shell/src/app/pages/`, `libs/ui-components/`, `nx.json`, `package.json`, and `apps/*/project.json`.
 
 ---
 
