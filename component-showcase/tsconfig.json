@@ -18,13 +18,5 @@
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["src"],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+  "include": ["src"]
 }
