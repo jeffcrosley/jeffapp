@@ -136,7 +136,7 @@ import { RouterModule } from '@angular/router';
 export class App {
   protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
-    { label: 'Dashboard', route: '/dashboard' },
+    { label: 'Home', route: '/dashboard' },
     { label: 'Contact', route: '/contact' },
   ];
 }
