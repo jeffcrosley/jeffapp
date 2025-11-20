@@ -129,23 +129,35 @@ import { Router, RouterModule } from '@angular/router';
         }
       }
 
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      .portfolio-header {
+        flex-shrink: 0;
+      }
+
       .main-content {
+        flex: 1;
         max-width: 1200px;
         margin: 0 auto;
         padding: 40px 20px;
-        min-height: calc(100vh - 60px); // Ensure content extends to bottom
+        overflow-y: auto;
 
         @media (max-width: 768px) {
           padding: 20px 15px;
         }
 
-        // Subapp mode: remove all padding/margin and fill viewport
+        // Subapp mode: remove all padding/margin and fill available space
         &.subapp-mode {
           max-width: none;
           margin: 0;
           padding: 0;
-          height: calc(100vh - 60px); // Full height minus header
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
       }
     `,
