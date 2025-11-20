@@ -6,11 +6,11 @@ import { DashboardComponent } from './pages/dashboard.component';
 export const appRoutes: Route[] = [
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/home',
     pathMatch: 'full',
   },
   {
-    path: 'dashboard',
+    path: 'home',
     component: DashboardComponent,
   },
   {
@@ -23,6 +23,6 @@ export const appRoutes: Route[] = [
   },
   {
     path: '**',
-    redirectTo: '/dashboard',
+    redirectTo: '/home',
   },
 ];

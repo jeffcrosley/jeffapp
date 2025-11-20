@@ -7,11 +7,11 @@ export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/component-showcase',
   server: {
-    port: 4200,
+    port: 4300,
     host: 'localhost',
   },
   preview: {
-    port: 4300,
+    port: 4301,
     host: 'localhost',
   },
   plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
