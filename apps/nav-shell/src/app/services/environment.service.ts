@@ -10,7 +10,7 @@ import { Injectable } from '@angular/core';
 export class EnvironmentService {
   /**
    * Get the component showcase URL
-   * In dev, uses proxied path for same-origin benefits
+   * In dev, uses direct URL to localhost:4300
    * In production, this should be set via build-time replacement or runtime config
    */
   getShowcaseUrl(): string {
@@ -19,9 +19,8 @@ export class EnvironmentService {
       return (globalThis as any).SHOWCASE_URL;
     }
 
-    // Dev: use proxied path (same origin, no CORS issues)
-    // The proxy.conf.json routes /showcase -> http://localhost:4300
-    return '/showcase';
+    // Dev: direct URL to showcase dev server
+    return 'http://localhost:4300';
   }
 
   /**

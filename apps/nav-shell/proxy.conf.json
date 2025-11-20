@@ -6,6 +6,7 @@
     "pathRewrite": {
       "^/showcase": ""
     },
-    "logLevel": "debug"
+    "logLevel": "debug",
+    "ws": true
   }
 }
