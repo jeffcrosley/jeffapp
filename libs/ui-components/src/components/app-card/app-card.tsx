@@ -39,18 +39,9 @@ export class AppCard {
    */
   @Event() cardClick: EventEmitter<{ title: string }>;
 
-  private handleClick = () => {
-    // TODO: Emit cardClick event with { title: this.title }
-  };
-
-  private handleKeyPress = (_event: KeyboardEvent) => {
-    // TODO: Handle Enter (keyCode 13) and Space (keyCode 32) key presses
-    // Call handleClick() when either key is pressed
-    // Hint: Access keyCode via _event.keyCode
-  };
-
   render() {
     // TODO: Implement the render method
+    // You'll need to add event handlers (handleClick, handleKeyPress) when implementing
     // Requirements:
     // 1. Root element should be a div with class "card" and "card-{variant}"
     // 2. Add role="button", tabindex="0", aria-label with title
