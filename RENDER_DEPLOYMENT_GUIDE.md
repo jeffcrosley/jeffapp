@@ -126,7 +126,7 @@ deploy_component_showcase:
 
    ```json
    {
-    "showcaseUrl": "https://components.jeffcrosley.com"
+     "showcaseUrl": "https://components.jeffcrosley.com"
    }
    ```
 
@@ -152,7 +152,7 @@ deploy_component_showcase:
 1. Update `.env.production`:
 
    ```
-  SHOWCASE_URL=https://components.jeffcrosley.com
+   SHOWCASE_URL=https://components.jeffcrosley.com
    ```
 
 2. Inject at build time via Angular's `fileReplacements` or define
