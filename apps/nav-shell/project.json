@@ -55,7 +55,8 @@
           "buildTarget": "nav-shell:build:production"
         },
         "development": {
-          "buildTarget": "nav-shell:build:development"
+          "buildTarget": "nav-shell:build:development",
+          "proxyConfig": "apps/nav-shell/proxy.conf.json"
         }
       },
       "defaultConfiguration": "development"

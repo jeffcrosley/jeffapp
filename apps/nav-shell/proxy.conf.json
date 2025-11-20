@@ -1,0 +1,11 @@
+{
+  "/showcase": {
+    "target": "http://localhost:4300",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/showcase": ""
+    },
+    "logLevel": "debug"
+  }
+}
