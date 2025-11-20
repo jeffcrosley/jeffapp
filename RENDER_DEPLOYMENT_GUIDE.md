@@ -1,5 +1,25 @@
 # Render Deployment Configuration
 
+## Quick Setup Checklist
+
+### Component Showcase Deployment
+
+- [ ] Create static site in Render dashboard with name: `component-showcase`
+- [ ] Configure build settings (see below)
+- [ ] Set up SPA rewrite rule: `/*` → `/index.html`
+- [ ] Copy deploy hook URL from Render
+- [ ] Add to GitHub Secrets as: `RENDER_SHOWCASE_DEPLOY_HOOK`
+- [ ] ✅ GitHub Actions workflow already configured (see `deploy_component_showcase` job)
+
+### Production iframe URL Configuration
+
+- [ ] Get deployed showcase URL from Render (e.g., `https://component-showcase.onrender.com`)
+- [ ] Choose configuration method:
+  - **Option 1 (Recommended):** Create `apps/nav-shell/public/config.json` with `showcaseUrl`
+  - **Option 2 (Simpler):** Set `SHOWCASE_URL` environment variable in Render for nav-shell
+
+---
+
 ## Component Showcase (Static Site)
 
 ### Render Dashboard Settings
@@ -12,7 +32,7 @@
   ```bash
   npx nx build component-showcase --configuration=production
   ```
-- **Publish Directory:** `dist/component-showcase`
+- **Publish Directory:** `dist/apps/component-showcase`
 - **Branch:** `main`
 - **Auto-Deploy:** OFF (use GitHub Actions webhooks)
 
@@ -29,7 +49,7 @@
    - Default behavior (no `X-Frame-Options`) allows embedding
    - If needed in future, front with a minimal Node service to add:
      ```
-     Content-Security-Policy: frame-ancestors https://jeffapp-nav-shell.onrender.com
+     Content-Security-Policy: frame-ancestors https://nav-shell.onrender.com
      ```
 
 **Environment Variables:**
@@ -58,7 +78,7 @@ npx nx build nav-shell --configuration=production
 **Environment Variables (optional):**
 
 - `SHOWCASE_URL`: Full URL to component-showcase Render site
-  - Example: `https://jeffapp-component-showcase.onrender.com`
+  - Example: `https://component-showcase.onrender.com`
   - Used by `EnvironmentService` for iframe src in production
 
 ---
@@ -106,7 +126,7 @@ deploy_component_showcase:
 
    ```json
    {
-     "showcaseUrl": "https://jeffapp-component-showcase.onrender.com"
+     "showcaseUrl": "https://component-showcase.onrender.com"
    }
    ```
 
@@ -132,7 +152,7 @@ deploy_component_showcase:
 1. Update `.env.production`:
 
    ```
-   SHOWCASE_URL=https://jeffapp-component-showcase.onrender.com
+   SHOWCASE_URL=https://component-showcase.onrender.com
    ```
 
 2. Inject at build time via Angular's `fileReplacements` or define
@@ -156,8 +176,8 @@ npx nx serve nav-shell
 
 **Production URLs:**
 
-- Shell: `https://jeffapp-nav-shell.onrender.com`
-- Showcase: `https://jeffapp-component-showcase.onrender.com`
+- Shell: `https://nav-shell.onrender.com`
+- Showcase: `https://component-showcase.onrender.com`
 - Iframe src: Full showcase URL (set via env or config.json)
 
 ---

@@ -15,6 +15,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'apps/**'
+      - 'component-showcase/**'
       - 'libs/**'
       - 'package*.json'
       - 'nx.json'
@@ -153,6 +154,30 @@ jobs:
           echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
 
           response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
+            echo "✅ Deploy hook triggered successfully"
+            echo "Response: $body"
+          else
+            echo "❌ Deploy hook failed with status $http_code"
+            echo "Response: $body"
+            exit 1
+          fi
+
+  deploy_component_showcase:
+    needs: [build_test_affected, setup_and_find_affected]
+    runs-on: ubuntu-latest
+    # Only deploy on push to main (not PRs) and if component-showcase is affected
+    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'component-showcase')
+    steps:
+      - name: Deploy Component Showcase to Render
+        run: |
+          echo "🚀 Deploying component-showcase (affected by changes)"
+          echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
+
+          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}")
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | head -n-1)
 

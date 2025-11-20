@@ -250,7 +250,7 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
 
 **Render Configuration** (configured in Render dashboard, not code):
 
-- **jeffapp-api-gateway** (Node.js Web Service):
+- **api-gateway** (Node.js Web Service):
 
   - Build Command: `npx nx build api-gateway --configuration=production`
   - Start Command: `node dist/apps/api-gateway/main.js`
@@ -258,7 +258,8 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
   - Health Check: `/health`
   - Deploy Hook: Set in GitHub secrets as `RENDER_API_DEPLOY_HOOK`
 
-- **jeffapp-nav-shell** (Static Site):
+- **nav-shell** (Static Site):
+
   - Build Command: `npx nx build nav-shell --configuration=production`
   - Publish Directory: `dist/apps/nav-shell/browser`
   - **Critical for SPA Routing**: Configure rewrite rules in Render dashboard:
@@ -267,6 +268,13 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
     - Type: `rewrite`
   - This ensures direct navigation to `/home`, `/about`, etc. works in production
   - Deploy Hook: Set in GitHub secrets as `RENDER_SHELL_DEPLOY_HOOK`
+
+- **component-showcase** (Static Site):
+  - Build Command: `npx nx build component-showcase --configuration=production`
+  - Publish Directory: `dist/apps/component-showcase`
+  - **Critical for SPA Routing**: Same rewrite rule as nav-shell (see above)
+  - Deploy Hook: Set in GitHub secrets as `RENDER_SHOWCASE_DEPLOY_HOOK`
+  - Purpose: Standalone gallery of UI components, embedded via iframe in nav-shell's `/components` page
 
 **Why This Architecture?**
 
@@ -297,7 +305,17 @@ Before deployments work correctly, verify these settings in Render dashboard:
   - Type: `rewrite`
 - [ ] Deploy Hook URL copied to GitHub secrets as `RENDER_SHELL_DEPLOY_HOOK`
 
-**Both services:**
+**component-showcase service:**
+
+- [ ] Build Command: `npx nx build component-showcase --configuration=production`
+- [ ] Publish Directory: `dist/component-showcase`
+- [ ] Rewrite Rules configured:
+  - Source: `/*`
+  - Destination: `/index.html`
+  - Type: `rewrite`
+- [ ] Deploy Hook URL copied to GitHub secrets as `RENDER_SHOWCASE_DEPLOY_HOOK`
+
+**All services:**
 
 - [ ] Auto-Deploy: **OFF** (we use webhooks from GitHub Actions)
 - [ ] Branch: `main`
