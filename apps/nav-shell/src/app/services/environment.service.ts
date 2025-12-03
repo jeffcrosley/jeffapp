@@ -1,92 +1,80 @@
 import { Injectable } from '@angular/core';
+import { DEFAULT_DEV_CONFIG, NavShellConfig } from '../types/config';
 
 /**
  * Environment configuration service
- * Provides runtime URLs for showcase and API gateway based on environment
+ * Provides runtime URLs for showcase and API gateway based on environment.
+ *
+ * @see .github/adr/001-runtime-configuration.md
  */
 @Injectable({
   providedIn: 'root',
 })
 export class EnvironmentService {
-  private config: any = null;
+  private config: NavShellConfig | null = null;
 
   /**
    * Load runtime configuration from config.json
-   * Call this during app initialization
+   * Called during app initialization via APP_INITIALIZER
    */
   async loadConfig(): Promise<void> {
     try {
       const response = await fetch('/config.json');
-      this.config = await response.json();
+      const data = (await response.json()) as NavShellConfig;
+      this.config = data;
+
+      // Optionally cache on window for debugging
+      if (typeof window !== 'undefined') {
+        window.__navShellConfig = data;
+      }
     } catch (error) {
       console.warn('Could not load config.json, using defaults:', error);
+      this.config = DEFAULT_DEV_CONFIG;
     }
   }
 
   /**
    * Get the component showcase URL
-   * In dev, uses direct URL to localhost:4300
-   * In production, loads from config.json
+   * In dev, uses localhost; in production, uses config.json value
    */
   getShowcaseUrl(): string {
-    // Dev: if running on localhost, always use local showcase
     if (this.isLocalDevelopment()) {
-      return 'http://localhost:4300';
+      return DEFAULT_DEV_CONFIG.showcaseUrl;
     }
-
-    // Production: use config.json
-    if (this.config?.showcaseUrl) {
-      return this.config.showcaseUrl;
-    }
-
-    // Check for build-time injected value (legacy support)
-    if (typeof (globalThis as any).SHOWCASE_URL === 'string') {
-      return (globalThis as any).SHOWCASE_URL;
-    }
-
-    // Fallback
-    return 'http://localhost:4300';
+    return this.config?.showcaseUrl ?? DEFAULT_DEV_CONFIG.showcaseUrl;
   }
 
   /**
    * Get the API gateway URL
+   * In dev, uses localhost; in production, uses config.json value
    */
   getApiGatewayUrl(): string {
-    // Dev: if running on localhost, always use local gateway
     if (this.isLocalDevelopment()) {
-      return 'http://localhost:3333';
+      return DEFAULT_DEV_CONFIG.apiGatewayUrl;
     }
-
-    // Production: use config.json
-    if (this.config?.apiGatewayUrl) {
-      return this.config.apiGatewayUrl;
-    }
-
-    // Check for build-time injected value (legacy support)
-    if (typeof (globalThis as any).API_GATEWAY_URL === 'string') {
-      return (globalThis as any).API_GATEWAY_URL;
-    }
-
-    return 'http://localhost:3333';
+    return this.config?.apiGatewayUrl ?? DEFAULT_DEV_CONFIG.apiGatewayUrl;
   }
 
   /**
    * Check if running in local development mode
+   * Detects localhost, 127.0.0.1, or .local domains
    */
-  private isLocalDevelopment(): boolean {
+  isLocalDevelopment(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    const hostname = window.location.hostname;
     return (
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1')
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.endsWith('.local')
     );
   }
 
   /**
-   * Check if running in production mode
+   * Check if running in production mode (inverse of dev detection)
    */
   isProduction(): boolean {
-    return typeof (globalThis as any).PRODUCTION !== 'undefined'
-      ? (globalThis as any).PRODUCTION === true
-      : false;
+    return !this.isLocalDevelopment();
   }
 }
