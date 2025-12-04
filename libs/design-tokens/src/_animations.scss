@@ -1,0 +1,157 @@
+/**
+ * Design Tokens: Animations
+ * 
+ * Transition durations, easing curves, and animation utilities
+ */
+
+:root {
+  // ----------------------------------------------------------------------------
+  // Durations
+  // ----------------------------------------------------------------------------
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 750ms;
+  
+  // ----------------------------------------------------------------------------
+  // Easing Curves
+  // ----------------------------------------------------------------------------
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.68, -0.25, 0.265, 1.25);
+}
+
+// ============================================================================
+// Respect User Motion Preferences
+// ============================================================================
+
+/// Disable animations for users who prefer reduced motion
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// ============================================================================
+// Animation Utility Mixins
+// ============================================================================
+
+/// Standard transition for interactive elements
+@mixin transition-interactive {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+/// Transition for color changes only
+@mixin transition-colors {
+  transition: color var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+
+/// Transition for transform changes
+@mixin transition-transform {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+/// Fade in animation
+@mixin fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+/// Slide in from bottom
+@mixin slide-in-bottom {
+  animation: slideInBottom var(--duration-normal) var(--ease-out);
+}
+
+// ============================================================================
+// Keyframe Animations
+// ============================================================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translateY(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

@@ -3,21 +3,12 @@
  * Modern, clean design for showcasing Web Components
  */
 
-@use 'sass:color';
+// Import design tokens
+@use '../../../libs/design-tokens/src/index' as *;
 
-// Design tokens
-$primary-color: #2c3e50;
-$secondary-color: #3498db;
-$accent-color: #ecf0f1;
-$text-color: #2c3e50;
-$border-color: #bdc3c7;
-$bg-light: #f8f9fa;
-$bg-white: #ffffff;
-$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-$border-radius: 8px;
-
-// Reset and base styles
+// ============================================================================
+// Reset & Base Styles
+// ============================================================================
 * {
   margin: 0;
   padding: 0;
@@ -25,121 +16,130 @@ $border-radius: 8px;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  color: $text-color;
-  background-color: $bg-light;
+  font-family: var(--font-sans);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  transition: background-color var(--duration-normal) var(--ease-out),
+              color var(--duration-normal) var(--ease-out);
 }
 
-// Gallery container
+// ============================================================================
+// Gallery Container
+// ============================================================================
 .gallery-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: var(--space-12) var(--space-6);
 
   @media (max-width: 768px) {
-    padding: 20px 15px;
+    padding: var(--space-6) var(--space-4);
   }
 }
 
+// ============================================================================
 // Header
+// ============================================================================
 .gallery-header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: var(--space-16);
   position: relative;
 
   h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    color: $primary-color;
-    margin-bottom: 15px;
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-sapphire-600);
+    margin-bottom: var(--space-4);
 
     @media (max-width: 768px) {
-      font-size: 2rem;
+      font-size: var(--font-size-3xl);
     }
   }
 
   .subtitle {
-    font-size: 1.25rem;
-    // Replaced deprecated lighten() with color.scale for consistent lightening
-    color: color.scale($text-color, $lightness: 20%);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
     max-width: 700px;
     margin: 0 auto;
 
     @media (max-width: 768px) {
-      font-size: 1rem;
+      font-size: var(--font-size-base);
     }
   }
 
   .click-feedback {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #27ae60;
+    top: var(--space-4);
+    right: var(--space-4);
+    background: var(--color-emerald-600);
     color: white;
-    padding: 12px 20px;
-    border-radius: $border-radius;
-    box-shadow: $shadow-md;
-    animation: slideIn 0.3s ease, fadeOut 0.3s ease 1.7s;
-    z-index: 1000;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    animation: slideIn var(--duration-fast) var(--ease-out), 
+               fadeOut var(--duration-fast) var(--ease-out) 1.7s;
+    z-index: var(--z-toast);
   }
 }
 
-// Component sections
+// ============================================================================
+// Component Sections
+// ============================================================================
 .component-section {
-  background: $bg-white;
-  border-radius: $border-radius;
-  padding: 40px;
-  margin-bottom: 40px;
-  box-shadow: $shadow-sm;
+  background: var(--color-card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-12);
+  margin-bottom: var(--space-12);
+  box-shadow: var(--shadow-sm);
 
   @media (max-width: 768px) {
-    padding: 24px 20px;
+    padding: var(--space-6);
   }
 
   h2 {
-    font-size: 2rem;
-    color: $primary-color;
-    margin-bottom: 10px;
-    border-bottom: 3px solid $secondary-color;
-    padding-bottom: 10px;
+    font-size: var(--font-size-3xl);
+    color: var(--color-sapphire-600);
+    margin-bottom: var(--space-2);
+    border-bottom: 3px solid var(--color-sapphire-500);
+    padding-bottom: var(--space-3);
   }
 
   .section-description {
-    color: color.scale($text-color, $lightness: 20%);
-    margin-bottom: 30px;
-    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-8);
+    font-size: var(--font-size-lg);
   }
 }
 
-// Component demos
+// ============================================================================
+// Component Demos
+// ============================================================================
 .component-demo {
-  margin-bottom: 40px;
+  margin-bottom: var(--space-12);
 
   &:last-child {
     margin-bottom: 0;
   }
 
   h3 {
-    font-size: 1.5rem;
-    color: $primary-color;
-    margin-bottom: 20px;
+    font-size: var(--font-size-2xl);
+    color: var(--color-sapphire-600);
+    margin-bottom: var(--space-6);
   }
 
   .demo-area {
-    background: $bg-light;
-    border: 1px solid $border-color;
-    border-radius: $border-radius;
-    padding: 30px;
-    margin-bottom: 15px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
+    margin-bottom: var(--space-4);
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: var(--space-4);
     align-items: center;
 
     @media (max-width: 768px) {
-      padding: 20px;
+      padding: var(--space-4);
       flex-direction: column;
       align-items: stretch;
     }
@@ -147,7 +147,7 @@ body {
     &.cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+      gap: var(--space-6);
 
       @media (max-width: 768px) {
         grid-template-columns: 1fr;
@@ -156,52 +156,57 @@ body {
   }
 
   .code-example {
-    border: 1px solid $border-color;
-    border-radius: $border-radius;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-md);
     overflow: hidden;
 
     summary {
-      background: $primary-color;
+      background: var(--color-sapphire-600);
       color: white;
-      padding: 12px 20px;
+      padding: var(--space-3) var(--space-5);
       cursor: pointer;
-      font-weight: 500;
+      font-weight: var(--font-weight-semibold);
       user-select: none;
 
       &:hover {
-        background: color.scale($primary-color, $lightness: 5%);
+        background: var(--color-sapphire-500);
       }
     }
 
     pre {
-      background: #282c34;
-      color: #abb2bf;
-      padding: 20px;
+      background: var(--color-bg-tertiary);
+      color: var(--color-text-secondary);
+      padding: var(--space-6);
       margin: 0;
       overflow-x: auto;
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-relaxed);
 
       code {
-        font-family: 'Courier New', Courier, monospace;
+        font-family: var(--font-mono);
       }
     }
   }
 }
 
-// Integration notes
+// ============================================================================
+// Integration Notes
+// ============================================================================
 .integration-notes {
   background: linear-gradient(
     135deg,
-    color.scale($secondary-color, $lightness: 35%),
-    color.scale($secondary-color, $lightness: 40%)
+    var(--color-sapphire-500),
+    var(--color-sapphire-600)
   );
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  color: white;
 
   .integration-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
+    gap: var(--space-6);
+    margin-top: var(--space-8);
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
@@ -209,57 +214,61 @@ body {
   }
 
   .integration-card {
-    background: $bg-white;
-    padding: 24px;
-    border-radius: $border-radius;
-    box-shadow: $shadow-sm;
+    background: var(--color-card-bg);
+    padding: var(--space-6);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
 
     h3 {
-      font-size: 1.25rem;
-      color: $secondary-color;
-      margin-bottom: 10px;
+      font-size: var(--font-size-lg);
+      color: var(--color-sapphire-600);
+      margin-bottom: var(--space-2);
     }
 
     p {
-      margin-bottom: 10px;
-      color: color.scale($text-color, $lightness: 15%);
+      margin-bottom: var(--space-2);
+      color: var(--color-text-secondary);
     }
 
     .inline-code {
       display: inline-block;
-      background: $bg-light;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.9rem;
-      color: $secondary-color;
+      background: var(--color-bg-secondary);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: var(--font-size-sm);
+      color: var(--color-sapphire-600);
     }
   }
 }
 
+// ============================================================================
 // Footer
+// ============================================================================
 .gallery-footer {
   text-align: center;
-  margin-top: 60px;
-  padding-top: 30px;
-  border-top: 2px solid $border-color;
-  color: color.scale($text-color, $lightness: 25%);
+  margin-top: var(--space-16);
+  padding-top: var(--space-8);
+  border-top: 2px solid var(--color-border-primary);
+  color: var(--color-text-muted);
 
   p {
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
   }
 
   .tech-stack {
-    font-size: 0.9rem;
+    font-size: var(--font-size-sm);
     font-style: italic;
   }
 
   strong {
-    color: $secondary-color;
+    color: var(--color-sapphire-600);
   }
 }
 
+// ============================================================================
 // Animations
+// ============================================================================
 @keyframes slideIn {
   from {
     transform: translateX(100%);

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +31,32 @@ import { Router, RouterModule } from '@angular/router';
             }
           </ul>
         </nav>
+        <button
+          class="theme-toggle"
+          (click)="toggleTheme()"
+          [attr.aria-label]="(themeService.getTheme() | async) === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          [title]="(themeService.getTheme() | async) === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        >
+          @if ((themeService.getTheme() | async) === 'dark') {
+            <!-- Sun icon for dark mode (click to switch to light) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          } @else {
+            <!-- Moon icon for light mode (click to switch to dark) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          }
+        </button>
       </div>
     </header>
 
@@ -39,47 +66,54 @@ import { Router, RouterModule } from '@angular/router';
   `,
   styles: [
     `
-      // Portfolio Header & Navigation Styles
-      $primary-color: #2c3e50;
-      $secondary-color: #3498db;
-      $accent-color: #ecf0f1;
-      $text-color: #2c3e50;
-      $border-color: #bdc3c7;
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
 
+      // ============================================================================
+      // Portfolio Header & Navigation Styles
+      // ============================================================================
       .portfolio-header {
-        background-color: $primary-color;
-        color: $accent-color;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background-color: var(--color-sapphire-600);
+        color: var(--color-slate-50);
+        box-shadow: var(--shadow-md);
         position: sticky;
         top: 0;
-        z-index: 100;
+        z-index: var(--z-sticky);
+        transition: background-color var(--duration-normal) var(--ease-out),
+                    box-shadow var(--duration-normal) var(--ease-out);
+        flex-shrink: 0;
 
         .header-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: var(--space-4) var(--space-6);
           display: flex;
           justify-content: space-between;
           align-items: center;
           flex-wrap: wrap;
-          gap: 20px;
+          gap: var(--space-6);
 
           @media (max-width: 768px) {
             flex-direction: column;
             align-items: flex-start;
-            gap: 15px;
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-4);
           }
         }
 
         .portfolio-title {
-          color: $accent-color;
+          color: var(--color-slate-50);
           margin: 0;
-          font-size: 1.8rem;
-          font-weight: 700;
+          font-size: var(--font-size-3xl);
+          font-weight: var(--font-weight-bold);
           letter-spacing: 0.5px;
+          flex-shrink: 0;
 
           @media (max-width: 768px) {
-            font-size: 1.4rem;
+            font-size: var(--font-size-2xl);
           }
         }
 
@@ -94,60 +128,91 @@ import { Router, RouterModule } from '@angular/router';
         .nav-links {
           list-style: none;
           display: flex;
-          gap: 30px;
+          gap: var(--space-6);
           margin: 0;
           padding: 0;
 
           @media (max-width: 768px) {
             flex-direction: column;
-            gap: 10px;
+            gap: var(--space-3);
           }
 
           li {
             a {
-              color: $accent-color;
+              color: var(--color-slate-50);
               text-decoration: none;
-              font-weight: 500;
-              font-size: 1rem;
-              padding: 8px 12px;
-              border-radius: 4px;
-              transition: all 0.3s ease;
+              font-weight: var(--font-weight-medium);
+              font-size: var(--font-size-base);
+              padding: var(--space-2) var(--space-3);
+              border-radius: var(--radius-md);
+              transition: all var(--duration-fast) var(--ease-out);
               display: inline-block;
 
               &:hover {
                 background-color: rgba(255, 255, 255, 0.1);
-                color: $secondary-color;
+                color: #93c5fd;
               }
 
               &.active {
-                background-color: $secondary-color;
+                background-color: rgba(255, 255, 255, 0.2);
                 color: white;
-                font-weight: 600;
+                font-weight: var(--font-weight-semibold);
+              }
+
+              &:focus-visible {
+                outline: 2px solid var(--color-focus-ring);
+                outline-offset: 2px;
               }
             }
           }
         }
+
+        .theme-toggle {
+          background: transparent;
+          border: 2px solid var(--color-slate-50);
+          color: var(--color-slate-50);
+          padding: var(--space-2);
+          border-radius: var(--radius-md);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast) var(--ease-out);
+          flex-shrink: 0;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #93c5fd;
+            color: #93c5fd;
+            transform: rotate(15deg);
+          }
+
+          &:focus-visible {
+            outline: 2px solid var(--color-focus-ring);
+            outline-offset: 2px;
+          }
+
+          svg {
+            display: block;
+            width: 20px;
+            height: 20px;
+          }
+        }
       }
 
-      :host {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-      }
-
-      .portfolio-header {
-        flex-shrink: 0;
-      }
-
+      // ============================================================================
+      // Main Content Area
+      // ============================================================================
       .main-content {
         flex: 1;
         max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: var(--space-10) var(--space-4);
         overflow-y: auto;
+        width: 100%;
 
         @media (max-width: 768px) {
-          padding: 20px 15px;
+          padding: var(--space-6) var(--space-3);
         }
 
         // Subapp mode: remove all padding/margin and fill available space
@@ -164,21 +229,23 @@ import { Router, RouterModule } from '@angular/router';
   ],
 })
 export class App {
-  private router = inject(Router);
+  protected portfolioTitle = 'Jeff Crosley';
+  protected router = inject(Router);
+  protected themeService = inject(ThemeService);
 
-  protected portfolioTitle = 'JeffApp';
   protected navigationLinks = [
-    { label: 'Home', route: '/home' },
+    { label: 'Home', route: '/' },
+    { label: 'About', route: '/about' },
     { label: 'Components', route: '/components' },
-    { label: 'Contact', route: '/contact' },
+    { label: 'GitHub', route: 'https://github.com/jeffcrosley' },
   ];
 
-  /**
-   * Check if current route is a subapp (microfrontend) route
-   * Subapp routes should fill the entire space below the header
-   */
   protected isSubappRoute(): boolean {
-    const url = this.router.url;
-    return url.startsWith('/components');
+    return this.router.url.startsWith('/components');
+  }
+
+  protected toggleTheme(): void {
+    this.themeService.toggle();
   }
 }
+

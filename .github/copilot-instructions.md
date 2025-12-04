@@ -119,6 +119,7 @@ Then import and add to `app.routes.ts` or embed in other pages via router or com
 2. Construct and implement tests and components that satisfy them (after discussion/confirmation)
 3. Proactively raise concerns about best practices, scalability, coupling, and testability
 4. Suggest better approaches when user decisions may limit future flexibility
+5. **Terminal interaction protocol**: When running commands that require user input (confirmations, selections), PAUSE and alert the user to approve the command rather than attempting manual implementation. Wait for user confirmation before proceeding.
 
 Practical advice for AI edits in this repo:
 
