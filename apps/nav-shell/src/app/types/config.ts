@@ -6,11 +6,11 @@
  * @see .github/adr/001-runtime-configuration.md
  */
 export interface NavShellConfig {
-  /** URL for the component showcase app (iframe source) */
-  showcaseUrl: string;
+	/** URL for the component showcase app (iframe source) */
+	showcaseUrl: string
 
-  /** URL for the API gateway backend */
-  apiGatewayUrl: string;
+	/** URL for the API gateway backend */
+	apiGatewayUrl: string
 }
 
 /**
@@ -18,17 +18,17 @@ export interface NavShellConfig {
  * Used when config.json cannot be loaded or when running on localhost.
  */
 export const DEFAULT_DEV_CONFIG: NavShellConfig = {
-  showcaseUrl: 'http://localhost:4201',
-  apiGatewayUrl: 'http://localhost:3333',
-};
+	showcaseUrl: 'http://localhost:4201',
+	apiGatewayUrl: 'http://localhost:3333'
+}
 
 /**
  * Global window augmentation for runtime config storage.
  * Allows optional caching of loaded config on window object.
  */
 declare global {
-  interface Window {
-    /** Cached runtime configuration after APP_INITIALIZER load */
-    __navShellConfig?: NavShellConfig;
-  }
+	interface Window {
+		/** Cached runtime configuration after APP_INITIALIZER load */
+		__navShellConfig?: NavShellConfig
+	}
 }
