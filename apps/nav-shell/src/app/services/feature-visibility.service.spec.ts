@@ -52,7 +52,9 @@ describe('FeatureVisibilityService', () => {
 		it('should be case-sensitive (only lowercase valid)', () => {
 			// TODO: Verify that 'WIP' (uppercase) does not match 'wip'
 			// Call with invalid status and verify behavior (likely default to null)
-			const indicator = service.getIndicator('WIP' as FeatureStatus)
+			const indicator = service.getIndicator(
+				'WIP' as FeatureStatus
+			)
 			expect(indicator).toBeNull()
 		})
 	})
@@ -70,8 +72,14 @@ describe('FeatureVisibilityService', () => {
 	describe('edge cases', () => {
 		it('should handle all valid status enum values', () => {
 			// TODO: Create array of all valid statuses and verify each returns expected indicator
-			const statuses: FeatureStatus[] = ['stable', 'wip', 'beta']
-			const results = statuses.map((s) => service.getIndicator(s))
+			const statuses: FeatureStatus[] = [
+				'stable',
+				'wip',
+				'beta'
+			]
+			const results = statuses.map((s) =>
+				service.getIndicator(s)
+			)
 			// Results should be: [null, '🚧 WIP', '🧪 Beta']
 			expect(results.length).toBe(3)
 		})
@@ -89,7 +97,9 @@ describe('FeatureVisibilityService', () => {
 
 		it('should return consistent results across different instances', () => {
 			// TODO: Create second service instance and verify same mapping
-			const service2 = TestBed.inject(FeatureVisibilityService)
+			const service2 = TestBed.inject(
+				FeatureVisibilityService
+			)
 			const indicator1 = service.getIndicator('beta')
 			const indicator2 = service2.getIndicator('beta')
 			expect(indicator1).toBe(indicator2)

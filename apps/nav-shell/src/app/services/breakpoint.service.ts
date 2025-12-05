@@ -1,15 +1,34 @@
-import { Injectable, OnDestroy, signal } from '@angular/core'
+import {
+	Injectable,
+	OnDestroy,
+	signal
+} from '@angular/core'
 
 @Injectable({
 	providedIn: 'root'
 })
 export class BreakpointService implements OnDestroy {
-	#isDesktop = signal(true)
+	mediaQueryList = window.matchMedia(
+		'(min-width: 1024px)'
+	)
+	listener = (e: MediaQueryListEvent) => {
+		this.#isDesktop.set(e.matches)
+	}
+
+	#isDesktop = signal(this.mediaQueryList?.matches)
 	isDesktop$ = this.#isDesktop.asReadonly()
 
 	constructor() {
-		this.#isDesktop.set(matchMedia('(min-width: 1024px)').matches)
+		this.mediaQueryList?.addEventListener(
+			'change',
+			this.listener
+		)
 	}
 
-	ngOnDestroy(): void {}
+	ngOnDestroy(): void {
+		this.mediaQueryList?.removeEventListener(
+			'change',
+			this.listener
+		)
+	}
 }
