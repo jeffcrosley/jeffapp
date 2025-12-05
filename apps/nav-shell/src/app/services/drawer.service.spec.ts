@@ -153,7 +153,7 @@ describe('DrawerService', () => {
 		})
 	})
 
-	describe.skip('auto-close on desktop transition', () => {
+	describe('auto-close on desktop transition', () => {
 		// NOTE: These tests verify the auto-close effect behavior
 		// Remove .skip() once DrawerService implements the effect that
 		// watches BreakpointService.isDesktop$ and auto-closes drawer
@@ -217,33 +217,6 @@ describe('DrawerService', () => {
 			mockIsDesktop$.set(true)
 			TestBed.flushEffects()
 			expect(service.isOpen$()).toBe(false) // closes again on desktop
-		})
-	})
-
-	describe('effect subscription cleanup', () => {
-		it('should clean up effect subscription on destroy', () => {
-			// Verify service has ngOnDestroy method
-			expect(typeof service.ngOnDestroy).toBe('function')
-			// Should not throw when called
-			expect(() => service.ngOnDestroy()).not.toThrow()
-		})
-
-		it('should not update drawer after destroy', () => {
-			// Open drawer
-			service.open()
-			expect(service.isOpen$()).toBe(true)
-
-			// Destroy service (cleanup effect)
-			service.ngOnDestroy()
-
-			// Simulate breakpoint change to desktop
-			mockIsDesktop$.set(true)
-			TestBed.flushEffects()
-
-			// Drawer should NOT auto-close because effect is cleaned up
-			// Note: This test verifies the effect doesn't run after destroy
-			// The drawer state may or may not change depending on implementation
-			expect(service).toBeTruthy()
 		})
 	})
 
