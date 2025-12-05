@@ -1,0 +1,50 @@
+.nav-drawer {
+	/* Navigation drawer container */
+}
+
+.drawer-header {
+	/* Header styling */
+}
+
+.portfolio-title {
+	/* Portfolio title styling */
+}
+
+.drawer-nav {
+	/* Navigation container */
+}
+
+.nav-links {
+	/* Unordered list styling */
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.nav-link {
+	/* Individual link styling */
+	display: block;
+	text-decoration: none;
+	padding: 0.75rem 1rem;
+	color: inherit;
+
+	&:hover {
+		/* Hover state */
+	}
+
+	&.active {
+		/* Active route state */
+	}
+}
+
+.status-badge {
+	/* Feature status badge */
+}
+
+.feature-wip {
+	/* Work-in-progress styling */
+}
+
+.feature-beta {
+	/* Beta feature styling */
+}

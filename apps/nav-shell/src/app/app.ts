@@ -1,7 +1,18 @@
 import { CommonModule } from '@angular/common'
 import { Component, inject } from '@angular/core'
-import { Router, RouterModule } from '@angular/router'
+import {
+	Router,
+	RouterModule
+} from '@angular/router'
+import { FeatureStatus } from './services/feature-visibility.service'
 import { ThemeService } from './services/theme.service'
+
+export interface NavLink {
+	label: string
+	route: string
+	status: FeatureStatus
+	external?: boolean
+}
 
 @Component({
 	selector: 'app-root',
@@ -9,21 +20,30 @@ import { ThemeService } from './services/theme.service'
 	template: `
 		<header class="portfolio-header">
 			<div class="header-container">
-				<h1 class="portfolio-title">{{ portfolioTitle }}</h1>
+				<h1 class="portfolio-title">
+					{{ portfolioTitle }}
+				</h1>
 				<nav class="navbar">
 					<ul class="nav-links">
-						@for (link of navigationLinks; track link.label) {
+						@for (link of navigationLinks; track
+						link.label) {
 						<li>
 							@if (link.route.startsWith('/')) {
 							<a
 								[routerLink]="link.route"
 								routerLinkActive="active"
-								[routerLinkActiveOptions]="{ exact: false }"
+								[routerLinkActiveOptions]="{
+									exact: false
+								}"
 							>
 								{{ link.label }}
 							</a>
 							} @else {
-							<a [href]="link.route" target="_blank" rel="noopener noreferrer">
+							<a
+								[href]="link.route"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
 								{{ link.label }}
 							</a>
 							}
@@ -45,7 +65,8 @@ import { ThemeService } from './services/theme.service'
 							: 'Switch to dark mode'
 					"
 				>
-					@if ((themeService.getTheme() | async) === 'dark') {
+					@if ((themeService.getTheme() | async) ===
+					'dark') {
 					<!-- Sun icon for dark mode (click to switch to light) -->
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -60,13 +81,43 @@ import { ThemeService } from './services/theme.service'
 					>
 						<circle cx="12" cy="12" r="5"></circle>
 						<line x1="12" y1="1" x2="12" y2="3"></line>
-						<line x1="12" y1="21" x2="12" y2="23"></line>
-						<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-						<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+						<line
+							x1="12"
+							y1="21"
+							x2="12"
+							y2="23"
+						></line>
+						<line
+							x1="4.22"
+							y1="4.22"
+							x2="5.64"
+							y2="5.64"
+						></line>
+						<line
+							x1="18.36"
+							y1="18.36"
+							x2="19.78"
+							y2="19.78"
+						></line>
 						<line x1="1" y1="12" x2="3" y2="12"></line>
-						<line x1="21" y1="12" x2="23" y2="12"></line>
-						<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+						<line
+							x1="21"
+							y1="12"
+							x2="23"
+							y2="12"
+						></line>
+						<line
+							x1="4.22"
+							y1="19.78"
+							x2="5.64"
+							y2="18.36"
+						></line>
+						<line
+							x1="18.36"
+							y1="5.64"
+							x2="19.78"
+							y2="4.22"
+						></line>
 					</svg>
 					} @else {
 					<!-- Moon icon for light mode (click to switch to dark) -->
@@ -81,14 +132,19 @@ import { ThemeService } from './services/theme.service'
 						stroke-linecap="round"
 						stroke-linejoin="round"
 					>
-						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+						<path
+							d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+						></path>
 					</svg>
 					}
 				</button>
 			</div>
 		</header>
 
-		<main class="main-content" [class.subapp-mode]="isSubappRoute()">
+		<main
+			class="main-content"
+			[class.subapp-mode]="isSubappRoute()"
+		>
 			<router-outlet></router-outlet>
 		</main>
 	`,
@@ -110,8 +166,10 @@ import { ThemeService } from './services/theme.service'
 				position: sticky;
 				top: 0;
 				z-index: var(--z-sticky);
-				transition: background-color var(--duration-normal) var(--ease-out),
-					box-shadow var(--duration-normal) var(--ease-out);
+				transition: background-color
+						var(--duration-normal) var(--ease-out),
+					box-shadow var(--duration-normal)
+						var(--ease-out);
 				flex-shrink: 0;
 
 				.header-container {
@@ -173,16 +231,27 @@ import { ThemeService } from './services/theme.service'
 							font-size: var(--font-size-base);
 							padding: var(--space-2) var(--space-3);
 							border-radius: var(--radius-md);
-							transition: all var(--duration-fast) var(--ease-out);
+							transition: all var(--duration-fast)
+								var(--ease-out);
 							display: inline-block;
 
 							&:hover {
-								background-color: rgba(255, 255, 255, 0.1);
+								background-color: rgba(
+									255,
+									255,
+									255,
+									0.1
+								);
 								color: #93c5fd;
 							}
 
 							&.active {
-								background-color: rgba(255, 255, 255, 0.2);
+								background-color: rgba(
+									255,
+									255,
+									255,
+									0.2
+								);
 								color: white;
 								font-weight: var(--font-weight-semibold);
 							}
@@ -205,7 +274,8 @@ import { ThemeService } from './services/theme.service'
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					transition: all var(--duration-fast) var(--ease-out);
+					transition: all var(--duration-fast)
+						var(--ease-out);
 					flex-shrink: 0;
 
 					&:hover {
@@ -265,7 +335,10 @@ export class App {
 		{ label: 'Home', route: '/' },
 		{ label: 'About', route: '/about' },
 		{ label: 'Components', route: '/components' },
-		{ label: 'GitHub', route: 'https://github.com/jeffcrosley' }
+		{
+			label: 'GitHub',
+			route: 'https://github.com/jeffcrosley'
+		}
 	]
 
 	protected isSubappRoute(): boolean {

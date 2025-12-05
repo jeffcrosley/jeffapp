@@ -1,0 +1,30 @@
+<aside class="nav-drawer">
+	<header class="drawer-header">
+		<h1 class="portfolio-title">{{ title }}</h1>
+	</header>
+	<nav class="drawer-nav">
+		<ul class="nav-links">
+			@for (link of links(); track link.label) {
+				<li>
+					@if (link.external) {
+						<a
+							class="nav-link"
+							[href]="link.route"
+							target="_blank"
+						>
+							{{ link.label }}
+						</a>
+					} @else {
+						<a
+							class="nav-link"
+							[routerLink]="link.route"
+							[routerLinkActive]="'active'"
+						>
+							{{ link.label }}
+						</a>
+					}
+				</li>
+			}
+		</ul>
+	</nav>
+</aside>

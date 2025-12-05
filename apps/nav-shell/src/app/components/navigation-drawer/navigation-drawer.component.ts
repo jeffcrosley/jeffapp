@@ -1,21 +1,21 @@
-import { Component, signal } from '@angular/core'
+import { Component, input } from '@angular/core'
+import { RouterModule } from '@angular/router'
+import { NavLink } from '../../app'
+
+const PORTFOLIO_TITLE = 'JeffApp'
 
 @Component({
 	selector: 'app-navigation-drawer',
-	template: `<div class="navigation-drawer">
-		<!-- Navigation drawer content goes here -->
-	</div>`,
-	styles: [
-		`
-			.navigation-drawer {
-				/* Styles for the navigation drawer */
-			}
-		`
-	]
+	templateUrl:
+		'./navigation-drawer.component.html',
+	styleUrl: './navigation-drawer.component.scss',
+	imports: [RouterModule]
 })
 export class NavigationDrawerComponent {
-	#isOpen = signal(false)
-	isOpen$ = this.#isOpen.asReadonly()
+	links = input.required<NavLink[]>()
+	isOpen = input.required<boolean>()
 
-	links = []
+	title = PORTFOLIO_TITLE
+
+	// constructor() {}
 }

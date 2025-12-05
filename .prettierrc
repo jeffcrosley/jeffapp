@@ -4,5 +4,13 @@
 	"semi": false,
 	"tabWidth": 1,
 	"useTabs": true,
-	"printWidth": 50
+	"printWidth": 50,
+	"overrides": [
+		{
+			"files": "*.html",
+			"options": {
+				"parser": "angular"
+			}
+		}
+	]
 }
