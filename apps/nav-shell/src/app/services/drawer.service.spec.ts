@@ -22,15 +22,13 @@ describe('DrawerService', () => {
 	let mockIsDesktop$: WritableSignal<boolean>
 	let mockBreakpointService: {
 		isDesktop$: WritableSignal<boolean>
-		ngOnDestroy: jest.Mock
 	}
 
 	beforeEach(() => {
 		// Create mock before TestBed configuration
 		mockIsDesktop$ = signal(false)
 		mockBreakpointService = {
-			isDesktop$: mockIsDesktop$,
-			ngOnDestroy: jest.fn()
+			isDesktop$: mockIsDesktop$
 		}
 
 		TestBed.configureTestingModule({
@@ -43,10 +41,6 @@ describe('DrawerService', () => {
 			]
 		})
 		service = TestBed.inject(DrawerService)
-	})
-
-	afterEach(() => {
-		service.ngOnDestroy?.()
 	})
 
 	describe('initialization', () => {
