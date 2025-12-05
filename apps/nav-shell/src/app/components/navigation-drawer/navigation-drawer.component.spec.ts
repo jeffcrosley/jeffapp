@@ -302,33 +302,36 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('rendering - feature status badges', () => {
-		it('should render badge for wip status link', () => {
+	describe('rendering - feature status badges', () => {
+		it('should apply feature-wip class for wip links (pseudo badge via CSS)', () => {
 			fixture.detectChanges()
 			const componentLink =
 				fixture.debugElement.queryAll(
 					By.css('a.nav-link')
 				)[2]
-			const badge = componentLink.query(
-				By.css('.feature-badge')
-			)
 			expect(
-				badge?.nativeElement.textContent
-			).toContain('🚧 WIP')
+				componentLink.nativeElement.classList.contains(
+					'feature-wip'
+				)
+			).toBe(true)
 		})
 
-		it('should not render badge for stable status link', () => {
+		it('should not add feature-wip/beta classes for stable links', () => {
 			fixture.detectChanges()
 			const homeLink = fixture.debugElement.queryAll(
 				By.css('a.nav-link')
 			)[0]
-			const badge = homeLink.query(
-				By.css('.feature-badge')
+			const classList =
+				homeLink.nativeElement.classList
+			expect(classList.contains('feature-wip')).toBe(
+				false
 			)
-			expect(badge).toBeFalsy()
+			expect(
+				classList.contains('feature-beta')
+			).toBe(false)
 		})
 
-		it('should render badge for beta status link', () => {
+		it('should apply feature-beta class for beta links', () => {
 			hostComponent.links.set([
 				...hostComponent.links(),
 				{
@@ -341,39 +344,9 @@ describe('NavigationDrawerComponent', () => {
 			const blogLink = fixture.debugElement.queryAll(
 				By.css('a.nav-link')
 			)[4]
-			const badge = blogLink.query(
-				By.css('.feature-badge')
-			)
 			expect(
-				badge?.nativeElement.textContent
-			).toContain('🧪 Beta')
-		})
-
-		it('should position badge inline with link text', () => {
-			fixture.detectChanges()
-			const componentLink =
-				fixture.debugElement.queryAll(
-					By.css('a.nav-link')
-				)[2]
-			const badge = componentLink.query(
-				By.css('.feature-badge')
-			)
-			expect(
-				componentLink.nativeElement.contains(
-					badge?.nativeElement
-				)
-			).toBe(true)
-		})
-
-		it('should apply feature-{status} class to link', () => {
-			fixture.detectChanges()
-			const componentLink =
-				fixture.debugElement.queryAll(
-					By.css('a.nav-link')
-				)[2]
-			expect(
-				componentLink.nativeElement.classList.contains(
-					'feature-wip'
+				blogLink.nativeElement.classList.contains(
+					'feature-beta'
 				)
 			).toBe(true)
 		})

@@ -42,9 +42,13 @@
 }
 
 .feature-wip {
-	/* Work-in-progress styling */
+	&::after {
+		content: '🚧 WIP';
+	}
 }
 
 .feature-beta {
-	/* Beta feature styling */
+	&::after {
+		content: '🧪 Beta';
+	}
 }
