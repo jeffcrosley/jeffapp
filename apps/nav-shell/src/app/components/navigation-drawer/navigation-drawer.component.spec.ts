@@ -131,7 +131,8 @@ describe.skip('NavigationDrawerComponent', () => {
 		drawerElement = fixture.debugElement.query(
 			By.directive(NavigationDrawerComponent)
 		)
-		drawerComponent = drawerElement.componentInstance
+		drawerComponent =
+			drawerElement.componentInstance
 	})
 
 	describe('initialization', () => {
@@ -169,9 +170,9 @@ describe.skip('NavigationDrawerComponent', () => {
 				By.css('.portfolio-title')
 			)
 			expect(header).toBeTruthy()
-			expect(title?.nativeElement.textContent).toContain(
-				'Jeff Crosley'
-			)
+			expect(
+				title?.nativeElement.textContent
+			).toContain('Jeff Crosley')
 		})
 
 		it('should render nav element with class drawer-nav', () => {
@@ -194,7 +195,11 @@ describe.skip('NavigationDrawerComponent', () => {
 	describe('rendering - navigation links', () => {
 		it('should render one link item per navigation link', () => {
 			hostComponent.links = [
-				{ label: 'Home', route: '/', status: 'stable' },
+				{
+					label: 'Home',
+					route: '/',
+					status: 'stable'
+				},
 				{
 					label: 'About',
 					route: '/about',
@@ -213,9 +218,8 @@ describe.skip('NavigationDrawerComponent', () => {
 				}
 			]
 			fixture.detectChanges()
-			const listItems = fixture.debugElement.queryAll(
-				By.css('li')
-			)
+			const listItems =
+				fixture.debugElement.queryAll(By.css('li'))
 			expect(listItems.length).toBe(4)
 		})
 
@@ -270,15 +274,16 @@ describe.skip('NavigationDrawerComponent', () => {
 	describe('rendering - feature status badges', () => {
 		it('should render badge for wip status link', () => {
 			fixture.detectChanges()
-			const componentLink = fixture.debugElement.queryAll(
-				By.css('a.nav-link')
-			)[2]
+			const componentLink =
+				fixture.debugElement.queryAll(
+					By.css('a.nav-link')
+				)[2]
 			const badge = componentLink.query(
 				By.css('.feature-badge')
 			)
-			expect(badge?.nativeElement.textContent).toContain(
-				'🚧 WIP'
-			)
+			expect(
+				badge?.nativeElement.textContent
+			).toContain('🚧 WIP')
 		})
 
 		it('should not render badge for stable status link', () => {
@@ -305,16 +310,17 @@ describe.skip('NavigationDrawerComponent', () => {
 			const badge = blogLink.query(
 				By.css('.feature-badge')
 			)
-			expect(badge?.nativeElement.textContent).toContain(
-				'🧪 Beta'
-			)
+			expect(
+				badge?.nativeElement.textContent
+			).toContain('🧪 Beta')
 		})
 
 		it('should position badge inline with link text', () => {
 			fixture.detectChanges()
-			const componentLink = fixture.debugElement.queryAll(
-				By.css('a.nav-link')
-			)[2]
+			const componentLink =
+				fixture.debugElement.queryAll(
+					By.css('a.nav-link')
+				)[2]
 			const badge = componentLink.query(
 				By.css('.feature-badge')
 			)
@@ -327,9 +333,10 @@ describe.skip('NavigationDrawerComponent', () => {
 
 		it('should apply feature-{status} class to link', () => {
 			fixture.detectChanges()
-			const componentLink = fixture.debugElement.queryAll(
-				By.css('a.nav-link')
-			)[2]
+			const componentLink =
+				fixture.debugElement.queryAll(
+					By.css('a.nav-link')
+				)[2]
 			expect(
 				componentLink.nativeElement.classList.contains(
 					'feature-wip'
@@ -358,7 +365,9 @@ describe.skip('NavigationDrawerComponent', () => {
 				By.css('aside.nav-drawer')
 			)
 			expect(
-				aside?.nativeElement.classList.contains('open')
+				aside?.nativeElement.classList.contains(
+					'open'
+				)
 			).toBe(true)
 		})
 
@@ -369,7 +378,9 @@ describe.skip('NavigationDrawerComponent', () => {
 				By.css('aside.nav-drawer')
 			)
 			expect(
-				aside?.nativeElement.classList.contains('open')
+				aside?.nativeElement.classList.contains(
+					'open'
+				)
 			).toBe(false)
 		})
 
@@ -470,10 +481,12 @@ describe.skip('NavigationDrawerComponent', () => {
 
 		it('should announce status badges in link text', () => {
 			fixture.detectChanges()
-			const componentLink = fixture.debugElement.queryAll(
-				By.css('a.nav-link')
-			)[2]
-			const text = componentLink.nativeElement.textContent
+			const componentLink =
+				fixture.debugElement.queryAll(
+					By.css('a.nav-link')
+				)[2]
+			const text =
+				componentLink.nativeElement.textContent
 			expect(text).toContain('Components')
 			expect(text).toContain('WIP')
 		})
@@ -510,9 +523,8 @@ describe.skip('NavigationDrawerComponent', () => {
 		it('should handle empty links array', () => {
 			hostComponent.links = []
 			fixture.detectChanges()
-			const listItems = fixture.debugElement.queryAll(
-				By.css('li')
-			)
+			const listItems =
+				fixture.debugElement.queryAll(By.css('li'))
 			expect(listItems.length).toBe(0)
 		})
 

@@ -1,4 +1,7 @@
-import { Component, DebugElement } from '@angular/core'
+import {
+	Component,
+	DebugElement
+} from '@angular/core'
 import {
 	ComponentFixture,
 	TestBed
@@ -36,7 +39,7 @@ class TestFeatureStatusComponent {
 	status: FeatureStatus = 'stable'
 }
 
-describe.skip('FeatureStatusDirective', () => {
+describe('FeatureStatusDirective', () => {
 	let fixture: ComponentFixture<TestFeatureStatusComponent>
 	let component: TestFeatureStatusComponent
 	let linkElement: DebugElement
@@ -52,7 +55,9 @@ describe.skip('FeatureStatusDirective', () => {
 			TestFeatureStatusComponent
 		)
 		component = fixture.componentInstance
-		linkElement = fixture.debugElement.query(By.css('a'))
+		linkElement = fixture.debugElement.query(
+			By.css('a')
+		)
 	})
 
 	describe('initialization', () => {
@@ -305,7 +310,13 @@ describe.skip('FeatureStatusDirective', () => {
 			component.status = 'wip'
 			fixture.detectChanges()
 			const nativeElement = linkElement.nativeElement
-			expect(nativeElement.offsetParent).not.toBeNull()
+			const styles = window.getComputedStyle(
+				nativeElement
+			)
+
+			// In jsdom, offsetParent is unreliable, so check computed styles instead
+			expect(styles.display).not.toBe('none')
+			expect(styles.visibility).not.toBe('hidden')
 		})
 	})
 })
