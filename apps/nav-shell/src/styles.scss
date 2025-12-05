@@ -9,26 +9,26 @@
 // Reset & Base Styles
 // ============================================================================
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 }
 
 html {
-  font-size: 16px;
-  scroll-behavior: smooth;
+	font-size: 16px;
+	scroll-behavior: smooth;
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  line-height: var(--line-height-normal);
-  font-weight: var(--font-weight-normal);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background-color var(--duration-normal) var(--ease-out),
-              color var(--duration-normal) var(--ease-out);
+	font-family: var(--font-sans);
+	background-color: var(--color-bg-secondary);
+	color: var(--color-text-primary);
+	line-height: var(--line-height-normal);
+	font-weight: var(--font-weight-normal);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	transition: background-color var(--duration-normal) var(--ease-out),
+		color var(--duration-normal) var(--ease-out);
 }
 
 // ============================================================================
@@ -39,72 +39,72 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  line-height: var(--line-height-tight);
-  margin-bottom: 0.5em;
+	font-weight: var(--font-weight-bold);
+	color: var(--color-text-primary);
+	line-height: var(--line-height-tight);
+	margin-bottom: 0.5em;
 }
 
 h1 {
-  font-size: 2.5rem;
+	font-size: 2.5rem;
 }
 
 h2 {
-  font-size: 2rem;
+	font-size: 2rem;
 }
 
 h3 {
-  font-size: 1.5rem;
+	font-size: 1.5rem;
 }
 
 h4 {
-  font-size: 1.25rem;
+	font-size: 1.25rem;
 }
 
 h5 {
-  font-size: 1.1rem;
+	font-size: 1.1rem;
 }
 
 h6 {
-  font-size: 1rem;
+	font-size: 1rem;
 }
 
 p {
-  margin-bottom: 1em;
-  color: var(--color-text-secondary);
+	margin-bottom: 1em;
+	color: var(--color-text-secondary);
 }
 
 a {
-  color: var(--color-link);
-  text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-out);
+	color: var(--color-link);
+	text-decoration: none;
+	transition: color var(--duration-fast) var(--ease-out);
 
-  &:hover {
-    color: var(--color-link-hover);
-  }
-  
-  &:focus-visible {
-    @include focus-ring;
-  }
+	&:hover {
+		color: var(--color-link-hover);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+	}
 }
 
 // ============================================================================
 // Layout & Structure
 // ============================================================================
 app-root {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 }
 
 header {
-  flex-shrink: 0;
+	flex-shrink: 0;
 }
 
 main {
-  flex: 1;
-  background-color: var(--color-bg-primary);
-  min-height: calc(100vh - 80px);
+	flex: 1;
+	background-color: var(--color-bg-primary);
+	min-height: calc(100vh - 80px);
 }
 
 // ============================================================================
@@ -112,48 +112,48 @@ main {
 // ============================================================================
 .container,
 .main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 var(--space-6);
 
-  @media (max-width: 1024px) {
-    max-width: 100%;
-    padding: 0 var(--space-6);
-  }
+	@media (max-width: 1024px) {
+		max-width: 100%;
+		padding: 0 var(--space-6);
+	}
 
-  @media (max-width: 768px) {
-    padding: 0 var(--space-4);
-  }
+	@media (max-width: 768px) {
+		padding: 0 var(--space-4);
+	}
 
-  @media (max-width: 480px) {
-    padding: 0 var(--space-3);
-  }
+	@media (max-width: 480px) {
+		padding: 0 var(--space-3);
+	}
 }
 
 // ============================================================================
 // Grid & Flexbox Utilities
 // ============================================================================
 .flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .flex-column {
-  display: flex;
-  flex-direction: column;
+	display: flex;
+	flex-direction: column;
 }
 
 .grid-auto {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-6);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: var(--space-6);
 }
 
 // ============================================================================
@@ -161,34 +161,34 @@ main {
 // ============================================================================
 button,
 .btn {
-  font-family: inherit;
-  font-size: var(--font-size-base);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-out);
-  padding: var(--space-2) var(--space-4);
+	font-family: inherit;
+	font-size: var(--font-size-base);
+	border: none;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition: all var(--duration-fast) var(--ease-out);
+	padding: var(--space-2) var(--space-4);
 
-  &:focus {
-    outline: 2px solid var(--color-focus-ring);
-    outline-offset: 2px;
-  }
+	&:focus {
+		outline: 2px solid var(--color-focus-ring);
+		outline-offset: 2px;
+	}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 }
 
 button.primary,
 .btn-primary {
-  background-color: var(--color-button-primary-bg);
-  color: var(--color-button-primary-text);
+	background-color: var(--color-button-primary-bg);
+	color: var(--color-button-primary-text);
 
-  &:hover:not(:disabled) {
-    filter: brightness(1.1);
-    box-shadow: var(--shadow-md);
-  }
+	&:hover:not(:disabled) {
+		filter: brightness(1.1);
+		box-shadow: var(--shadow-md);
+	}
 }
 
 // ============================================================================
@@ -197,45 +197,45 @@ button.primary,
 input,
 textarea,
 select {
-  font-family: inherit;
-  font-size: var(--font-size-base);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	font-family: inherit;
+	font-size: var(--font-size-base);
+	border: 1px solid var(--color-border-primary);
+	border-radius: var(--radius-md);
+	padding: var(--space-2) var(--space-3);
+	background-color: var(--color-bg-primary);
+	color: var(--color-text-primary);
+	transition: border-color var(--duration-fast) var(--ease-out);
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-link);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
+	&:focus {
+		outline: none;
+		border-color: var(--color-link);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	}
 
-  &::placeholder {
-    color: var(--color-text-muted);
-  }
+	&::placeholder {
+		color: var(--color-text-muted);
+	}
 }
 
 textarea {
-  resize: vertical;
-  min-height: 120px;
+	resize: vertical;
+	min-height: 120px;
 }
 
 // ============================================================================
 // Cards & Panels
 // ============================================================================
 .card {
-  background-color: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--duration-fast) var(--ease-out);
+	background-color: var(--color-card-bg);
+	border: 1px solid var(--color-card-border);
+	border-radius: var(--radius-lg);
+	padding: var(--space-6);
+	box-shadow: var(--shadow-sm);
+	transition: all var(--duration-fast) var(--ease-out);
 
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
+	&:hover {
+		box-shadow: var(--shadow-md);
+	}
 }
 
 // ============================================================================
@@ -243,99 +243,99 @@ textarea {
 // ============================================================================
 code,
 pre {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--space-2);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-sm);
+	background-color: var(--color-bg-secondary);
+	border-radius: var(--radius-md);
+	padding: var(--space-2);
 }
 
 pre {
-  padding: var(--space-4);
-  overflow-x: auto;
-  margin: var(--space-4) 0;
+	padding: var(--space-4);
+	overflow-x: auto;
+	margin: var(--space-4) 0;
 }
 
 // ============================================================================
 // Responsive Typography Adjustments
 // ============================================================================
 @media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-  }
+	h1 {
+		font-size: 2rem;
+	}
 
-  h2 {
-    font-size: 1.5rem;
-  }
+	h2 {
+		font-size: 1.5rem;
+	}
 
-  h3 {
-    font-size: 1.25rem;
-  }
+	h3 {
+		font-size: 1.25rem;
+	}
 
-  h4 {
-    font-size: 1.1rem;
-  }
+	h4 {
+		font-size: 1.1rem;
+	}
 
-  p {
-    font-size: 0.95rem;
-  }
+	p {
+		font-size: 0.95rem;
+	}
 }
 
 // ============================================================================
 // Scrollbar Styling (Webkit browsers)
 // ============================================================================
 ::-webkit-scrollbar {
-  width: 10px;
+	width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
+	background: var(--color-bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-primary);
-  border-radius: 5px;
+	background: var(--color-border-primary);
+	border-radius: 5px;
 
-  &:hover {
-    background: var(--color-text-muted);
-  }
+	&:hover {
+		background: var(--color-text-muted);
+	}
 }
 
 // ============================================================================
 // Utility Classes
 // ============================================================================
 .mt-0 {
-  margin-top: 0 !important;
+	margin-top: 0 !important;
 }
 
 .mb-0 {
-  margin-bottom: 0 !important;
+	margin-bottom: 0 !important;
 }
 
 .text-center {
-  text-align: center;
+	text-align: center;
 }
 
 .text-right {
-  text-align: right;
+	text-align: right;
 }
 
 .text-muted {
-  color: var(--color-text-muted);
+	color: var(--color-text-muted);
 }
 
 .text-primary {
-  color: var(--color-link);
+	color: var(--color-link);
 }
 
 .bg-light {
-  background-color: var(--color-bg-secondary);
+	background-color: var(--color-bg-secondary);
 }
 
 .bg-white {
-  background-color: var(--color-bg-primary);
+	background-color: var(--color-bg-primary);
 }
 
 .shadow {
-  box-shadow: var(--shadow-md);
+	box-shadow: var(--shadow-md);
 }

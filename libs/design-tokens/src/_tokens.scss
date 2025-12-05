@@ -9,223 +9,223 @@
 // Light Theme (Default)
 // ============================================================================
 :root {
-  // ----------------------------------------------------------------------------
-  // Jewel Tone Primaries
-  // ----------------------------------------------------------------------------
-  --color-sapphire-600: #1e40af;      // Primary brand (deep blue)
-  --color-sapphire-500: #3b82f6;      // Interactive elements
-  --color-sapphire-400: #60a5fa;      // Hover states
-  --color-emerald-600: #059669;       // Success, accents
-  --color-emerald-500: #10b981;       // Success hover
-  --color-amethyst-600: #7c3aed;      // Secondary brand (purple)
-  --color-amethyst-500: #a78bfa;      // Secondary hover
-  --color-ruby-600: #dc2626;          // Errors, warnings
-  --color-ruby-500: #ef4444;          // Error hover
-  --color-topaz-600: #d97706;         // Alerts, highlights
-  --color-topaz-500: #f59e0b;         // Alert hover
-  
-  // ----------------------------------------------------------------------------
-  // Neutrals (Cool Gray Scale)
-  // ----------------------------------------------------------------------------
-  --color-slate-900: #0f172a;         // Darkest text
-  --color-slate-800: #1e293b;         // Headings
-  --color-slate-700: #334155;         // Body text
-  --color-slate-600: #475569;         // Secondary text
-  --color-slate-500: #64748b;         // Muted text
-  --color-slate-400: #94a3b8;         // Disabled text
-  --color-slate-300: #cbd5e1;         // Borders
-  --color-slate-200: #e2e8f0;         // Dividers
-  --color-slate-100: #f1f5f9;         // Subtle backgrounds
-  --color-slate-50: #f8fafc;          // Page background
-  
-  // ----------------------------------------------------------------------------
-  // Semantic Tokens (Light Mode)
-  // ----------------------------------------------------------------------------
-  --color-text-primary: var(--color-slate-900);
-  --color-text-secondary: var(--color-slate-700);
-  --color-text-muted: var(--color-slate-500);
-  --color-text-disabled: var(--color-slate-400);
-  
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: var(--color-slate-50);
-  --color-bg-tertiary: var(--color-slate-100);
-  --color-bg-elevated: #ffffff;       // Cards, modals
-  
-  --color-border-primary: var(--color-slate-300);
-  --color-border-secondary: var(--color-slate-200);
-  --color-border-focus: var(--color-sapphire-500);
-  
-  // ----------------------------------------------------------------------------
-  // Interactive States
-  // ----------------------------------------------------------------------------
-  --color-link: var(--color-sapphire-600);
-  --color-link-hover: var(--color-sapphire-500);
-  --color-link-visited: var(--color-amethyst-600);
-  --color-focus-ring: var(--color-sapphire-500);
-  
-  // ----------------------------------------------------------------------------
-  // Component-Specific Tokens
-  // ----------------------------------------------------------------------------
-  --color-button-primary-bg: var(--color-sapphire-600);
-  --color-button-primary-text: #ffffff;
-  --color-button-primary-hover: var(--color-sapphire-500);
-  
-  --color-button-secondary-bg: var(--color-emerald-600);
-  --color-button-secondary-text: #ffffff;
-  --color-button-secondary-hover: var(--color-emerald-500);
-  
-  --color-button-danger-bg: var(--color-ruby-600);
-  --color-button-danger-text: #ffffff;
-  --color-button-danger-hover: var(--color-ruby-500);
-  
-  --color-card-bg: var(--color-bg-elevated);
-  --color-card-border: var(--color-border-primary);
-  --color-card-shadow: var(--shadow-md);
-  
-  // ----------------------------------------------------------------------------
-  // Spacing Scale (8px base unit)
-  // ----------------------------------------------------------------------------
-  --space-0: 0;
-  --space-1: 0.25rem;   // 4px
-  --space-2: 0.5rem;    // 8px
-  --space-3: 0.75rem;   // 12px
-  --space-4: 1rem;      // 16px
-  --space-5: 1.25rem;   // 20px
-  --space-6: 1.5rem;    // 24px
-  --space-8: 2rem;      // 32px
-  --space-10: 2.5rem;   // 40px
-  --space-12: 3rem;     // 48px
-  --space-16: 4rem;     // 64px
-  --space-20: 5rem;     // 80px
-  --space-24: 6rem;     // 96px
-  --space-32: 8rem;     // 128px
-  
-  // ----------------------------------------------------------------------------
-  // Border Radius
-  // ----------------------------------------------------------------------------
-  --radius-none: 0;
-  --radius-sm: 0.25rem;   // 4px
-  --radius-md: 0.5rem;    // 8px
-  --radius-lg: 0.75rem;   // 12px
-  --radius-xl: 1rem;      // 16px
-  --radius-2xl: 1.5rem;   // 24px
-  --radius-full: 9999px;  // Pill shape
-  
-  // ----------------------------------------------------------------------------
-  // Shadows
-  // ----------------------------------------------------------------------------
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
-  
-  // ----------------------------------------------------------------------------
-  // Z-Index Scale
-  // ----------------------------------------------------------------------------
-  --z-base: 0;
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-toast: 500;
-  --z-tooltip: 600;
-  
-  // ----------------------------------------------------------------------------
-  // Breakpoints (for JS access via getComputedStyle)
-  // ----------------------------------------------------------------------------
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+	// ----------------------------------------------------------------------------
+	// Jewel Tone Primaries
+	// ----------------------------------------------------------------------------
+	--color-sapphire-600: #1e40af; // Primary brand (deep blue)
+	--color-sapphire-500: #3b82f6; // Interactive elements
+	--color-sapphire-400: #60a5fa; // Hover states
+	--color-emerald-600: #059669; // Success, accents
+	--color-emerald-500: #10b981; // Success hover
+	--color-amethyst-600: #7c3aed; // Secondary brand (purple)
+	--color-amethyst-500: #a78bfa; // Secondary hover
+	--color-ruby-600: #dc2626; // Errors, warnings
+	--color-ruby-500: #ef4444; // Error hover
+	--color-topaz-600: #d97706; // Alerts, highlights
+	--color-topaz-500: #f59e0b; // Alert hover
+
+	// ----------------------------------------------------------------------------
+	// Neutrals (Cool Gray Scale)
+	// ----------------------------------------------------------------------------
+	--color-slate-900: #0f172a; // Darkest text
+	--color-slate-800: #1e293b; // Headings
+	--color-slate-700: #334155; // Body text
+	--color-slate-600: #475569; // Secondary text
+	--color-slate-500: #64748b; // Muted text
+	--color-slate-400: #94a3b8; // Disabled text
+	--color-slate-300: #cbd5e1; // Borders
+	--color-slate-200: #e2e8f0; // Dividers
+	--color-slate-100: #f1f5f9; // Subtle backgrounds
+	--color-slate-50: #f8fafc; // Page background
+
+	// ----------------------------------------------------------------------------
+	// Semantic Tokens (Light Mode)
+	// ----------------------------------------------------------------------------
+	--color-text-primary: var(--color-slate-900);
+	--color-text-secondary: var(--color-slate-700);
+	--color-text-muted: var(--color-slate-500);
+	--color-text-disabled: var(--color-slate-400);
+
+	--color-bg-primary: #ffffff;
+	--color-bg-secondary: var(--color-slate-50);
+	--color-bg-tertiary: var(--color-slate-100);
+	--color-bg-elevated: #ffffff; // Cards, modals
+
+	--color-border-primary: var(--color-slate-300);
+	--color-border-secondary: var(--color-slate-200);
+	--color-border-focus: var(--color-sapphire-500);
+
+	// ----------------------------------------------------------------------------
+	// Interactive States
+	// ----------------------------------------------------------------------------
+	--color-link: var(--color-sapphire-600);
+	--color-link-hover: var(--color-sapphire-500);
+	--color-link-visited: var(--color-amethyst-600);
+	--color-focus-ring: var(--color-sapphire-500);
+
+	// ----------------------------------------------------------------------------
+	// Component-Specific Tokens
+	// ----------------------------------------------------------------------------
+	--color-button-primary-bg: var(--color-sapphire-600);
+	--color-button-primary-text: #ffffff;
+	--color-button-primary-hover: var(--color-sapphire-500);
+
+	--color-button-secondary-bg: var(--color-emerald-600);
+	--color-button-secondary-text: #ffffff;
+	--color-button-secondary-hover: var(--color-emerald-500);
+
+	--color-button-danger-bg: var(--color-ruby-600);
+	--color-button-danger-text: #ffffff;
+	--color-button-danger-hover: var(--color-ruby-500);
+
+	--color-card-bg: var(--color-bg-elevated);
+	--color-card-border: var(--color-border-primary);
+	--color-card-shadow: var(--shadow-md);
+
+	// ----------------------------------------------------------------------------
+	// Spacing Scale (8px base unit)
+	// ----------------------------------------------------------------------------
+	--space-0: 0;
+	--space-1: 0.25rem; // 4px
+	--space-2: 0.5rem; // 8px
+	--space-3: 0.75rem; // 12px
+	--space-4: 1rem; // 16px
+	--space-5: 1.25rem; // 20px
+	--space-6: 1.5rem; // 24px
+	--space-8: 2rem; // 32px
+	--space-10: 2.5rem; // 40px
+	--space-12: 3rem; // 48px
+	--space-16: 4rem; // 64px
+	--space-20: 5rem; // 80px
+	--space-24: 6rem; // 96px
+	--space-32: 8rem; // 128px
+
+	// ----------------------------------------------------------------------------
+	// Border Radius
+	// ----------------------------------------------------------------------------
+	--radius-none: 0;
+	--radius-sm: 0.25rem; // 4px
+	--radius-md: 0.5rem; // 8px
+	--radius-lg: 0.75rem; // 12px
+	--radius-xl: 1rem; // 16px
+	--radius-2xl: 1.5rem; // 24px
+	--radius-full: 9999px; // Pill shape
+
+	// ----------------------------------------------------------------------------
+	// Shadows
+	// ----------------------------------------------------------------------------
+	--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+	--shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+	--shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+
+	// ----------------------------------------------------------------------------
+	// Z-Index Scale
+	// ----------------------------------------------------------------------------
+	--z-base: 0;
+	--z-dropdown: 100;
+	--z-sticky: 200;
+	--z-modal-backdrop: 300;
+	--z-modal: 400;
+	--z-toast: 500;
+	--z-tooltip: 600;
+
+	// ----------------------------------------------------------------------------
+	// Breakpoints (for JS access via getComputedStyle)
+	// ----------------------------------------------------------------------------
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 1024px;
+	--breakpoint-xl: 1280px;
+	--breakpoint-2xl: 1536px;
 }
 
 // ============================================================================
 // Dark Theme
 // ============================================================================
-[data-theme="dark"] {
-  // ----------------------------------------------------------------------------
-  // Jewel Tones (adjusted for dark backgrounds)
-  // ----------------------------------------------------------------------------
-  --color-sapphire-600: #3b82f6;      // Brighter for contrast
-  --color-sapphire-500: #60a5fa;
-  --color-sapphire-400: #93c5fd;
-  --color-emerald-600: #10b981;
-  --color-emerald-500: #34d399;
-  --color-amethyst-600: #a78bfa;
-  --color-amethyst-500: #c4b5fd;
-  --color-ruby-600: #ef4444;
-  --color-ruby-500: #f87171;
-  --color-topaz-600: #f59e0b;
-  --color-topaz-500: #fbbf24;
-  
-  // ----------------------------------------------------------------------------
-  // Neutrals (Inverted)
-  // ----------------------------------------------------------------------------
-  --color-slate-900: #f8fafc;         // Lightest text
-  --color-slate-800: #f1f5f9;         // Headings
-  --color-slate-700: #e2e8f0;         // Body text
-  --color-slate-600: #cbd5e1;         // Secondary text
-  --color-slate-500: #94a3b8;         // Muted text
-  --color-slate-400: #64748b;         // Disabled text
-  --color-slate-300: #475569;         // Borders
-  --color-slate-200: #334155;         // Dividers
-  --color-slate-100: #1e293b;         // Subtle backgrounds
-  --color-slate-50: #0f172a;          // Page background
-  
-  // ----------------------------------------------------------------------------
-  // Semantic Tokens (Dark Mode Overrides)
-  // ----------------------------------------------------------------------------
-  --color-text-primary: var(--color-slate-900);
-  --color-text-secondary: var(--color-slate-700);
-  --color-text-muted: var(--color-slate-500);
-  --color-text-disabled: var(--color-slate-400);
-  
-  --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-  --color-bg-elevated: #1e293b;       // Cards, modals slightly elevated
-  
-  --color-border-primary: var(--color-slate-300);
-  --color-border-secondary: #334155;
-  --color-border-focus: var(--color-sapphire-400);
-  
-  // ----------------------------------------------------------------------------
-  // Interactive States
-  // ----------------------------------------------------------------------------
-  --color-link: var(--color-sapphire-400);
-  --color-link-hover: var(--color-sapphire-300);
-  --color-link-visited: var(--color-amethyst-400);
-  --color-focus-ring: var(--color-sapphire-400);
-  
-  // ----------------------------------------------------------------------------
-  // Component-Specific Tokens
-  // ----------------------------------------------------------------------------
-  --color-button-primary-bg: var(--color-sapphire-600);
-  --color-button-primary-text: var(--color-slate-900);
-  --color-button-primary-hover: var(--color-sapphire-500);
-  
-  --color-button-secondary-bg: var(--color-emerald-600);
-  --color-button-secondary-text: var(--color-slate-900);
-  --color-button-secondary-hover: var(--color-emerald-500);
-  
-  --color-button-danger-bg: var(--color-ruby-600);
-  --color-button-danger-text: #ffffff;
-  --color-button-danger-hover: var(--color-ruby-500);
-  
-  --color-card-bg: var(--color-bg-elevated);
-  --color-card-border: var(--color-border-primary);
-  --color-card-shadow: var(--shadow-lg);
-  
-  // ----------------------------------------------------------------------------
-  // Shadows (Darker for dark backgrounds)
-  // ----------------------------------------------------------------------------
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.7);
+[data-theme='dark'] {
+	// ----------------------------------------------------------------------------
+	// Jewel Tones (adjusted for dark backgrounds)
+	// ----------------------------------------------------------------------------
+	--color-sapphire-600: #3b82f6; // Brighter for contrast
+	--color-sapphire-500: #60a5fa;
+	--color-sapphire-400: #93c5fd;
+	--color-emerald-600: #10b981;
+	--color-emerald-500: #34d399;
+	--color-amethyst-600: #a78bfa;
+	--color-amethyst-500: #c4b5fd;
+	--color-ruby-600: #ef4444;
+	--color-ruby-500: #f87171;
+	--color-topaz-600: #f59e0b;
+	--color-topaz-500: #fbbf24;
+
+	// ----------------------------------------------------------------------------
+	// Neutrals (Inverted)
+	// ----------------------------------------------------------------------------
+	--color-slate-900: #f8fafc; // Lightest text
+	--color-slate-800: #f1f5f9; // Headings
+	--color-slate-700: #e2e8f0; // Body text
+	--color-slate-600: #cbd5e1; // Secondary text
+	--color-slate-500: #94a3b8; // Muted text
+	--color-slate-400: #64748b; // Disabled text
+	--color-slate-300: #475569; // Borders
+	--color-slate-200: #334155; // Dividers
+	--color-slate-100: #1e293b; // Subtle backgrounds
+	--color-slate-50: #0f172a; // Page background
+
+	// ----------------------------------------------------------------------------
+	// Semantic Tokens (Dark Mode Overrides)
+	// ----------------------------------------------------------------------------
+	--color-text-primary: var(--color-slate-900);
+	--color-text-secondary: var(--color-slate-700);
+	--color-text-muted: var(--color-slate-500);
+	--color-text-disabled: var(--color-slate-400);
+
+	--color-bg-primary: #0f172a;
+	--color-bg-secondary: #1e293b;
+	--color-bg-tertiary: #334155;
+	--color-bg-elevated: #1e293b; // Cards, modals slightly elevated
+
+	--color-border-primary: var(--color-slate-300);
+	--color-border-secondary: #334155;
+	--color-border-focus: var(--color-sapphire-400);
+
+	// ----------------------------------------------------------------------------
+	// Interactive States
+	// ----------------------------------------------------------------------------
+	--color-link: var(--color-sapphire-400);
+	--color-link-hover: var(--color-sapphire-300);
+	--color-link-visited: var(--color-amethyst-400);
+	--color-focus-ring: var(--color-sapphire-400);
+
+	// ----------------------------------------------------------------------------
+	// Component-Specific Tokens
+	// ----------------------------------------------------------------------------
+	--color-button-primary-bg: var(--color-sapphire-600);
+	--color-button-primary-text: var(--color-slate-900);
+	--color-button-primary-hover: var(--color-sapphire-500);
+
+	--color-button-secondary-bg: var(--color-emerald-600);
+	--color-button-secondary-text: var(--color-slate-900);
+	--color-button-secondary-hover: var(--color-emerald-500);
+
+	--color-button-danger-bg: var(--color-ruby-600);
+	--color-button-danger-text: #ffffff;
+	--color-button-danger-hover: var(--color-ruby-500);
+
+	--color-card-bg: var(--color-bg-elevated);
+	--color-card-border: var(--color-border-primary);
+	--color-card-shadow: var(--shadow-lg);
+
+	// ----------------------------------------------------------------------------
+	// Shadows (Darker for dark backgrounds)
+	// ----------------------------------------------------------------------------
+	--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+	--shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+	--shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.7);
 }

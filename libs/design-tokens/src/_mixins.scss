@@ -8,11 +8,15 @@
 // Breakpoints
 // ============================================================================
 $breakpoints: (
-  'sm': 640px,   // Large phones (portrait tablets)
-  'md': 768px,   // Tablets (portrait)
-  'lg': 1024px,  // Tablets (landscape), small laptops
-  'xl': 1280px,  // Laptops, desktops
-  '2xl': 1536px  // Large desktops
+	'sm': 640px,
+	// Large phones (portrait tablets)
+	'md': 768px,
+	// Tablets (portrait)
+	'lg': 1024px,
+	// Tablets (landscape), small laptops
+	'xl': 1280px,
+	// Laptops, desktops
+	'2xl': 1536px // Large desktops
 );
 
 // ============================================================================
@@ -29,13 +33,13 @@ $breakpoints: (
 ///     }
 ///   }
 @mixin respond-above($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (min-width: map-get($breakpoints, $breakpoint)) {
-      @content;
-    }
-  } @else {
-    @warn "Unknown breakpoint: #{$breakpoint}. Available: #{map-keys($breakpoints)}";
-  }
+	@if map-has-key($breakpoints, $breakpoint) {
+		@media (min-width: map-get($breakpoints, $breakpoint)) {
+			@content;
+		}
+	} @else {
+		@warn "Unknown breakpoint: #{$breakpoint}. Available: #{map-keys($breakpoints)}";
+	}
 }
 
 /// Desktop-first media query (for specific cases)
@@ -48,13 +52,13 @@ $breakpoints: (
 ///     }
 ///   }
 @mixin respond-below($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
-      @content;
-    }
-  } @else {
-    @warn "Unknown breakpoint: #{$breakpoint}. Available: #{map-keys($breakpoints)}";
-  }
+	@if map-has-key($breakpoints, $breakpoint) {
+		@media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
+			@content;
+		}
+	} @else {
+		@warn "Unknown breakpoint: #{$breakpoint}. Available: #{map-keys($breakpoints)}";
+	}
 }
 
 /// Between two breakpoints
@@ -67,13 +71,13 @@ $breakpoints: (
 ///     }
 ///   }
 @mixin respond-between($min, $max) {
-  @if map-has-key($breakpoints, $min) and map-has-key($breakpoints, $max) {
-    @media (min-width: map-get($breakpoints, $min)) and (max-width: map-get($breakpoints, $max) - 1px) {
-      @content;
-    }
-  } @else {
-    @warn "Unknown breakpoints: #{$min} or #{$max}. Available: #{map-keys($breakpoints)}";
-  }
+	@if map-has-key($breakpoints, $min) and map-has-key($breakpoints, $max) {
+		@media (min-width: map-get($breakpoints, $min)) and (max-width: map-get($breakpoints, $max) - 1px) {
+			@content;
+		}
+	} @else {
+		@warn "Unknown breakpoints: #{$min} or #{$max}. Available: #{map-keys($breakpoints)}";
+	}
 }
 
 // ============================================================================
@@ -82,40 +86,40 @@ $breakpoints: (
 
 /// Visually hide element (accessible to screen readers)
 @mixin visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
 }
 
 /// Truncate text with ellipsis
 @mixin truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /// Multi-line truncate with ellipsis
 /// @param {Number} $lines - Number of lines to show
 @mixin line-clamp($lines: 2) {
-  display: -webkit-box;
-  -webkit-line-clamp: $lines;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: $lines;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
 /// Focus ring for keyboard navigation
 @mixin focus-ring {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
 }
 
 /// Reset focus ring (use :focus-visible instead)
 @mixin focus-reset {
-  outline: none;
+	outline: none;
 }

@@ -57,36 +57,36 @@ Creating new pages:
 Create a `.ts` file in `apps/nav-shell/src/app/pages/` with inline template and styles. Prefer Angular's modern control flow syntax (`@if`, `@for`, `@switch`) rather than legacy structural directives. Pages should render UI composed from Nx libraries (e.g., `@jeffapp/ui-components`, `@jeffapp/ui-angular`).
 
 ```typescript
-import { Component, CommonModule } from '@angular/core';
+import { Component, CommonModule } from '@angular/core'
 
 @Component({
-  selector: 'app-my-component',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    @if (show) {
-    <div class="my-class">{{ data }}</div>
-    } @else {
-    <div class="my-class">Hidden</div>
-    }
-    <ul>
-      @for (item of items; track item) {
-      <li>{{ item }}</li>
-      }
-    </ul>
-  `,
-  styles: [
-    `
-      .my-class {
-        color: blue;
-      }
-    `,
-  ],
+	selector: 'app-my-component',
+	standalone: true,
+	imports: [CommonModule],
+	template: `
+		@if (show) {
+		<div class="my-class">{{ data }}</div>
+		} @else {
+		<div class="my-class">Hidden</div>
+		}
+		<ul>
+			@for (item of items; track item) {
+			<li>{{ item }}</li>
+			}
+		</ul>
+	`,
+	styles: [
+		`
+			.my-class {
+				color: blue;
+			}
+		`
+	]
 })
 export class MyPage {
-  protected data = 'Hello';
-  protected show = true;
-  protected items = ['One', 'Two', 'Three'];
+	protected data = 'Hello'
+	protected show = true
+	protected items = ['One', 'Two', 'Three']
 }
 ```
 ````
@@ -198,21 +198,21 @@ import '@jeffapp/ui-components-native'; // Load native components
 
 ```typescript
 // In main.tsx or App.tsx entry point
-import { loadWebComponents, AppButton, NativeCard } from '@jeffapp/ui-react';
+import { loadWebComponents, AppButton, NativeCard } from '@jeffapp/ui-react'
 
 // Load Web Components once at app startup
-loadWebComponents();
+loadWebComponents()
 
 // Use type-safe React wrappers or direct JSX
 function App() {
-  return (
-    <>
-      <AppButton label="Stencil" variant="primary" onClick={() => alert('clicked')} />
-      <NativeCard title="Native" description="Vanilla">
-        <p>Card content</p>
-      </NativeCard>
-    </>
-  );
+	return (
+		<>
+			<AppButton label="Stencil" variant="primary" onClick={() => alert('clicked')} />
+			<NativeCard title="Native" description="Vanilla">
+				<p>Card content</p>
+			</NativeCard>
+		</>
+	)
 }
 ```
 
