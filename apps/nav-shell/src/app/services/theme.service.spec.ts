@@ -55,7 +55,9 @@ describe.skip('ThemeService', () => {
 			// Create service
 			// Verify currentTheme is 'dark'
 			// Verify data-theme attribute is set to 'dark'
-			;(localStorage.getItem as jest.Mock).mockReturnValue('dark')
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue('dark')
 			service = TestBed.inject(ThemeService)
 			expect(service.getCurrentTheme()).toBe('dark')
 		})
@@ -65,8 +67,12 @@ describe.skip('ThemeService', () => {
 			// Mock window.matchMedia to return { matches: true } (dark mode)
 			// Create service
 			// Verify currentTheme is 'dark'
-			;(localStorage.getItem as jest.Mock).mockReturnValue(null)
-			const matchMediaMock = jest.fn().mockReturnValue({ matches: true })
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue(null)
+			const matchMediaMock = jest
+				.fn()
+				.mockReturnValue({ matches: true })
 			Object.defineProperty(window, 'matchMedia', {
 				value: matchMediaMock,
 				writable: true
@@ -80,8 +86,12 @@ describe.skip('ThemeService', () => {
 			// Mock window.matchMedia to return { matches: false }
 			// Create service
 			// Verify currentTheme is 'light'
-			;(localStorage.getItem as jest.Mock).mockReturnValue(null)
-			const matchMediaMock = jest.fn().mockReturnValue({ matches: false })
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue(null)
+			const matchMediaMock = jest
+				.fn()
+				.mockReturnValue({ matches: false })
 			Object.defineProperty(window, 'matchMedia', {
 				value: matchMediaMock,
 				writable: true
@@ -119,7 +129,10 @@ describe.skip('ThemeService', () => {
 			service.setTheme('light')
 			service.toggle()
 			expect(service.getCurrentTheme()).toBe('dark')
-			expect(localStorage.setItem).toHaveBeenCalledWith('jeffapp-theme', 'dark')
+			expect(localStorage.setItem).toHaveBeenCalledWith(
+				'jeffapp-theme',
+				'dark'
+			)
 		})
 
 		it('should toggle from dark to light', () => {
@@ -190,7 +203,10 @@ describe.skip('ThemeService', () => {
 			// Verify localStorage.setItem was called
 			service.setTheme('dark')
 			expect(service.getCurrentTheme()).toBe('dark')
-			expect(localStorage.setItem).toHaveBeenCalledWith('jeffapp-theme', 'dark')
+			expect(localStorage.setItem).toHaveBeenCalledWith(
+				'jeffapp-theme',
+				'dark'
+			)
 		})
 
 		it('should be idempotent (setting same theme multiple times)', () => {
@@ -201,7 +217,9 @@ describe.skip('ThemeService', () => {
 			service.setTheme('dark')
 			service.setTheme('dark')
 			expect(service.getCurrentTheme()).toBe('dark')
-			expect(localStorage.setItem).toHaveBeenCalledTimes(3)
+			expect(localStorage.setItem).toHaveBeenCalledTimes(
+				3
+			)
 		})
 	})
 
@@ -330,7 +348,9 @@ describe.skip('ThemeService', () => {
 			// Destroy and recreate service (TestBed.inject again)
 			// Verify new service starts with dark theme
 			service.setTheme('dark')
-			;(localStorage.getItem as jest.Mock).mockReturnValue('dark')
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue('dark')
 			const newService = TestBed.inject(ThemeService)
 			expect(newService.getCurrentTheme()).toBe('dark')
 		})
@@ -345,7 +365,9 @@ describe.skip('ThemeService', () => {
 			const originalWindow = global.window
 			// @ts-expect-error: Testing SSR scenario
 			delete global.window
-			expect(() => TestBed.inject(ThemeService)).not.toThrow()
+			expect(() =>
+				TestBed.inject(ThemeService)
+			).not.toThrow()
 			global.window = originalWindow
 		})
 
@@ -356,7 +378,9 @@ describe.skip('ThemeService', () => {
 			const originalDocument = global.document
 			// @ts-expect-error: Testing SSR scenario
 			delete global.document
-			expect(() => TestBed.inject(ThemeService)).not.toThrow()
+			expect(() =>
+				TestBed.inject(ThemeService)
+			).not.toThrow()
 			global.document = originalDocument
 		})
 
@@ -379,8 +403,12 @@ describe.skip('ThemeService', () => {
 			// Mock matchMedia to return { matches: true }
 			// Create service
 			// Verify theme is dark
-			;(localStorage.getItem as jest.Mock).mockReturnValue(null)
-			const matchMediaMock = jest.fn().mockReturnValue({ matches: true })
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue(null)
+			const matchMediaMock = jest
+				.fn()
+				.mockReturnValue({ matches: true })
 			Object.defineProperty(window, 'matchMedia', {
 				value: matchMediaMock,
 				writable: true
@@ -394,8 +422,12 @@ describe.skip('ThemeService', () => {
 			// Mock matchMedia to return { matches: false }
 			// Create service
 			// Verify theme is light
-			;(localStorage.getItem as jest.Mock).mockReturnValue(null)
-			const matchMediaMock = jest.fn().mockReturnValue({ matches: false })
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue(null)
+			const matchMediaMock = jest
+				.fn()
+				.mockReturnValue({ matches: false })
 			Object.defineProperty(window, 'matchMedia', {
 				value: matchMediaMock,
 				writable: true
@@ -409,8 +441,12 @@ describe.skip('ThemeService', () => {
 			// Mock matchMedia to return { matches: true } (OS prefers dark)
 			// Create service
 			// Verify theme is 'light' (localStorage wins)
-			;(localStorage.getItem as jest.Mock).mockReturnValue('light')
-			const matchMediaMock = jest.fn().mockReturnValue({ matches: true })
+			;(
+				localStorage.getItem as jest.Mock
+			).mockReturnValue('light')
+			const matchMediaMock = jest
+				.fn()
+				.mockReturnValue({ matches: true })
 			Object.defineProperty(window, 'matchMedia', {
 				value: matchMediaMock,
 				writable: true
@@ -434,7 +470,10 @@ describe.skip('ThemeService', () => {
 				'setAttribute'
 			)
 			service.setTheme('dark')
-			expect(setAttributeSpy).toHaveBeenCalledWith('data-theme', 'dark')
+			expect(setAttributeSpy).toHaveBeenCalledWith(
+				'data-theme',
+				'dark'
+			)
 		})
 
 		it('should update data-theme attribute on every theme change', () => {
@@ -473,7 +512,9 @@ describe.skip('ThemeService', () => {
 			// Call toggle()
 			// Verify service doesn't crash
 			// Theme still updates (just not persisted)
-			;(localStorage.setItem as jest.Mock).mockImplementation(() => {
+			;(
+				localStorage.setItem as jest.Mock
+			).mockImplementation(() => {
 				throw new Error('Storage quota exceeded')
 			})
 			expect(() => service.toggle()).not.toThrow()

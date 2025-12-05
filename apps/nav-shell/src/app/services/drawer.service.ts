@@ -1,4 +1,8 @@
-import { Injectable, OnDestroy, signal } from '@angular/core'
+import {
+	Injectable,
+	OnDestroy,
+	signal
+} from '@angular/core'
 
 @Injectable({
 	providedIn: 'root'

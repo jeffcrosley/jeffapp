@@ -1,8 +1,16 @@
-import { Component, DebugElement } from '@angular/core'
-import { ComponentFixture, TestBed } from '@angular/core/testing'
+import {
+	Component,
+	DebugElement,
+	signal
+} from '@angular/core'
+import {
+	ComponentFixture,
+	TestBed
+} from '@angular/core/testing'
 import { By } from '@angular/platform-browser'
 import { of } from 'rxjs'
 import { FeatureStatusDirective } from '../../directives/feature-status.directive'
+import { BreakpointService } from '../../services/breakpoint.service'
 import { DrawerService } from '../../services/drawer.service'
 import type { FeatureStatus } from '../../services/feature-visibility.service'
 import { FeatureVisibilityService } from '../../services/feature-visibility.service'
@@ -37,6 +45,20 @@ interface NavLink {
 	external?: boolean
 }
 
+// Mock services for unit testing isolation
+const createMockBreakpointService = () => ({
+	isDesktop$: signal(false),
+	ngOnDestroy: jest.fn()
+})
+
+const createMockDrawerService = () => ({
+	isOpen$: signal(false),
+	toggle: jest.fn(),
+	open: jest.fn(),
+	close: jest.fn(),
+	ngOnDestroy: jest.fn()
+})
+
 @Component({
 	selector: 'app-test-navigation-drawer',
 	template: `
@@ -51,8 +73,16 @@ interface NavLink {
 class TestNavigationDrawerHostComponent {
 	links: NavLink[] = [
 		{ label: 'Home', route: '/', status: 'stable' },
-		{ label: 'About', route: '/about', status: 'stable' },
-		{ label: 'Components', route: '/components', status: 'wip' },
+		{
+			label: 'About',
+			route: '/about',
+			status: 'stable'
+		},
+		{
+			label: 'Components',
+			route: '/components',
+			status: 'wip'
+		},
 		{
 			label: 'GitHub',
 			route: 'https://github.com',
@@ -77,12 +107,26 @@ describe.skip('NavigationDrawerComponent', () => {
 				NavigationDrawerComponent,
 				FeatureStatusDirective
 			],
-			providers: [FeatureVisibilityService, DrawerService]
+			providers: [
+				FeatureVisibilityService,
+				{
+					provide: BreakpointService,
+					useFactory: createMockBreakpointService
+				},
+				{
+					provide: DrawerService,
+					useFactory: createMockDrawerService
+				}
+			]
 		})
 
-		fixture = TestBed.createComponent(TestNavigationDrawerHostComponent)
+		fixture = TestBed.createComponent(
+			TestNavigationDrawerHostComponent
+		)
 		hostComponent = fixture.componentInstance
-		featureVisibilityService = TestBed.inject(FeatureVisibilityService)
+		featureVisibilityService = TestBed.inject(
+			FeatureVisibilityService
+		)
 
 		drawerElement = fixture.debugElement.query(
 			By.directive(NavigationDrawerComponent)
@@ -116,7 +160,9 @@ describe.skip('NavigationDrawerComponent', () => {
 		it('should render aside element with class nav-drawer', () => {
 			// TODO: Verify component renders <aside class="nav-drawer">
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('aside.nav-drawer'))
+			const aside = fixture.debugElement.query(
+				By.css('aside.nav-drawer')
+			)
 			expect(aside).toBeTruthy()
 		})
 
@@ -126,23 +172,33 @@ describe.skip('NavigationDrawerComponent', () => {
 			//   <h1 class="portfolio-title">Jeff Crosley</h1>
 			// </div>
 			fixture.detectChanges()
-			const header = fixture.debugElement.query(By.css('.drawer-header'))
-			const title = fixture.debugElement.query(By.css('.portfolio-title'))
+			const header = fixture.debugElement.query(
+				By.css('.drawer-header')
+			)
+			const title = fixture.debugElement.query(
+				By.css('.portfolio-title')
+			)
 			expect(header).toBeTruthy()
-			expect(title?.nativeElement.textContent).toContain('Jeff Crosley')
+			expect(title?.nativeElement.textContent).toContain(
+				'Jeff Crosley'
+			)
 		})
 
 		it('should render nav element with class drawer-nav', () => {
 			// TODO: Verify <nav class="drawer-nav"> exists
 			fixture.detectChanges()
-			const nav = fixture.debugElement.query(By.css('nav.drawer-nav'))
+			const nav = fixture.debugElement.query(
+				By.css('nav.drawer-nav')
+			)
 			expect(nav).toBeTruthy()
 		})
 
 		it('should render unordered list with class nav-links', () => {
 			// TODO: Verify <ul class="nav-links"> exists inside nav
 			fixture.detectChanges()
-			const ul = fixture.debugElement.query(By.css('ul.nav-links'))
+			const ul = fixture.debugElement.query(
+				By.css('ul.nav-links')
+			)
 			expect(ul).toBeTruthy()
 		})
 	})
@@ -154,8 +210,16 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Verify 4 <li> elements exist in list
 			hostComponent.links = [
 				{ label: 'Home', route: '/', status: 'stable' },
-				{ label: 'About', route: '/about', status: 'stable' },
-				{ label: 'Components', route: '/components', status: 'wip' },
+				{
+					label: 'About',
+					route: '/about',
+					status: 'stable'
+				},
+				{
+					label: 'Components',
+					route: '/components',
+					status: 'wip'
+				},
 				{
 					label: 'GitHub',
 					route: 'https://github.com',
@@ -164,7 +228,9 @@ describe.skip('NavigationDrawerComponent', () => {
 				}
 			]
 			fixture.detectChanges()
-			const listItems = fixture.debugElement.queryAll(By.css('li'))
+			const listItems = fixture.debugElement.queryAll(
+				By.css('li')
+			)
 			expect(listItems.length).toBe(4)
 		})
 
@@ -175,9 +241,15 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Link 2: "Components"
 			// Link 3: "GitHub"
 			fixture.detectChanges()
-			const links = fixture.debugElement.queryAll(By.css('a.nav-link'))
-			expect(links[0].nativeElement.textContent).toContain('Home')
-			expect(links[1].nativeElement.textContent).toContain('About')
+			const links = fixture.debugElement.queryAll(
+				By.css('a.nav-link')
+			)
+			expect(
+				links[0].nativeElement.textContent
+			).toContain('Home')
+			expect(
+				links[1].nativeElement.textContent
+			).toContain('About')
 		})
 
 		it('should set href for internal routes', () => {
@@ -185,7 +257,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Link to "/" should have href="/"
 			// Link to "/about" should have href="/about"
 			fixture.detectChanges()
-			const homeLink = fixture.debugElement.query(By.css('a[href="/"]'))
+			const homeLink = fixture.debugElement.query(
+				By.css('a[href="/"]')
+			)
 			expect(homeLink).toBeTruthy()
 		})
 
@@ -211,8 +285,12 @@ describe.skip('NavigationDrawerComponent', () => {
 		it('should not set target="_blank" for internal routes', () => {
 			// TODO: Verify internal links do NOT have target="_blank"
 			fixture.detectChanges()
-			const homeLink = fixture.debugElement.query(By.css('a[href="/"]'))
-			expect(homeLink?.nativeElement.getAttribute('target')).not.toBe('_blank')
+			const homeLink = fixture.debugElement.query(
+				By.css('a[href="/"]')
+			)
+			expect(
+				homeLink?.nativeElement.getAttribute('target')
+			).not.toBe('_blank')
 		})
 	})
 
@@ -224,16 +302,24 @@ describe.skip('NavigationDrawerComponent', () => {
 			const componentLink = fixture.debugElement.queryAll(
 				By.css('a.nav-link')
 			)[2]
-			const badge = componentLink.query(By.css('.feature-badge'))
-			expect(badge?.nativeElement.textContent).toContain('🚧 WIP')
+			const badge = componentLink.query(
+				By.css('.feature-badge')
+			)
+			expect(badge?.nativeElement.textContent).toContain(
+				'🚧 WIP'
+			)
 		})
 
 		it('should not render badge for stable status link', () => {
 			// TODO: Find Home link (status: stable)
 			// Verify it does NOT contain .feature-badge
 			fixture.detectChanges()
-			const homeLink = fixture.debugElement.queryAll(By.css('a.nav-link'))[0]
-			const badge = homeLink.query(By.css('.feature-badge'))
+			const homeLink = fixture.debugElement.queryAll(
+				By.css('a.nav-link')
+			)[0]
+			const badge = homeLink.query(
+				By.css('.feature-badge')
+			)
 			expect(badge).toBeFalsy()
 		})
 
@@ -246,9 +332,15 @@ describe.skip('NavigationDrawerComponent', () => {
 				status: 'beta'
 			})
 			fixture.detectChanges()
-			const blogLink = fixture.debugElement.queryAll(By.css('a.nav-link'))[4]
-			const badge = blogLink.query(By.css('.feature-badge'))
-			expect(badge?.nativeElement.textContent).toContain('🧪 Beta')
+			const blogLink = fixture.debugElement.queryAll(
+				By.css('a.nav-link')
+			)[4]
+			const badge = blogLink.query(
+				By.css('.feature-badge')
+			)
+			expect(badge?.nativeElement.textContent).toContain(
+				'🧪 Beta'
+			)
 		})
 
 		it('should position badge inline with link text', () => {
@@ -259,10 +351,14 @@ describe.skip('NavigationDrawerComponent', () => {
 			const componentLink = fixture.debugElement.queryAll(
 				By.css('a.nav-link')
 			)[2]
-			const badge = componentLink.query(By.css('.feature-badge'))
-			expect(componentLink.nativeElement.contains(badge?.nativeElement)).toBe(
-				true
+			const badge = componentLink.query(
+				By.css('.feature-badge')
 			)
+			expect(
+				componentLink.nativeElement.contains(
+					badge?.nativeElement
+				)
+			).toBe(true)
 		})
 
 		it('should apply feature-{status} class to link', () => {
@@ -273,7 +369,9 @@ describe.skip('NavigationDrawerComponent', () => {
 				By.css('a.nav-link')
 			)[2]
 			expect(
-				componentLink.nativeElement.classList.contains('feature-wip')
+				componentLink.nativeElement.classList.contains(
+					'feature-wip'
+				)
 			).toBe(true)
 		})
 	})
@@ -303,8 +401,12 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Verify aside.nav-drawer has class 'open'
 			hostComponent.isOpen$ = of(true)
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('aside.nav-drawer'))
-			expect(aside?.nativeElement.classList.contains('open')).toBe(true)
+			const aside = fixture.debugElement.query(
+				By.css('aside.nav-drawer')
+			)
+			expect(
+				aside?.nativeElement.classList.contains('open')
+			).toBe(true)
 		})
 
 		it('should remove open class when isOpen$ emits false', () => {
@@ -313,8 +415,12 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Verify aside.nav-drawer does NOT have class 'open'
 			hostComponent.isOpen$ = of(false)
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('aside.nav-drawer'))
-			expect(aside?.nativeElement.classList.contains('open')).toBe(false)
+			const aside = fixture.debugElement.query(
+				By.css('aside.nav-drawer')
+			)
+			expect(
+				aside?.nativeElement.classList.contains('open')
+			).toBe(false)
 		})
 
 		it('should toggle open class reactively when isOpen$ changes', () => {
@@ -410,29 +516,39 @@ describe.skip('NavigationDrawerComponent', () => {
 		it('should have semantic nav element', () => {
 			// TODO: Verify <nav> element exists (semantic nav role)
 			fixture.detectChanges()
-			const nav = fixture.debugElement.query(By.css('nav'))
+			const nav = fixture.debugElement.query(
+				By.css('nav')
+			)
 			expect(nav).toBeTruthy()
 		})
 
 		it('should have semantic h1 for portfolio title', () => {
 			// TODO: Verify <h1 class="portfolio-title"> (semantic heading)
 			fixture.detectChanges()
-			const h1 = fixture.debugElement.query(By.css('h1.portfolio-title'))
+			const h1 = fixture.debugElement.query(
+				By.css('h1.portfolio-title')
+			)
 			expect(h1).toBeTruthy()
 		})
 
 		it('should have semantic aside element', () => {
 			// TODO: Verify <aside class="nav-drawer"> (semantic aside role)
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('aside.nav-drawer'))
+			const aside = fixture.debugElement.query(
+				By.css('aside.nav-drawer')
+			)
 			expect(aside).toBeTruthy()
 		})
 
 		it('should have semantic list structure', () => {
 			// TODO: Verify <ul> and <li> elements (semantic list)
 			fixture.detectChanges()
-			const ul = fixture.debugElement.query(By.css('ul.nav-links'))
-			const lis = fixture.debugElement.queryAll(By.css('li'))
+			const ul = fixture.debugElement.query(
+				By.css('ul.nav-links')
+			)
+			const lis = fixture.debugElement.queryAll(
+				By.css('li')
+			)
 			expect(ul).toBeTruthy()
 			expect(lis.length).toBeGreaterThan(0)
 		})
@@ -441,7 +557,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// TODO: Each link should be <a> or <button> (interactive)
 			// Screen reader should announce them as links
 			fixture.detectChanges()
-			const links = fixture.debugElement.queryAll(By.css('a.nav-link'))
+			const links = fixture.debugElement.queryAll(
+				By.css('a.nav-link')
+			)
 			expect(links.length).toBeGreaterThan(0)
 		})
 
@@ -481,7 +599,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// TODO: Drawer should render on both mobile and desktop
 			// Breakpoint only affects visibility/styling
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('aside.nav-drawer'))
+			const aside = fixture.debugElement.query(
+				By.css('aside.nav-drawer')
+			)
 			expect(aside).toBeTruthy()
 		})
 
@@ -501,7 +621,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// Verify no errors, nav still renders, just no items
 			hostComponent.links = []
 			fixture.detectChanges()
-			const listItems = fixture.debugElement.queryAll(By.css('li'))
+			const listItems = fixture.debugElement.queryAll(
+				By.css('li')
+			)
 			expect(listItems.length).toBe(0)
 		})
 
@@ -534,8 +656,12 @@ describe.skip('NavigationDrawerComponent', () => {
 				status: 'stable'
 			})
 			fixture.detectChanges()
-			const links = fixture.debugElement.queryAll(By.css('a.nav-link'))
-			expect(links[4].nativeElement.textContent).toContain('Design System')
+			const links = fixture.debugElement.queryAll(
+				By.css('a.nav-link')
+			)
+			expect(
+				links[4].nativeElement.textContent
+			).toContain('Design System')
 		})
 	})
 
@@ -568,7 +694,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// TODO: CSS in navigation-drawer.component.scss targets .nav-drawer
 			// Verify class is present for styling to work
 			fixture.detectChanges()
-			const aside = fixture.debugElement.query(By.css('.nav-drawer'))
+			const aside = fixture.debugElement.query(
+				By.css('.nav-drawer')
+			)
 			expect(aside).toBeTruthy()
 		})
 
@@ -576,7 +704,9 @@ describe.skip('NavigationDrawerComponent', () => {
 			// TODO: CSS targets .nav-link for styling links
 			// Verify class present on all link elements
 			fixture.detectChanges()
-			const links = fixture.debugElement.queryAll(By.css('.nav-link'))
+			const links = fixture.debugElement.queryAll(
+				By.css('.nav-link')
+			)
 			expect(links.length).toBeGreaterThan(0)
 		})
 
