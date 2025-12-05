@@ -45,25 +45,19 @@ describe('DrawerService', () => {
 
 	describe('initialization', () => {
 		it('should be created', () => {
-			// TODO: Verify service instantiates
 			expect(service).toBeTruthy()
 		})
 
 		it('should expose isOpen$ readonly signal', () => {
-			// TODO: Verify service has public isOpen$ property
-			// isOpen$ should be a signal (callable function)
 			expect(typeof service.isOpen$).toBe('function')
 		})
 
 		it('should start in closed state', () => {
-			// TODO: Call isOpen$() and verify result is false
 			const isOpen = service.isOpen$()
 			expect(isOpen).toBe(false)
 		})
 
 		it('should not expose setter (isOpen$ is readonly)', () => {
-			// TODO: Verify consumer cannot call isOpen$.set() or isOpen$.update()
-			// Only internal service methods (toggle, open, close) modify state
 			expect(service.isOpen$).toBeDefined()
 		})
 	})

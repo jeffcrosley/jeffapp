@@ -15,7 +15,7 @@ import { EnvironmentService } from './environment.service'
  * - isLocalDevelopment(): Detects localhost, 127.0.0.1, or .local domains
  * - isProduction(): Inverse of isLocalDevelopment()
  */
-describe.skip('EnvironmentService', () => {
+describe('EnvironmentService', () => {
 	let service: EnvironmentService
 	let originalFetch: typeof global.fetch
 	let originalLocation: Location
@@ -54,7 +54,6 @@ describe.skip('EnvironmentService', () => {
 
 	describe('loadConfig()', () => {
 		it('should fetch config.json from root path', async () => {
-			// TODO: Mock fetch, verify it's called with '/config.json'
 			const mockFetch = jest.fn().mockResolvedValue({
 				json: () =>
 					Promise.resolve({
@@ -72,7 +71,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should parse JSON response and store config', async () => {
-			// TODO: Mock fetch with valid config, verify config is stored
 			const mockConfig = {
 				showcaseUrl: 'https://showcase.example.com',
 				apiGatewayUrl: 'https://api.example.com'
@@ -98,7 +96,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should cache config on window.__navShellConfig for debugging', async () => {
-			// TODO: Verify window.__navShellConfig is set after loadConfig
 			const mockConfig = {
 				showcaseUrl: 'https://showcase.example.com',
 				apiGatewayUrl: 'https://api.example.com'
@@ -113,7 +110,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should fall back to DEFAULT_DEV_CONFIG on fetch error', async () => {
-			// TODO: Mock fetch to throw, verify defaults are used
 			global.fetch = jest
 				.fn()
 				.mockRejectedValue(new Error('Network error'))
@@ -133,7 +129,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should fall back to DEFAULT_DEV_CONFIG on JSON parse error', async () => {
-			// TODO: Mock fetch with invalid JSON response
 			global.fetch = jest.fn().mockResolvedValue({
 				json: () =>
 					Promise.reject(new Error('Invalid JSON'))
@@ -150,7 +145,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should be idempotent - calling twice should not cause issues', async () => {
-			// TODO: Call loadConfig twice, verify no errors
 			const mockConfig = {
 				showcaseUrl: 'https://showcase.example.com',
 				apiGatewayUrl: 'https://api.example.com'
@@ -168,7 +162,6 @@ describe.skip('EnvironmentService', () => {
 
 	describe('getShowcaseUrl()', () => {
 		it('should return DEFAULT_DEV_CONFIG.showcaseUrl in local development', () => {
-			// TODO: Mock localhost, verify dev URL is returned
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'localhost' },
 				writable: true
@@ -180,7 +173,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should return config value in production after loadConfig', async () => {
-			// TODO: Mock production hostname, load config, verify production URL
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'jeffcrosley.com' },
 				writable: true
@@ -202,7 +194,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should return default if config not loaded in production', () => {
-			// TODO: Production environment but loadConfig not called
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'jeffcrosley.com' },
 				writable: true
@@ -215,7 +206,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should always return dev URL on localhost regardless of config', async () => {
-			// TODO: Load production config but run on localhost
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'localhost' },
 				writable: true
@@ -240,7 +230,6 @@ describe.skip('EnvironmentService', () => {
 
 	describe('getApiGatewayUrl()', () => {
 		it('should return DEFAULT_DEV_CONFIG.apiGatewayUrl in local development', () => {
-			// TODO: Mock localhost, verify dev URL is returned
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'localhost' },
 				writable: true
@@ -252,7 +241,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should return config value in production after loadConfig', async () => {
-			// TODO: Mock production hostname, load config, verify production URL
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'jeffcrosley.com' },
 				writable: true
@@ -274,7 +262,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should return default if config not loaded in production', () => {
-			// TODO: Production environment but loadConfig not called
 			Object.defineProperty(window, 'location', {
 				value: { hostname: 'jeffcrosley.com' },
 				writable: true
@@ -286,7 +273,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should always return dev URL on 127.0.0.1 regardless of config', async () => {
-			// TODO: Load production config but run on 127.0.0.1
 			Object.defineProperty(window, 'location', {
 				value: { hostname: '127.0.0.1' },
 				writable: true
@@ -435,22 +421,18 @@ describe.skip('EnvironmentService', () => {
 
 	describe('SSR safety', () => {
 		it('should handle undefined window gracefully in isLocalDevelopment', () => {
-			// TODO: This is tricky to test in Jest/JSDOM, but document the behavior
 			// When window is undefined (SSR), should return false
-			// Implementation checks: if (typeof window === 'undefined') return false
 			expect(true).toBe(true) // Placeholder - SSR testing requires special setup
 		})
 
 		it('should handle undefined window gracefully in loadConfig', () => {
-			// TODO: Verify loadConfig doesn't crash when window is undefined
-			// Should skip window.__navShellConfig assignment
+			// Should skip window.__navShellConfig assignment in SSR
 			expect(true).toBe(true) // Placeholder
 		})
 	})
 
 	describe('edge cases', () => {
 		it('should handle empty config.json gracefully', async () => {
-			// TODO: Mock fetch with empty object response
 			global.fetch = jest.fn().mockResolvedValue({
 				json: () => Promise.resolve({})
 			})
@@ -469,7 +451,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should handle partial config.json gracefully', async () => {
-			// TODO: Mock fetch with only showcaseUrl
 			global.fetch = jest.fn().mockResolvedValue({
 				json: () =>
 					Promise.resolve({
@@ -494,7 +475,6 @@ describe.skip('EnvironmentService', () => {
 		})
 
 		it('should handle network timeout gracefully', async () => {
-			// TODO: Mock fetch that never resolves or takes too long
 			global.fetch = jest
 				.fn()
 				.mockImplementation(
@@ -520,8 +500,6 @@ describe.skip('EnvironmentService', () => {
 
 	describe('type safety', () => {
 		it('should type config as NavShellConfig', async () => {
-			// TODO: This is compile-time only, document expected behavior
-			// TypeScript should enforce NavShellConfig shape
 			const mockConfig = {
 				showcaseUrl: 'https://showcase.example.com',
 				apiGatewayUrl: 'https://api.example.com'

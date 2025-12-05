@@ -32,7 +32,6 @@ describe('BreakpointService', () => {
 
 	describe('initialization', () => {
 		it('should be created', () => {
-			// TODO: Verify service is instantiated via DI
 			const mockMatchMedia = jest.fn().mockReturnValue({
 				matches: false,
 				addEventListener: jest.fn(),
@@ -48,12 +47,13 @@ describe('BreakpointService', () => {
 		})
 
 		it('should query matchMedia with correct breakpoint on init', () => {
-			// TODO: Verify matchMedia is called with '(min-width: 1024px)'
-			const mockMatchMediaInit = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaInit = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaInit,
 				writable: true
@@ -66,7 +66,6 @@ describe('BreakpointService', () => {
 		})
 
 		it('should register change listener on init', () => {
-			// TODO: Verify addEventListener is called for 'change' event
 			const addEventListenerMock = jest.fn()
 			const mockMatchMediaListener = jest
 				.fn()
@@ -90,13 +89,13 @@ describe('BreakpointService', () => {
 
 	describe('breakpoint detection', () => {
 		it('should return true when viewport is desktop (>= 1024px)', () => {
-			// TODO: Mock window.matchMedia to return { matches: true }
-			// Verify service.isDesktop$() returns true
-			const mockMatchMediaDesktop = jest.fn().mockReturnValue({
-				matches: true,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaDesktop = jest
+				.fn()
+				.mockReturnValue({
+					matches: true,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaDesktop,
 				writable: true
@@ -107,13 +106,13 @@ describe('BreakpointService', () => {
 		})
 
 		it('should return false when viewport is mobile (< 1024px)', () => {
-			// TODO: Mock window.matchMedia to return { matches: false }
-			// Verify service.isDesktop$() returns false
-			const mockMatchMediaMobile = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaMobile = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaMobile,
 				writable: true
@@ -124,12 +123,13 @@ describe('BreakpointService', () => {
 		})
 
 		it('should use correct media query string', () => {
-			// TODO: Verify the exact media query string used
-			const mockMatchMediaQuery = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaQuery = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaQuery,
 				writable: true
@@ -144,7 +144,6 @@ describe('BreakpointService', () => {
 
 	describe('signal reactivity', () => {
 		it('should update signal when viewport crosses breakpoint', () => {
-			// TODO: Register listener, trigger change event, verify signal updates
 			const listenersReactivity: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -180,7 +179,6 @@ describe('BreakpointService', () => {
 		})
 
 		it('should handle multiple rapid breakpoint changes', () => {
-			// TODO: Trigger multiple changes in quick succession, verify final state
 			const listenersMulti: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -191,7 +189,8 @@ describe('BreakpointService', () => {
 						event: string,
 						listener: (e: MediaQueryListEvent) => void
 					) => {
-						if (event === 'change') listenersMulti.push(listener)
+						if (event === 'change')
+							listenersMulti.push(listener)
 					}
 				),
 				removeEventListener: jest.fn()
@@ -223,7 +222,6 @@ describe('BreakpointService', () => {
 
 	describe('event listener management', () => {
 		it('should add event listener on service creation', () => {
-			// TODO: Verify addEventListener is called exactly once
 			const addEventListenerMgmt = jest.fn()
 			const mockMediaQueryListMgmt = {
 				matches: false,
@@ -239,11 +237,12 @@ describe('BreakpointService', () => {
 			})
 
 			service = TestBed.inject(BreakpointService)
-			expect(addEventListenerMgmt).toHaveBeenCalledTimes(1)
+			expect(addEventListenerMgmt).toHaveBeenCalledTimes(
+				1
+			)
 		})
 
 		it('should remove event listener on service destroy', () => {
-			// TODO: Call ngOnDestroy or destroy service, verify removeEventListener called
 			const removeEventListenerDestroy = jest.fn()
 			const mockMediaQueryListDestroy = {
 				matches: false,
@@ -260,15 +259,15 @@ describe('BreakpointService', () => {
 
 			service = TestBed.inject(BreakpointService)
 			service.ngOnDestroy()
-			expect(removeEventListenerDestroy).toHaveBeenCalledWith(
+			expect(
+				removeEventListenerDestroy
+			).toHaveBeenCalledWith(
 				'change',
 				expect.any(Function)
 			)
 		})
 
 		it('should use same listener reference for add and remove', () => {
-			// TODO: Capture listener passed to addEventListener
-			// Verify same reference passed to removeEventListener
 			let capturedListener:
 				| ((e: MediaQueryListEvent) => void)
 				| null = null
@@ -277,7 +276,8 @@ describe('BreakpointService', () => {
 					event: string,
 					listener: (e: MediaQueryListEvent) => void
 				) => {
-					if (event === 'change') capturedListener = listener
+					if (event === 'change')
+						capturedListener = listener
 				}
 			)
 			const removeEventListenerRef = jest.fn()
@@ -307,9 +307,9 @@ describe('BreakpointService', () => {
 
 	describe('SSR safety', () => {
 		it('should handle missing window.matchMedia gracefully', () => {
-			// TODO: Set matchMedia to undefined, verify service doesn't crash
-			// Should default to mobile (isDesktop$ = false)
-			const mockMatchMediaSSR = jest.fn().mockReturnValue(null)
+			const mockMatchMediaSSR = jest
+				.fn()
+				.mockReturnValue(null)
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaSSR,
 				writable: true
@@ -322,12 +322,13 @@ describe('BreakpointService', () => {
 		})
 
 		it('should default to mobile when matchMedia unavailable', () => {
-			// TODO: When matchMedia returns null, isDesktop$ should be false
-			const mockMatchMediaDefault = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaDefault = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaDefault,
 				writable: true
@@ -340,13 +341,13 @@ describe('BreakpointService', () => {
 
 	describe('edge cases', () => {
 		it('should handle exact breakpoint value (1024px)', () => {
-			// TODO: Test behavior at exactly 1024px width
-			// Per media query, >= 1024 should return true
-			const mockMatchMediaExact = jest.fn().mockReturnValue({
-				matches: true, // At exactly 1024px, matches should be true
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaExact = jest
+				.fn()
+				.mockReturnValue({
+					matches: true, // At exactly 1024px, matches should be true
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaExact,
 				writable: true
@@ -357,7 +358,6 @@ describe('BreakpointService', () => {
 		})
 
 		it('should handle rapid resize events without memory leaks', () => {
-			// TODO: Trigger many change events, verify no listener accumulation
 			const listenersRapid: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -368,7 +368,8 @@ describe('BreakpointService', () => {
 						event: string,
 						listener: (e: MediaQueryListEvent) => void
 					) => {
-						if (event === 'change') listenersRapid.push(listener)
+						if (event === 'change')
+							listenersRapid.push(listener)
 					}
 				),
 				removeEventListener: jest.fn()
@@ -399,8 +400,6 @@ describe('BreakpointService', () => {
 
 	describe('integration with DrawerService', () => {
 		it('should close drawer when transitioning from mobile to desktop', () => {
-			// TODO: This tests the integration pattern, not direct coupling
-			// BreakpointService emits change, consumer (nav component) should react
 			const listenersMobileToDesktop: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -436,7 +435,6 @@ describe('BreakpointService', () => {
 		})
 
 		it('should allow drawer open when transitioning from desktop to mobile', () => {
-			// TODO: Verify signal updates correctly for mobile transition
 			const listenersDesktopToMobile: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -474,12 +472,13 @@ describe('BreakpointService', () => {
 
 	describe('performance', () => {
 		it('should only create one matchMedia query', () => {
-			// TODO: Verify matchMedia is called exactly once per service instance
-			const mockMatchMediaPerf = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn()
-			})
+			const mockMatchMediaPerf = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn()
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaPerf,
 				writable: true
@@ -495,7 +494,6 @@ describe('BreakpointService', () => {
 		})
 
 		it('should not create memory leaks with repeated access', () => {
-			// TODO: Access isDesktop$ many times, verify no listener accumulation
 			const listenersLeak: Array<
 				(e: MediaQueryListEvent) => void
 			> = []
@@ -506,7 +504,8 @@ describe('BreakpointService', () => {
 						event: string,
 						listener: (e: MediaQueryListEvent) => void
 					) => {
-						if (event === 'change') listenersLeak.push(listener)
+						if (event === 'change')
+							listenersLeak.push(listener)
 					}
 				),
 				removeEventListener: jest.fn()
@@ -533,7 +532,6 @@ describe('BreakpointService', () => {
 
 	describe('Angular lifecycle', () => {
 		it('should implement OnDestroy interface', () => {
-			// TODO: Verify service has ngOnDestroy method
 			const mockMatchMediaLifecycle = jest
 				.fn()
 				.mockReturnValue({
@@ -551,13 +549,14 @@ describe('BreakpointService', () => {
 		})
 
 		it('should clean up resources on destroy', () => {
-			// TODO: Call ngOnDestroy, verify cleanup is complete
 			const removeEventListenerCleanup = jest.fn()
-			const mockMatchMediaCleanup = jest.fn().mockReturnValue({
-				matches: false,
-				addEventListener: jest.fn(),
-				removeEventListener: removeEventListenerCleanup
-			})
+			const mockMatchMediaCleanup = jest
+				.fn()
+				.mockReturnValue({
+					matches: false,
+					addEventListener: jest.fn(),
+					removeEventListener: removeEventListenerCleanup
+				})
 			Object.defineProperty(window, 'matchMedia', {
 				value: mockMatchMediaCleanup,
 				writable: true
@@ -566,7 +565,9 @@ describe('BreakpointService', () => {
 			service = TestBed.inject(BreakpointService)
 			service.ngOnDestroy()
 
-			expect(removeEventListenerCleanup).toHaveBeenCalled()
+			expect(
+				removeEventListenerCleanup
+			).toHaveBeenCalled()
 		})
 	})
 })
