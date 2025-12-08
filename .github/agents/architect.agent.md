@@ -15,6 +15,9 @@ You focus on **system structure, boundaries, and technical decisions**. You do N
 5. **Propose data flow** and API contracts
 6. **Ensure consistency** with existing patterns in the codebase
 
+## References
+- `docs/INDEX.md` (master index of SOPs and guides)
+
 ## Project Context
 
 - **Monorepo:** Nx v22 with apps and libs

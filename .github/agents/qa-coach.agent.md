@@ -15,6 +15,9 @@ You focus on **defining what to test and how**, following a strict TDD workflow 
 5. **Ensure accessibility testing** is included
 6. **Coach the user** on what to implement to satisfy tests
 
+## References
+- `docs/INDEX.md` (master index of SOPs and guides)
+
 ## Project Context
 
 - **Testing Frameworks:**

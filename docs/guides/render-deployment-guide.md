@@ -225,3 +225,27 @@ npx nx serve nav-shell
 
 - Add staging environment following same hook pattern.
 - Wire Sentry or other error tracking when ready; add DSN as secret and gate deploy on health signal.
+
+### CI/CD Agent Runbook (step-by-step)
+**When a PR merges to `main`:**
+1) Confirm GitHub Actions workflow still contains affected-only `lint/test/build` gates and deploy jobs conditioned on `refs/heads/main`.
+2) Check secrets exist: `RENDER_API_DEPLOY_HOOK`, `RENDER_SHELL_DEPLOY_HOOK`, `RENDER_SHOWCASE_DEPLOY_HOOK` (add staging equivalents when that env exists).
+3) Validate Render service settings:
+  - api-gateway: build `npx nx build api-gateway --configuration=production`; start `node dist/apps/api-gateway/main.js`; health `/health`; port = `PORT`.
+  - nav-shell: publish `dist/apps/nav-shell/browser`; rewrite `/* -> /index.html`; auto-deploy OFF; branch `main`; `SHOWCASE_URL` or `config.json` present.
+  - component-showcase: publish `dist/apps/component-showcase`; rewrite `/* -> /index.html`; auto-deploy OFF; branch `main`.
+4) Run `npx nx show projects --affected --base=origin/main --head=HEAD` and note affected apps. Only trigger hooks for affected ones.
+5) Ensure lint/test/build succeeded for each affected app before any deploy hook fires.
+6) Fire hooks in order: api-gateway first (backend), then nav-shell, then component-showcase (if affected).
+7) Post-deploy smoke:
+  - `GET https://<api-gateway>/health` expect 200.
+  - `GET https://<nav-shell>/` expect 200 and HTML.
+  - `GET https://<component-showcase>/` expect 200 and HTML (if deployed).
+  - Record any non-200 as a deploy warning; no Sentry yet.
+
+**Manual run / dry-run mode:**
+- Provide a summary of affected apps, missing secrets, and any Render misconfig before triggering hooks.
+- If any gate fails (lint/test/build), stop and report; do not trigger deploys.
+
+**How to extend to staging later:**
+- Duplicate secrets with `STAGING_` prefix; add staging deploy jobs conditioned on branch/tag; reuse the same validation steps with staging URLs.

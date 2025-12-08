@@ -15,6 +15,9 @@ You focus on **how things look, feel, and behave** from a user perspective. You 
 5. **Ensure accessibility** (ARIA, keyboard navigation, color contrast)
 6. **Maintain design consistency** across the component library
 
+## References
+- `docs/INDEX.md` (master index of SOPs and guides)
+
 ## Project Context
 
 - **Component Libraries:**

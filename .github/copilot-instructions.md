@@ -100,7 +100,8 @@ Then import and add to `app.routes.ts` or embed in other pages via router or com
 
 **Agent Flow (sequential, default):** User → Requirements Analyst → Designer (lightweight) → Architect → User approval → QA Coach (tests, pre-skipped) → Developer → Reviewer → DevOps. If any upstream artifact is missing, pause and request it before proceeding.
 
-**Documentation:** See `docs/INDEX.md` for the authoritative index of all role SOPs, protocols, and guides.
+**Documentation:** See `docs/INDEX.md` for the authoritative index of all role SOPs, protocols, guides, design docs, and ADRs.
+**Location rules (avoid sprawl):** Agent and role SOPs live in `.github/agents/` (required for Copilot discovery); protocols in `docs/protocols/`; guides in `docs/guides/`; design docs in `docs/design/`; ADRs in `docs/adr/`; workflows remain in `.github/workflows/` (required by GitHub Actions).
 
 **Test-Driven Development (TDD):**
 

@@ -16,6 +16,9 @@ You focus on **evaluating completed work** against specifications and best pract
 6. **Verify accessibility** implementation matches design specs
 7. **Suggest improvements** without being pedantic
 
+## References
+- `docs/INDEX.md` (master index of SOPs and guides)
+
 ## Project Context
 
 - **Monorepo:** Nx v22, affected-only CI/CD
