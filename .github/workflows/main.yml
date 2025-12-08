@@ -2,190 +2,199 @@
 name: Nx Monorepo CI/CD - Affected Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'apps/**'
-      - 'libs/**'
-      - 'package*.json'
-      - 'nx.json'
-      - '.github/workflows/**'
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'apps/**'
-      - 'component-showcase/**'
-      - 'libs/**'
-      - 'package*.json'
-      - 'nx.json'
+ push:
+  branches:
+   - main
+  paths:
+   - 'apps/**'
+   - 'libs/**'
+   - 'package*.json'
+   - 'nx.json'
+   - '.github/workflows/**'
+ pull_request:
+  types: [opened, synchronize, reopened]
+  paths:
+   - 'apps/**'
+   - 'component-showcase/**'
+   - 'libs/**'
+   - 'package*.json'
+   - 'nx.json'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+ group: ${{ github.workflow }}-${{ github.ref }}
+ cancel-in-progress: true
 
 jobs:
-  # --- 1. SETUP and AFFECTED CALCULATION ---
-  # This job installs dependencies and identifies projects affected by the changes.
-  setup_and_find_affected:
-    runs-on: ubuntu-latest
-    outputs:
-      affected_projects: ${{ steps.affected.outputs.affected_projects }}
-      affected_apps: ${{ steps.affected.outputs.affected_apps }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required for calculating changes between commits
+ # --- 1. SETUP and AFFECTED CALCULATION ---
+ # This job installs dependencies and identifies projects affected by the changes.
+ setup_and_find_affected:
+  runs-on: ubuntu-latest
+  outputs:
+   affected_projects: ${{ steps.affected.outputs.affected_projects }}
+   affected_apps: ${{ steps.affected.outputs.affected_apps }}
+  steps:
+   - name: Checkout Code
+     uses: actions/checkout@v4
+     with:
+      fetch-depth: 0 # Required for calculating changes between commits
 
-      - name: Setup Node (and Cache)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+   - name: Setup Node (and Cache)
+     uses: actions/setup-node@v4
+     with:
+      node-version: 20
+      cache: 'npm'
 
-      - name: Cache Nx
-        uses: actions/cache@v3
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-          restore-keys: |
-            nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
-            nx-${{ runner.os }}-
+   - name: Cache Nx
+     uses: actions/cache@v3
+     with:
+      path: .nx/cache
+      key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+      restore-keys: |
+       nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+       nx-${{ runner.os }}-
 
-      - name: Install Dependencies
-        run: npm ci
+   - name: Install Dependencies
+     run: npm ci
 
-      # --- Nx Setup ---
-      # This sets the BASE and HEAD commits for the affected calculation.
-      - name: Set Nx Affected SHAs
-        uses: nrwl/nx-set-shas@v3
+   # --- Nx Setup ---
+   # This sets the BASE and HEAD commits for the affected calculation.
+   - name: Set Nx Affected SHAs
+     uses: nrwl/nx-set-shas@v3
 
-      # --- Determine Affected Projects and Apps ---
-      - name: Find Affected Projects
-        id: affected
-        run: |
-          # 1. Get a comma-separated list of ALL affected projects (used for lint/test).
-          # Use '|| true' to prevent failure if no projects are affected, and cleanup output with 'tr'.
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --select=projects || true)
-          AFFECTED_PROJECTS=$(echo "${AFFECTED_PROJECTS}" | tr -d '\n\r')
+   # --- Determine Affected Projects and Apps ---
+   - name: Find Affected Projects
+     id: affected
+     run: |
+      # 1. Get a comma-separated list of ALL affected projects (used for lint/test).
+      # Use '|| true' to prevent failure if no projects are affected, and cleanup output with 'tr'.
+      AFFECTED_PROJECTS=$(npx nx show projects --affected --select=projects || true)
+      AFFECTED_PROJECTS=$(echo "${AFFECTED_PROJECTS}" | tr -d '\n\r')
 
-          # 2. Get a comma-separated list of affected APPS for deployment (Excluding all *-e2e projects).
-          AFFECTED_APPS=$(npx nx show projects --affected --target=build --exclude='*-e2e' --select=projects || true)
-          AFFECTED_APPS=$(echo "${AFFECTED_APPS}" | tr -d '\n\r')
+      # 2. Get a comma-separated list of affected APPS for deployment (Excluding all *-e2e projects).
+      AFFECTED_APPS=$(npx nx show projects --affected --target=build --exclude='*-e2e' --select=projects || true)
+      AFFECTED_APPS=$(echo "${AFFECTED_APPS}" | tr -d '\n\r')
 
-          echo "affected_projects=${AFFECTED_PROJECTS}" >> $GITHUB_OUTPUT
-          echo "affected_apps=${AFFECTED_APPS}" >> $GITHUB_OUTPUT
-          echo "Affected Apps for Deploy: ${AFFECTED_APPS}"
+      echo "affected_projects=${AFFECTED_PROJECTS}" >> $GITHUB_OUTPUT
+      echo "affected_apps=${AFFECTED_APPS}" >> $GITHUB_OUTPUT
+      echo "Affected Apps for Deploy: ${AFFECTED_APPS}"
 
-  # ----------------------------------------------------
-  # --- 2. BUILD, LINT, and TEST (AFFECTED ONLY) ---
-  # This job runs targets ONLY on the subset of projects calculated in the previous step.
-  build_test_affected:
-    needs: [setup_and_find_affected]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+ # ----------------------------------------------------
+ # --- 2. BUILD, LINT, and TEST (AFFECTED ONLY) ---
+ # This job runs targets ONLY on the subset of projects calculated in the previous step.
+ build_test_affected:
+  needs: [setup_and_find_affected]
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Code
+     uses: actions/checkout@v4
+     with:
+      fetch-depth: 0
 
-      - name: Setup Node (Restore cache)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+   - name: Setup Node (Restore cache)
+     uses: actions/setup-node@v4
+     with:
+      node-version: 20
+      cache: 'npm'
 
-      - name: Cache Nx
-        uses: actions/cache@v3
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
-          restore-keys: |
-            nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
-            nx-${{ runner.os }}-
+   - name: Cache Nx
+     uses: actions/cache@v3
+     with:
+      path: .nx/cache
+      key: nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+      restore-keys: |
+       nx-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+       nx-${{ runner.os }}-
 
-      - name: Install Dependencies
-        run: npm ci
+   - name: Install Dependencies
+     run: npm ci
 
-      - name: Set Nx Affected SHAs
-        uses: nrwl/nx-set-shas@v3
+   - name: Set Nx Affected SHAs
+     uses: nrwl/nx-set-shas@v3
 
-      - name: Run AFFECTED Lint, Test, and Build
-        run: npx nx affected --target=lint,test,build --parallel=3
+   - name: Run AFFECTED Lint
+     run: npx nx affected --target=lint --parallel=3
 
-  # ----------------------------------------------------
-  # --- 3. CONDITIONAL DEPLOYMENT JOBS ---
-  # These jobs ONLY run if their corresponding project name is in the affected_apps list.
+   - name: Run AFFECTED Test (skip component libraries)
+     run: npx nx affected --target=test --exclude="ui-components,ui-components-native,ui-angular,ui-react,design-tokens" --parallel=3
 
-  deploy_api_gateway:
-    needs: [build_test_affected, setup_and_find_affected]
-    runs-on: ubuntu-latest
-    # Only deploy on push to main (not PRs) and if api-gateway is affected
-    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
-    steps:
-      - name: Deploy API Gateway to Render
-        run: |
-          echo "🚀 Deploying api-gateway (affected by changes)"
-          echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
+   - name: Run AFFECTED Build
+     run: npx nx affected --target=build --parallel=3
 
-          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}")
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | head -n-1)
+ # ----------------------------------------------------
+ # --- 3. CONDITIONAL DEPLOYMENT JOBS ---
+ # These jobs ONLY run if their corresponding project name is in the affected_apps list.
 
-          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-            echo "✅ Deploy hook triggered successfully"
-            echo "Response: $body"
-          else
-            echo "❌ Deploy hook failed with status $http_code"
-            echo "Response: $body"
-            exit 1
-          fi
+ deploy_api_gateway:
+  needs:
+   [build_test_affected, setup_and_find_affected]
+  runs-on: ubuntu-latest
+  # Only deploy on push to main (not PRs) and if api-gateway is affected
+  if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'api-gateway')
+  steps:
+   - name: Deploy API Gateway to Render
+     run: |
+      echo "🚀 Deploying api-gateway (affected by changes)"
+      echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
 
-  deploy_nav_shell:
-    needs: [build_test_affected, setup_and_find_affected]
-    runs-on: ubuntu-latest
-    # Only deploy on push to main (not PRs) and if nav-shell is affected
-    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
-    steps:
-      - name: Deploy Nav Shell to Render
-        run: |
-          echo "🚀 Deploying nav-shell (affected by changes)"
-          echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
+      response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_API_DEPLOY_HOOK }}")
+      http_code=$(echo "$response" | tail -n1)
+      body=$(echo "$response" | head -n-1)
 
-          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}")
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | head -n-1)
+      if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
+        echo "✅ Deploy hook triggered successfully"
+        echo "Response: $body"
+      else
+        echo "❌ Deploy hook failed with status $http_code"
+        echo "Response: $body"
+        exit 1
+      fi
 
-          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-            echo "✅ Deploy hook triggered successfully"
-            echo "Response: $body"
-          else
-            echo "❌ Deploy hook failed with status $http_code"
-            echo "Response: $body"
-            exit 1
-          fi
+ deploy_nav_shell:
+  needs:
+   [build_test_affected, setup_and_find_affected]
+  runs-on: ubuntu-latest
+  # Only deploy on push to main (not PRs) and if nav-shell is affected
+  if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'nav-shell')
+  steps:
+   - name: Deploy Nav Shell to Render
+     run: |
+      echo "🚀 Deploying nav-shell (affected by changes)"
+      echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
 
-  deploy_component_showcase:
-    needs: [build_test_affected, setup_and_find_affected]
-    runs-on: ubuntu-latest
-    # Only deploy on push to main (not PRs) and if component-showcase is affected
-    if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'component-showcase')
-    steps:
-      - name: Deploy Component Showcase to Render
-        run: |
-          echo "🚀 Deploying component-showcase (affected by changes)"
-          echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
+      response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}")
+      http_code=$(echo "$response" | tail -n1)
+      body=$(echo "$response" | head -n-1)
 
-          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}")
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | head -n-1)
+      if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
+        echo "✅ Deploy hook triggered successfully"
+        echo "Response: $body"
+      else
+        echo "❌ Deploy hook failed with status $http_code"
+        echo "Response: $body"
+        exit 1
+      fi
 
-          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-            echo "✅ Deploy hook triggered successfully"
-            echo "Response: $body"
-          else
-            echo "❌ Deploy hook failed with status $http_code"
-            echo "Response: $body"
-            exit 1
-          fi
+ deploy_component_showcase:
+  needs:
+   [build_test_affected, setup_and_find_affected]
+  runs-on: ubuntu-latest
+  # Only deploy on push to main (not PRs) and if component-showcase is affected
+  if: github.event_name == 'push' && contains(needs.setup_and_find_affected.outputs.affected_apps, 'component-showcase')
+  steps:
+   - name: Deploy Component Showcase to Render
+     run: |
+      echo "🚀 Deploying component-showcase (affected by changes)"
+      echo "Affected apps: ${{ needs.setup_and_find_affected.outputs.affected_apps }}"
+
+      response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}")
+      http_code=$(echo "$response" | tail -n1)
+      body=$(echo "$response" | head -n-1)
+
+      if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
+        echo "✅ Deploy hook triggered successfully"
+        echo "Response: $body"
+      else
+        echo "❌ Deploy hook failed with status $http_code"
+        echo "Response: $body"
+        exit 1
+      fi

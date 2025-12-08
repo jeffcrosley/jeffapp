@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 /**
  * Navigation Shell E2E
- * Focused on the current UI: drawer, theme toggle, responsive behavior, accessibility, and feature statuses.
+ * Covers navigation, drawer behavior, theme toggle, responsive states, accessibility, feature status badges, and external links.
  */
 
 test.describe('Navigation Shell', () => {
@@ -29,20 +29,15 @@ test.describe('Navigation Shell', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto(baseUrl)
-		await page.waitForLoadState('networkidle')
+		await page.waitForLoadState('domcontentloaded')
 	})
 
 	test.describe('Page Navigation', () => {
-		test('redirects root to /home', async ({
+		test('redirects root to /home and handles unknown routes', async ({
 			page
 		}) => {
 			await page.goto(baseUrl)
 			await expect(page).toHaveURL(`${baseUrl}/home`)
-		})
-
-		test('handles unknown routes by redirecting to /home', async ({
-			page
-		}) => {
 			await page.goto(`${baseUrl}/unknown-route`)
 			await expect(page).toHaveURL(`${baseUrl}/home`)
 		})
@@ -82,7 +77,6 @@ test.describe('Navigation Shell', () => {
 				'button.hamburger'
 			)
 			const drawer = page.locator('aside.nav-drawer')
-
 			await hamburger.click()
 			await expect(drawer).toHaveClass(/open/)
 		})
@@ -100,7 +94,7 @@ test.describe('Navigation Shell', () => {
 			await hamburger.click()
 			await expect(drawer).toHaveClass(/open/)
 
-			// Click on the far right of the backdrop so the drawer does not intercept
+			// Click outside drawer footprint to avoid interception
 			await backdrop.click({
 				position: { x: MOBILE_WIDTH - 10, y: 50 }
 			})
@@ -146,7 +140,7 @@ test.describe('Navigation Shell', () => {
 			await setDesktop(page)
 			await expect(
 				page.locator('button.hamburger')
-			).not.toBeVisible()
+			).toBeHidden()
 			await expect(
 				page.locator('aside.nav-drawer')
 			).toBeVisible()
@@ -161,7 +155,6 @@ test.describe('Navigation Shell', () => {
 				'button.theme-toggle'
 			)
 			const html = page.locator('html')
-
 			const initial = await html.evaluate(
 				(el) =>
 					el.getAttribute('data-theme') || 'light'
@@ -195,13 +188,11 @@ test.describe('Navigation Shell', () => {
 				'button.theme-toggle'
 			)
 			const html = page.locator('html')
-
 			await themeToggle.click()
 			const setTheme = await html.evaluate(
 				(el) =>
 					el.getAttribute('data-theme') || 'light'
 			)
-
 			await page.reload()
 			const reloadedTheme = await html.evaluate(
 				(el) =>
@@ -222,7 +213,7 @@ test.describe('Navigation Shell', () => {
 			await setDesktop(page)
 			await expect(
 				page.locator('button.hamburger')
-			).not.toBeVisible()
+			).toBeHidden()
 			await expect(
 				page.locator('aside.nav-drawer')
 			).toBeVisible()
@@ -234,7 +225,7 @@ test.describe('Navigation Shell', () => {
 			await setDesktop(page)
 			await expect(
 				page.locator('button.hamburger')
-			).not.toBeVisible()
+			).toBeHidden()
 			await setMobile(page)
 			await expect(
 				page.locator('button.hamburger')
@@ -290,7 +281,7 @@ test.describe('Navigation Shell', () => {
 	})
 
 	test.describe('Feature Status', () => {
-		test('applies feature-wip to About link and feature-beta to Components link', async ({
+		test('applies feature-wip to About and feature-beta to Components', async ({
 			page
 		}) => {
 			const aboutLink = page.locator(
@@ -299,7 +290,6 @@ test.describe('Navigation Shell', () => {
 			const componentsLink = page.locator(
 				'a.nav-link[href="/components"]'
 			)
-
 			expect(
 				await aboutLink.getAttribute('class')
 			).toContain('feature-wip')
@@ -334,7 +324,6 @@ test.describe('Navigation Shell', () => {
 				'button.hamburger'
 			)
 			const backdrop = page.locator('.backdrop')
-
 			await hamburger.click()
 			await expect(backdrop).toBeVisible()
 		})
