@@ -1,53 +1,55 @@
 {
-  "name": "component-showcase",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "projectType": "application",
-  "sourceRoot": "component-showcase/src",
-  "tags": [],
-  "targets": {
-    "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "outputPath": "dist/apps/component-showcase"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "component-showcase:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "component-showcase:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "component-showcase:build:production",
-          "hmr": false
-        }
-      }
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{workspaceRoot}/coverage/component-showcase"],
-      "options": {
-        "passWithNoTests": true,
-        "config": "component-showcase/vite.config.ts"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    }
-  }
+	"name": "component-showcase",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"projectType": "application",
+	"sourceRoot": "component-showcase/src",
+	"tags": [],
+	"targets": {
+		"build": {
+			"executor": "@nx/vite:build",
+			"outputs": ["{options.outputPath}"],
+			"defaultConfiguration": "production",
+			"options": {
+				"outputPath": "dist/apps/component-showcase"
+			},
+			"configurations": {
+				"development": {
+					"mode": "development"
+				},
+				"production": {
+					"mode": "production"
+				}
+			}
+		},
+		"serve": {
+			"executor": "@nx/vite:dev-server",
+			"defaultConfiguration": "development",
+			"options": {
+				"buildTarget": "component-showcase:build"
+			},
+			"configurations": {
+				"development": {
+					"buildTarget": "component-showcase:build:development",
+					"hmr": true
+				},
+				"production": {
+					"buildTarget": "component-showcase:build:production",
+					"hmr": false
+				}
+			}
+		},
+		"test": {
+			"executor": "@nx/vitest:test",
+			"outputs": [
+				"{workspaceRoot}/coverage/component-showcase"
+			],
+			"options": {
+				"passWithNoTests": true,
+				"config": "apps/component-showcase/vite.config.ts"
+			}
+		},
+		"lint": {
+			"executor": "@nx/eslint:lint"
+		}
+	}
 }
