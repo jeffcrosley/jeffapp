@@ -2,7 +2,7 @@
 	"name": "component-showcase",
 	"$schema": "../../node_modules/nx/schemas/project-schema.json",
 	"projectType": "application",
-	"sourceRoot": "component-showcase/src",
+	"sourceRoot": "apps/component-showcase/src",
 	"tags": [],
 	"targets": {
 		"build": {
