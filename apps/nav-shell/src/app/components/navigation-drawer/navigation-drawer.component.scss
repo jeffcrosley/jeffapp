@@ -1,54 +1,228 @@
-.nav-drawer {
-	/* Navigation drawer container */
+// ========================================
+// Variables
+// ========================================
+$breakpoint-desktop: 1024px;
+$drawer-width: 280px;
+$animation-duration: 350ms;
+$transition-duration: 250ms;
+$hamburger-size: 24px;
+$hamburger-line-height: 2px;
+$backdrop-bg: rgba(0, 0, 0, 0.5);
+
+// ========================================
+// Hamburger Button
+// ========================================
+.hamburger {
+	position: fixed;
+	top: 1.5rem;
+	left: 1rem;
+	z-index: 1001;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 5px;
+	width: $hamburger-size + 16px;
+	height: $hamburger-size + 16px;
+	padding: 8px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	transition: left $animation-duration ease;
+	color: var(--color-text-primary, #000);
+
+	// Open state: move to upper-right of drawer
+	&.open {
+		left: calc(
+			$drawer-width - ($hamburger-size + 16px) - 1rem
+		);
+	}
+
+	&:hover {
+		opacity: 0.7;
+	}
+
+	&:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 4px;
+	}
+
+	// Hide on desktop (drawer is always visible)
+	@media (min-width: $breakpoint-desktop) {
+		display: none;
+	}
 }
 
+.hamburger-line {
+	width: $hamburger-size;
+	height: $hamburger-line-height;
+	background-color: currentColor;
+	border-radius: 2px;
+	transition: all $transition-duration ease;
+	transform-origin: center;
+
+	// Animate to X when open
+	.hamburger.open & {
+		&:nth-child(1) {
+			transform: translateY(7px) rotate(45deg);
+		}
+
+		&:nth-child(2) {
+			opacity: 0;
+			transform: scaleX(0);
+		}
+
+		&:nth-child(3) {
+			transform: translateY(-7px) rotate(-45deg);
+		}
+	}
+}
+
+// ========================================
+// Backdrop
+// ========================================
+.backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: $backdrop-bg;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity $transition-duration ease;
+	z-index: 999;
+
+	&.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	// Hide on desktop
+	@media (min-width: $breakpoint-desktop) {
+		display: none;
+	}
+}
+
+// ========================================
+// Navigation Drawer
+// ========================================
+.nav-drawer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: $drawer-width;
+	height: 100vh;
+	background: var(--color-surface, #fff);
+	box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+	transform: translateX(-100%);
+	transition: transform $animation-duration ease;
+	z-index: 1000;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+
+	// Mobile: slide in when open
+	&.open {
+		transform: translateX(0);
+	}
+
+	// Desktop: always visible, part of layout
+	@media (min-width: $breakpoint-desktop) {
+		position: relative;
+		transform: translateX(0);
+		box-shadow: none;
+		border-right: 1px solid
+			var(--color-border, #e0e0e0);
+	}
+}
+
+// ========================================
+// Drawer Header
+// ========================================
 .drawer-header {
-	/* Header styling */
+	padding: 2rem 1.5rem 1.5rem;
+	border-bottom: 1px solid
+		var(--color-border, #e0e0e0);
 }
 
 .portfolio-title {
-	/* Portfolio title styling */
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: var(--color-text-primary, #000);
 }
 
+// ========================================
+// Drawer Navigation
+// ========================================
 .drawer-nav {
-	/* Navigation container */
+	flex: 1;
+	padding: 1rem 0;
 }
 
 .nav-links {
-	/* Unordered list styling */
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
 .nav-link {
-	/* Individual link styling */
 	display: block;
+	padding: 0.875rem 1.5rem;
 	text-decoration: none;
-	padding: 0.75rem 1rem;
-	color: inherit;
+	color: var(--color-text-secondary, #555);
+	font-weight: 500;
+	transition: all $transition-duration ease;
+	position: relative;
 
 	&:hover {
-		/* Hover state */
+		background: var(
+			--color-hover,
+			rgba(0, 0, 0, 0.05)
+		);
+		color: var(--color-text-primary, #000);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-focus, #0066cc);
+		outline-offset: -2px;
 	}
 
 	&.active {
-		/* Active route state */
+		background: var(
+			--color-active,
+			rgba(0, 102, 204, 0.1)
+		);
+		color: var(--color-primary, #0066cc);
+		font-weight: 600;
+		border-left: 4px solid
+			var(--color-primary, #0066cc);
+		padding-left: calc(1.5rem - 4px);
 	}
 }
 
-.status-badge {
-	/* Feature status badge */
+// ========================================
+// Feature Status Badges
+// ========================================
+.feature-wip::after,
+.feature-beta::after {
+	content: attr(data-badge);
+	margin-left: 0.5rem;
+	padding: 0.125rem 0.5rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 4px;
+	vertical-align: middle;
 }
 
-.feature-wip {
-	&::after {
-		content: '🚧 WIP';
-	}
+.feature-wip::after {
+	content: '🚧 WIP';
+	background: var(--color-badge-wip-bg, #fff3cd);
+	color: var(--color-badge-wip-text, #856404);
 }
 
-.feature-beta {
-	&::after {
-		content: '🧪 Beta';
-	}
+.feature-beta::after {
+	content: '✨ Beta';
+	background: var(--color-badge-beta-bg, #d1ecf1);
+	color: var(--color-badge-beta-text, #0c5460);
 }

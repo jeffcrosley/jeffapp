@@ -5,6 +5,7 @@ import {
 	RouterModule
 } from '@angular/router'
 import { NavigationDrawerComponent } from './components/navigation-drawer/navigation-drawer.component'
+import { DrawerService } from './services/drawer.service'
 import { FeatureStatus } from './services/feature-visibility.service'
 import { ThemeService } from './services/theme.service'
 
@@ -29,11 +30,15 @@ export class App {
 	protected portfolioTitle = 'Jeff Crosley'
 	protected router = inject(Router)
 	protected themeService = inject(ThemeService)
+	protected drawerService = inject(DrawerService)
+
+	protected navDrawerIsOpen =
+		this.drawerService.isOpen
 
 	protected navigationLinks: NavLink[] = [
 		{
 			label: 'Home',
-			route: '/',
+			route: '/home',
 			status: 'stable'
 		},
 		{
@@ -62,4 +67,9 @@ export class App {
 	protected toggleTheme(): void {
 		this.themeService.toggle()
 	}
+
+	onDrawerCloseRequested = () =>
+		this.drawerService.close()
+	onDrawerToggleRequested = () =>
+		this.drawerService.toggle()
 }

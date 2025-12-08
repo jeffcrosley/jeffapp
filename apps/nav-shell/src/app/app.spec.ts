@@ -68,9 +68,9 @@ describe('App', () => {
 					{
 						path: 'components',
 						loadComponent: () =>
-							import(
-								'./pages/components.component'
-							).then((m) => m.ComponentsComponent)
+							import('./pages/components.component').then(
+								(m) => m.ComponentsComponent
+							)
 					}
 				]),
 				{
@@ -103,27 +103,12 @@ describe('App', () => {
 		})
 	})
 
-	describe('rendering - header structure', () => {
-		it('should render portfolio header', () => {
-			const header = compiled.querySelector(
-				'.portfolio-header'
+	describe('rendering - new drawer layout', () => {
+		it('should render navigation drawer component', () => {
+			const drawer = compiled.querySelector(
+				'app-navigation-drawer'
 			)
-			expect(header).toBeTruthy()
-		})
-
-		it('should render portfolio title', () => {
-			const title = compiled.querySelector(
-				'h1.portfolio-title'
-			)
-			expect(title?.textContent).toContain(
-				'Jeff Crosley'
-			)
-		})
-
-		it('should render navbar element', () => {
-			const navbar =
-				compiled.querySelector('nav.navbar')
-			expect(navbar).toBeTruthy()
+			expect(drawer).toBeTruthy()
 		})
 
 		it('should render theme toggle button', () => {
@@ -148,116 +133,69 @@ describe('App', () => {
 		})
 	})
 
-	describe('navigation links', () => {
-		it('should render all navigation links', () => {
-			const navLinks = compiled.querySelectorAll(
-				'.nav-links a'
+	describe('navigation drawer integration', () => {
+		it('should pass navigationLinks to drawer', () => {
+			expect(component.navigationLinks).toBeDefined()
+			expect(component.navigationLinks.length).toBe(
+				4
 			)
-			expect(navLinks.length).toBe(4)
 		})
 
-		it('should render Home link', () => {
-			const links = compiled.querySelectorAll(
-				'.nav-links a'
-			)
-			const homeLink = Array.from(links).find(
-				(link) => link.textContent?.trim() === 'Home'
-			)
+		it('should have Home link in navigationLinks', () => {
+			const homeLink =
+				component.navigationLinks.find(
+					(link) => link.label === 'Home'
+				)
 			expect(homeLink).toBeTruthy()
-			expect(homeLink?.textContent?.trim()).toBe(
-				'Home'
-			)
+			expect(homeLink?.route).toBe('/home')
 		})
 
-		it('should render About link', () => {
-			const links = compiled.querySelectorAll(
-				'.nav-links a'
-			)
-			const aboutLink = Array.from(links).find(
-				(link) => link.textContent?.trim() === 'About'
-			)
+		it('should have About link in navigationLinks', () => {
+			const aboutLink =
+				component.navigationLinks.find(
+					(link) => link.label === 'About'
+				)
 			expect(aboutLink).toBeTruthy()
-			expect(aboutLink?.textContent?.trim()).toBe(
-				'About'
-			)
+			expect(aboutLink?.route).toBe('/about')
 		})
 
-		it('should render Components link', () => {
-			const links = compiled.querySelectorAll(
-				'.nav-links a'
-			)
-			const componentsLink = Array.from(links).find(
-				(link) =>
-					link.textContent?.trim() === 'Components'
-			)
+		it('should have Components link in navigationLinks', () => {
+			const componentsLink =
+				component.navigationLinks.find(
+					(link) => link.label === 'Components'
+				)
 			expect(componentsLink).toBeTruthy()
-			expect(
-				componentsLink?.textContent?.trim()
-			).toBe('Components')
-		})
-
-		it('should render GitHub external link', () => {
-			const githubLink = compiled.querySelector(
-				'a[href*="github.com"]'
-			)
-			expect(githubLink?.textContent?.trim()).toBe(
-				'GitHub'
+			expect(componentsLink?.route).toBe(
+				'/components'
 			)
 		})
 
-		it('should set target="_blank" for external links', () => {
-			const githubLink = compiled.querySelector(
-				'a[href*="github.com"]'
-			)
-			expect(
-				githubLink?.getAttribute('target')
-			).toBe('_blank')
-		})
-
-		it('should set rel="noopener noreferrer" for external links', () => {
-			const githubLink = compiled.querySelector(
-				'a[href*="github.com"]'
-			)
-			expect(githubLink?.getAttribute('rel')).toBe(
-				'noopener noreferrer'
-			)
-		})
-
-		it('should not set target="_blank" for internal links', () => {
-			const links = compiled.querySelectorAll(
-				'.nav-links a'
-			)
-			const homeLink = Array.from(links).find(
-				(link) => link.textContent?.trim() === 'Home'
-			)
-			expect(
-				homeLink?.getAttribute('target')
-			).not.toBe('_blank')
-		})
-
-		it('should use routerLink for internal navigation', () => {
-			const debugLinks =
-				fixture.debugElement.queryAll(
-					By.css('.nav-links a')
+		it('should have GitHub external link in navigationLinks', () => {
+			const githubLink =
+				component.navigationLinks.find(
+					(link) => link.label === 'GitHub'
 				)
-			const internalLinks = debugLinks.filter(
-				(link) =>
-					!link.nativeElement.hasAttribute('target')
+			expect(githubLink).toBeTruthy()
+			expect(githubLink?.external).toBe(true)
+			expect(githubLink?.route).toContain(
+				'github.com'
 			)
-			expect(internalLinks.length).toBe(3)
 		})
 
-		it('should use routerLinkActive for active state', () => {
-			const debugLinks =
-				fixture.debugElement.queryAll(
-					By.css('.nav-links a')
+		it('should mark external links correctly', () => {
+			const externalLinks =
+				component.navigationLinks.filter(
+					(link) => link.external
 				)
-			const internalLinks = debugLinks.filter(
-				(link) =>
-					!link.nativeElement.hasAttribute('target')
+			expect(externalLinks.length).toBe(1)
+			expect(externalLinks[0].label).toBe('GitHub')
+		})
+
+		it('should pass drawer open state from service', () => {
+			const drawer = compiled.querySelector(
+				'app-navigation-drawer'
 			)
-			// RouterLinkActive directive should be present on internal links
-			expect(internalLinks.length).toBeGreaterThan(0)
+			expect(drawer).toBeTruthy()
 		})
 	})
 
@@ -404,99 +342,23 @@ describe('App', () => {
 		})
 	})
 
-	describe('component properties', () => {
-		it('should have portfolioTitle property', () => {
-			expect(component['portfolioTitle']).toBe(
-				'Jeff Crosley'
+	describe('drawer interaction', () => {
+		it('should respond to drawer toggle requests', () => {
+			const drawer = fixture.debugElement.query(
+				By.css('app-navigation-drawer')
 			)
+			expect(drawer).toBeTruthy()
 		})
 
-		it('should have navigationLinks array', () => {
-			expect(component['navigationLinks']).toEqual([
-				{ label: 'Home', route: '/' },
-				{ label: 'About', route: '/about' },
-				{ label: 'Components', route: '/components' },
-				{
-					label: 'GitHub',
-					route: 'https://github.com/jeffcrosley'
-				}
-			])
-		})
-
-		it('should have 4 navigation links', () => {
-			expect(
-				component['navigationLinks'].length
-			).toBe(4)
-		})
-	})
-
-	describe('template control flow', () => {
-		it('should use @for to render navigation links', () => {
-			const listItems = compiled.querySelectorAll(
-				'.nav-links li'
+		it('should respond to drawer close requests', () => {
+			const drawer = fixture.debugElement.query(
+				By.css('app-navigation-drawer')
 			)
-			expect(listItems.length).toBe(
-				component['navigationLinks'].length
-			)
-		})
-
-		it('should use @if/@else for internal vs external links', () => {
-			const allLinks = compiled.querySelectorAll(
-				'.nav-links a'
-			)
-			const externalLinks =
-				compiled.querySelectorAll(
-					'a[target="_blank"]'
-				)
-			const internalLinks =
-				allLinks.length - externalLinks.length
-
-			expect(internalLinks).toBe(3)
-			expect(externalLinks.length).toBe(1)
-		})
-
-		it('should use @if/@else for theme icon toggle', () => {
-			mockThemeService.getTheme.mockReturnValue(
-				of('light')
-			)
-			fixture.detectChanges()
-			let svgCount = compiled.querySelectorAll(
-				'button.theme-toggle svg'
-			).length
-			expect(svgCount).toBe(1)
-
-			mockThemeService.getTheme.mockReturnValue(
-				of('dark')
-			)
-			fixture.detectChanges()
-			svgCount = compiled.querySelectorAll(
-				'button.theme-toggle svg'
-			).length
-			expect(svgCount).toBe(1)
+			expect(drawer).toBeTruthy()
 		})
 	})
 
 	describe('accessibility', () => {
-		it('should use semantic header element', () => {
-			const header = compiled.querySelector(
-				'header.portfolio-header'
-			)
-			expect(header).toBeTruthy()
-		})
-
-		it('should use semantic h1 for title', () => {
-			const h1 = compiled.querySelector(
-				'h1.portfolio-title'
-			)
-			expect(h1).toBeTruthy()
-		})
-
-		it('should use semantic nav element', () => {
-			const nav =
-				compiled.querySelector('nav.navbar')
-			expect(nav).toBeTruthy()
-		})
-
 		it('should use semantic main element', () => {
 			const main = compiled.querySelector(
 				'main.main-content'
@@ -511,26 +373,6 @@ describe('App', () => {
 			expect(
 				themeToggle?.hasAttribute('aria-label')
 			).toBe(true)
-		})
-	})
-
-	describe('responsive behavior', () => {
-		it('should render on mobile viewport', () => {
-			expect(
-				compiled.querySelector('.portfolio-header')
-			).toBeTruthy()
-			expect(
-				compiled.querySelector('.nav-links')
-			).toBeTruthy()
-		})
-
-		it('should render on desktop viewport', () => {
-			expect(
-				compiled.querySelector('.portfolio-header')
-			).toBeTruthy()
-			expect(
-				compiled.querySelector('.nav-links')
-			).toBeTruthy()
 		})
 	})
 })

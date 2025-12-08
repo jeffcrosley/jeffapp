@@ -11,19 +11,23 @@ import { BreakpointService } from './breakpoint.service'
 })
 export class DrawerService {
 	#isOpen = signal(false)
-	isOpen$ = this.#isOpen.asReadonly()
+	isOpen = this.#isOpen.asReadonly()
 
 	constructor() {
-		const breakpointService = inject(BreakpointService)
+		const breakpointService = inject(
+			BreakpointService
+		)
 		effect(() => {
-			const isDesktop = breakpointService.isDesktop$()
+			const isDesktop =
+				breakpointService.isDesktop$()
 			if (isDesktop && this.#isOpen()) {
 				this.#isOpen.set(false)
 			}
 		})
 	}
 
-	toggle = (): void => this.#isOpen.set(!this.#isOpen())
+	toggle = (): void =>
+		this.#isOpen.set(!this.#isOpen())
 	open = (): void => this.#isOpen.set(true)
 	close = (): void => this.#isOpen.set(false)
 }

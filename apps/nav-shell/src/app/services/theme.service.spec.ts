@@ -25,31 +25,29 @@ describe('ThemeService', () => {
 		storedTheme?: string | null
 		prefersDark?: boolean
 	}) => {
-		const { storedTheme = null, prefersDark = false } =
-			options
+		const {
+			storedTheme = null,
+			prefersDark = false
+		} = options
 
 		localStorageGetItemSpy = jest
 			.spyOn(Storage.prototype, 'getItem')
 			.mockReturnValue(storedTheme)
 		localStorageSetItemSpy = jest
 			.spyOn(Storage.prototype, 'setItem')
-			.mockImplementation(() => {})
+			.mockImplementation(jest.fn())
 
-		// matchMedia doesn't exist in jsdom, use Object.defineProperty
-		Object.defineProperty(window, 'matchMedia', {
-			writable: true,
-			configurable: true,
-			value: jest.fn().mockReturnValue({
-				matches: prefersDark,
-				media: '(prefers-color-scheme: dark)',
-				onchange: null,
-				addListener: jest.fn(),
-				removeListener: jest.fn(),
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn(),
-				dispatchEvent: jest.fn()
-			})
-		})
+		// Update the matchMedia mock (already defined in test-setup.ts)
+		window.matchMedia = jest.fn().mockReturnValue({
+			matches: prefersDark,
+			media: '(prefers-color-scheme: dark)',
+			onchange: null,
+			addListener: jest.fn(),
+			removeListener: jest.fn(),
+			addEventListener: jest.fn(),
+			removeEventListener: jest.fn(),
+			dispatchEvent: jest.fn()
+		}) as unknown as typeof window.matchMedia
 
 		setAttributeSpy = jest.spyOn(
 			document.documentElement,
@@ -123,10 +121,9 @@ describe('ThemeService', () => {
 			})
 			service.toggle()
 			expect(service.getCurrentTheme()).toBe('dark')
-			expect(localStorageSetItemSpy).toHaveBeenCalledWith(
-				'jeffapp-theme',
-				'dark'
-			)
+			expect(
+				localStorageSetItemSpy
+			).toHaveBeenCalledWith('jeffapp-theme', 'dark')
 		})
 
 		it('should toggle from dark to light', () => {
@@ -135,7 +132,9 @@ describe('ThemeService', () => {
 			})
 			service.toggle()
 			expect(service.getCurrentTheme()).toBe('light')
-			expect(localStorageSetItemSpy).toHaveBeenCalledWith(
+			expect(
+				localStorageSetItemSpy
+			).toHaveBeenCalledWith(
 				'jeffapp-theme',
 				'light'
 			)
@@ -173,7 +172,9 @@ describe('ThemeService', () => {
 			})
 			service.setTheme('light')
 			expect(service.getCurrentTheme()).toBe('light')
-			expect(localStorageSetItemSpy).toHaveBeenCalledWith(
+			expect(
+				localStorageSetItemSpy
+			).toHaveBeenCalledWith(
 				'jeffapp-theme',
 				'light'
 			)
@@ -185,10 +186,9 @@ describe('ThemeService', () => {
 			})
 			service.setTheme('dark')
 			expect(service.getCurrentTheme()).toBe('dark')
-			expect(localStorageSetItemSpy).toHaveBeenCalledWith(
-				'jeffapp-theme',
-				'dark'
-			)
+			expect(
+				localStorageSetItemSpy
+			).toHaveBeenCalledWith('jeffapp-theme', 'dark')
 		})
 
 		it('should be idempotent (setting same theme multiple times)', () => {
@@ -236,8 +236,10 @@ describe('ThemeService', () => {
 			service = createServiceWithMocks({
 				storedTheme: 'light'
 			})
-			let subscriber1Value: 'light' | 'dark' | null = null
-			let subscriber2Value: 'light' | 'dark' | null = null
+			let subscriber1Value: 'light' | 'dark' | null =
+				null
+			let subscriber2Value: 'light' | 'dark' | null =
+				null
 
 			service.getTheme().subscribe((theme) => {
 				subscriber1Value = theme
@@ -304,19 +306,18 @@ describe('ThemeService', () => {
 				storedTheme: 'light'
 			})
 			service.toggle()
-			expect(localStorageSetItemSpy).toHaveBeenCalledWith(
-				'jeffapp-theme',
-				'dark'
-			)
+			expect(
+				localStorageSetItemSpy
+			).toHaveBeenCalledWith('jeffapp-theme', 'dark')
 		})
 
 		it('should read from localStorage on initialization', () => {
 			service = createServiceWithMocks({
 				storedTheme: 'dark'
 			})
-			expect(localStorageGetItemSpy).toHaveBeenCalledWith(
-				'jeffapp-theme'
-			)
+			expect(
+				localStorageGetItemSpy
+			).toHaveBeenCalledWith('jeffapp-theme')
 			expect(service.getCurrentTheme()).toBe('dark')
 		})
 	})
@@ -362,7 +363,9 @@ describe('ThemeService', () => {
 			setAttributeSpy.mockClear()
 			service.toggle()
 			service.toggle()
-			expect(setAttributeSpy).toHaveBeenCalledTimes(2)
+			expect(setAttributeSpy).toHaveBeenCalledTimes(
+				2
+			)
 		})
 	})
 
@@ -376,7 +379,9 @@ describe('ThemeService', () => {
 				service.toggle()
 			}
 			// After 10 toggles (even number), should be same as initial
-			expect(service.getCurrentTheme()).toBe(initialTheme)
+			expect(service.getCurrentTheme()).toBe(
+				initialTheme
+			)
 		})
 
 		it('should handle matchMedia being undefined', () => {
@@ -385,16 +390,16 @@ describe('ThemeService', () => {
 				.mockReturnValue(null)
 			jest
 				.spyOn(Storage.prototype, 'setItem')
-				.mockImplementation(() => {})
+				.mockImplementation(jest.fn())
 
 			// Set matchMedia to undefined to simulate SSR or old browser
-			Object.defineProperty(window, 'matchMedia', {
-				writable: true,
-				configurable: true,
-				value: undefined
-			})
+			window.matchMedia =
+				undefined as unknown as typeof window.matchMedia
 
-			jest.spyOn(document.documentElement, 'setAttribute')
+			jest.spyOn(
+				document.documentElement,
+				'setAttribute'
+			)
 
 			TestBed.configureTestingModule({
 				providers: [ThemeService]

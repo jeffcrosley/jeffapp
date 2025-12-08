@@ -1,8 +1,37 @@
-<aside class="nav-drawer">
+<button
+	class="hamburger"
+	[class.open]="isOpen()"
+	(click)="onClickHamburgerButton()"
+	aria-label="Toggle navigation menu"
+	[attr.aria-expanded]="isOpen()"
+>
+	<span class="hamburger-line"></span>
+	<span class="hamburger-line"></span>
+	<span class="hamburger-line"></span>
+</button>
+
+<div
+	class="backdrop"
+	[class.visible]="isOpen()"
+	(click)="drawerCloseRequested.emit()"
+	aria-hidden="true"
+></div>
+
+<aside
+	class="nav-drawer"
+	[class.open]="isOpen()"
+	role="navigation"
+	[attr.aria-label]="'Main navigation'"
+	[attr.aria-hidden]="!isOpen()"
+>
 	<header class="drawer-header">
 		<h1 class="portfolio-title">{{ title }}</h1>
 	</header>
-	<nav class="drawer-nav">
+	<nav
+		class="drawer-nav"
+		role="navigation"
+		aria-label="Main navigation"
+	>
 		<ul class="nav-links">
 			@for (link of links(); track link.label) {
 				<li>
@@ -11,6 +40,7 @@
 							class="nav-link"
 							[href]="link.route"
 							target="_blank"
+							rel="noopener noreferrer"
 						>
 							{{ link.label }}
 						</a>
@@ -18,8 +48,10 @@
 						<a
 							class="nav-link"
 							[routerLink]="link.route"
-							[routerLinkActive]="'active'"
+							routerLinkActive="active"
+							[routerLinkActiveOptions]="{ exact: true }"
 							[appFeatureStatus]="link.status"
+							(click)="drawerCloseRequested.emit()"
 						>
 							{{ link.label }}
 						</a>

@@ -1,4 +1,5 @@
 # Render Deployment Configuration
+
 > Canonical index: `docs/INDEX.md`
 
 ## Quick Setup Checklist
@@ -40,7 +41,6 @@
 **Headers & Rewrite Rules:**
 
 1. **Rewrite Rule (SPA routing):**
-
    - Source: `/*`
    - Destination: `/index.html`
    - Type: `rewrite`
@@ -96,25 +96,25 @@ npx nx build nav-shell --configuration=production
 - name: Check if component-showcase is affected
   id: affected-showcase
   run: |
-    AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD)
-    if echo "$AFFECTED" | grep -q "component-showcase"; then
-      echo "affected=true" >> $GITHUB_OUTPUT
-    else
-      echo "affected=false" >> $GITHUB_OUTPUT
-    fi
+   AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD)
+   if echo "$AFFECTED" | grep -q "component-showcase"; then
+     echo "affected=true" >> $GITHUB_OUTPUT
+   else
+     echo "affected=false" >> $GITHUB_OUTPUT
+   fi
 ```
 
 **Add deploy job for showcase:**
 
 ```yaml
 deploy_component_showcase:
-  needs: [build, affected]
-  runs-on: ubuntu-latest
-  if: needs.affected.outputs.showcase_affected == 'true' && github.ref == 'refs/heads/main'
-  steps:
-    - name: Trigger Render Deploy Hook for Component Showcase
-      run: |
-        curl -X POST ${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}
+ needs: [build, affected]
+ runs-on: ubuntu-latest
+ if: needs.affected.outputs.showcase_affected == 'true' && github.ref == 'refs/heads/main'
+ steps:
+  - name: Trigger Render Deploy Hook for Component Showcase
+    run: |
+     curl -X POST ${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}
 ```
 
 ---
@@ -127,7 +127,7 @@ deploy_component_showcase:
 
    ```json
    {
-     "showcaseUrl": "https://components.jeffcrosley.com"
+   	"showcaseUrl": "https://components.jeffcrosley.com"
    }
    ```
 
@@ -192,3 +192,36 @@ npx nx serve nav-shell
 - [ ] Update GitHub Actions workflow
 - [ ] Set production `SHOWCASE_URL` (via config.json or env)
 - [ ] Test affected-only deploys
+
+---
+
+## CI/CD Agent Playbook (Render + GitHub Actions)
+
+**Scope:** keep `.github/workflows/main.yml` healthy, validate Render configs, trigger deploy hooks only for affected apps, and surface post-deploy health.
+
+### Agent Duties
+
+- Verify secrets present: `RENDER_API_DEPLOY_HOOK`, `RENDER_SHELL_DEPLOY_HOOK`, `RENDER_SHOWCASE_DEPLOY_HOOK`.
+- Validate workflow gates: affected-only `lint/test/build` must run before deploy jobs; deploys gated to `refs/heads/main`.
+- Confirm Render services:
+  - api-gateway (Node): build `npx nx build api-gateway --configuration=production`, start `node dist/apps/api-gateway/main.js`, health `/health`, port from `PORT`.
+  - nav-shell (static): publish `dist/apps/nav-shell/browser`, rewrite `/* -> /index.html`, auto-deploy OFF, branch `main`.
+  - component-showcase (static): publish `dist/apps/component-showcase`, rewrite `/* -> /index.html`, auto-deploy OFF, branch `main`.
+- Check env/config:
+  - prod + local today; keep pattern ready for staging (naming + secrets + hooks).
+  - nav-shell: `SHOWCASE_URL` or `config.json` present for iframe.
+- Post-deploy checks: hit `/health` (api-gateway) and root pages (shell/showcase); report failures; no Sentry wired yet.
+- Documentation: update this guide and related SOPs when workflow or hooks change.
+
+### Standard Validation Steps
+
+1. **Workflow:** ensure affected detection runs and deploy jobs conditioned on affected apps + `main` branch.
+2. **Secrets:** `gh secret list` (manual) or workflow dry-run to confirm `RENDER_*_DEPLOY_HOOK` available.
+3. **Render:** visually confirm build/start/publish dirs + rewrite rules; auto-deploy OFF.
+4. **Env vars:** verify `SHOWCASE_URL` (or `config.json`) set for nav-shell.
+5. **Health checks:** after deploy, GET `/health` (api-gateway) and root pages for shell/showcase.
+
+### Optional Future Enhancements
+
+- Add staging environment following same hook pattern.
+- Wire Sentry or other error tracking when ready; add DSN as secret and gate deploy on health signal.

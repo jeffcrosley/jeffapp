@@ -383,6 +383,7 @@ describe('NavigationDrawerComponent', () => {
 		it('should apply active class to current route link', async () => {
 			fixture.detectChanges()
 			await router.navigate(['/about'])
+			await fixture.whenStable()
 			fixture.detectChanges()
 
 			const links = fixture.debugElement.queryAll(
@@ -405,13 +406,12 @@ describe('NavigationDrawerComponent', () => {
 					'active'
 				)
 			).toBe(true)
-			// Home link (/) will ALSO be active due to routerLinkActiveOptions default ({ exact: false })
-			// This means "/" matches all routes that start with "/"
+			// Home link should NOT be active because we use exact: true in the template
 			expect(
 				homeLink?.nativeElement.classList.contains(
 					'active'
 				)
-			).toBe(true)
+			).toBe(false)
 		})
 
 		it('should update active class when route changes', async () => {
@@ -419,6 +419,7 @@ describe('NavigationDrawerComponent', () => {
 
 			// Start on home route
 			await router.navigate(['/'])
+			await fixture.whenStable()
 			fixture.detectChanges()
 
 			const links = fixture.debugElement.queryAll(
@@ -459,15 +460,16 @@ describe('NavigationDrawerComponent', () => {
 
 			// Navigate to about
 			await router.navigate(['/about'])
+			await fixture.whenStable()
 			fixture.detectChanges()
 
 			// About should now be active
-			// Home will also remain active (non-exact matching: "/" matches "/about")
+			// Home should NOT be active because we use exact: true
 			expect(
 				homeLink?.nativeElement.classList.contains(
 					'active'
 				)
-			).toBe(true)
+			).toBe(false)
 			expect(
 				aboutLink?.nativeElement.classList.contains(
 					'active'
@@ -503,7 +505,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('drawer state - open/closed', () => {
+	describe('drawer state - open/closed', () => {
 		it('should add open class when isOpen signal is true', () => {
 			hostComponent.isOpen.set(true)
 			fixture.detectChanges()
@@ -552,66 +554,57 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('keyboard interaction - Esc key', () => {
+	describe('keyboard interaction - Esc key', () => {
 		it('should emit drawerCloseRequested when Esc is pressed while open', () => {
 			hostComponent.isOpen.set(true)
 			fixture.detectChanges()
-			const component =
-				drawerComponent as unknown as {
-					drawerCloseRequested: { emit: jest.Mock }
-				}
-			const emitSpy = jest.fn()
-			component.drawerCloseRequested = {
-				emit: emitSpy
-			}
+			const emitSpy = jest.spyOn(
+				drawerComponent.drawerCloseRequested,
+				'emit'
+			)
 			const event = new KeyboardEvent('keydown', {
 				key: 'Escape'
 			})
-			fixture.nativeElement.dispatchEvent(event)
+			document.dispatchEvent(event)
 			fixture.detectChanges()
 			expect(emitSpy).toHaveBeenCalledTimes(1)
+			emitSpy.mockRestore()
 		})
 
 		it('should not emit when a non-Esc key is pressed', () => {
 			hostComponent.isOpen.set(true)
 			fixture.detectChanges()
-			const component =
-				drawerComponent as unknown as {
-					drawerCloseRequested: { emit: jest.Mock }
-				}
-			const emitSpy = jest.fn()
-			component.drawerCloseRequested = {
-				emit: emitSpy
-			}
+			const emitSpy = jest.spyOn(
+				drawerComponent.drawerCloseRequested,
+				'emit'
+			)
 			const event = new KeyboardEvent('keydown', {
 				key: 'Enter'
 			})
-			fixture.nativeElement.dispatchEvent(event)
+			document.dispatchEvent(event)
 			fixture.detectChanges()
 			expect(emitSpy).not.toHaveBeenCalled()
+			emitSpy.mockRestore()
 		})
 
 		it('should not emit when drawer is closed', () => {
 			hostComponent.isOpen.set(false)
 			fixture.detectChanges()
-			const component =
-				drawerComponent as unknown as {
-					drawerCloseRequested: { emit: jest.Mock }
-				}
-			const emitSpy = jest.fn()
-			component.drawerCloseRequested = {
-				emit: emitSpy
-			}
+			const emitSpy = jest.spyOn(
+				drawerComponent.drawerCloseRequested,
+				'emit'
+			)
 			const event = new KeyboardEvent('keydown', {
 				key: 'Escape'
 			})
-			fixture.nativeElement.dispatchEvent(event)
+			document.dispatchEvent(event)
 			fixture.detectChanges()
 			expect(emitSpy).not.toHaveBeenCalled()
+			emitSpy.mockRestore()
 		})
 	})
 
-	describe.skip('focus management - focus trap', () => {
+	describe('focus management - focus trap', () => {
 		it('should expose focusable elements when open on mobile', () => {
 			breakpointService.isMobile$.set(true)
 			hostComponent.isOpen.set(true)
@@ -653,7 +646,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('accessibility - ARIA', () => {
+	describe('accessibility - ARIA', () => {
 		it('should set role="navigation" and aria-label on nav', () => {
 			fixture.detectChanges()
 			const nav = fixture.debugElement.query(
@@ -697,7 +690,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('integration with services', () => {
+	describe('integration with services', () => {
 		it('should call FeatureVisibilityService.getIndicator()', () => {
 			fixture.detectChanges()
 			expect(featureVisibilityService).toBeTruthy()
@@ -709,7 +702,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('responsive behavior', () => {
+	describe('responsive behavior', () => {
 		it('should render drawer regardless of breakpoint', () => {
 			fixture.detectChanges()
 			const aside = fixture.debugElement.query(
@@ -729,7 +722,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('edge cases', () => {
+	describe('edge cases', () => {
 		it('should handle empty links array', () => {
 			hostComponent.links.set([])
 			fixture.detectChanges()
@@ -776,7 +769,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('template binding', () => {
+	describe('template binding', () => {
 		it('should render using modern @if/@for control flow', () => {
 			fixture.detectChanges()
 			const links = fixture.debugElement.queryAll(
@@ -807,7 +800,7 @@ describe('NavigationDrawerComponent', () => {
 		})
 	})
 
-	describe.skip('styling integration', () => {
+	describe('styling integration', () => {
 		it('should apply CSS class nav-drawer for styling', () => {
 			fixture.detectChanges()
 			const aside = fixture.debugElement.query(
