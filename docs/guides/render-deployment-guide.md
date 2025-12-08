@@ -1,4 +1,5 @@
 # Render Deployment Configuration
+> Canonical index: `docs/INDEX.md`
 
 ## Quick Setup Checklist
 

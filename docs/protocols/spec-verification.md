@@ -1,4 +1,5 @@
 # Spec Verification Guide
+> Canonical index: `docs/INDEX.md`
 
 This guide helps detect incomplete or interrupted spec updates without running tests.
 

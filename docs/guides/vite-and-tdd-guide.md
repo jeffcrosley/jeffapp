@@ -1,4 +1,5 @@
 # Vite Overview & TDD Workflow Strategy
+> Canonical index: `docs/INDEX.md`
 
 ## What is Vite?
 

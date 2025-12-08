@@ -1,4 +1,5 @@
 # QA Coach Operation Protocol
+> Canonical index: `docs/INDEX.md`
 
 This document defines how I (QA Coach) will operate to minimize errors and maximize transparency during complex operations.
 
@@ -11,6 +12,8 @@ This document defines how I (QA Coach) will operate to minimize errors and maxim
 ---
 
 ## Pre-Operation Protocol
+
+**Precondition:** Do not proceed unless the approved Requirements Brief (Requirements Analyst), Design Spec (Designer, lightweight), and Implementation Spec (Architect) are available. If missing or ambiguous, stop and request them.
 
 ### Step 1: Operation Briefing
 

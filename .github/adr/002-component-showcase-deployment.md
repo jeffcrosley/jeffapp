@@ -127,7 +127,7 @@ nx build ui-components  # generates www/ with showcase
 ```typescript
 // Rejected: federated module approach
 remotes: {
-  showcase: 'https://components.jeffcrosley.com/remoteEntry.js';
+	showcase: 'https://components.jeffcrosley.com/remoteEntry.js'
 }
 ```
 
@@ -143,5 +143,5 @@ remotes: {
 - Related: ADR 001 (Runtime Configuration)
 - Related: ADR 003 (CI/CD Pipeline)
 - Deployment: `.github/workflows/main.yml` (deploy_component_showcase job)
-- Security: `RENDER_DEPLOYMENT_GUIDE.md` (CSP guidance)
+- Security: `docs/guides/render-deployment-guide.md` (CSP guidance)
 - Implementation: `apps/component-showcase/` and `apps/nav-shell/src/app/pages/components.component.ts`

@@ -1,5 +1,7 @@
 # Operation Protocol - Quick Reference
 
+> Canonical index: `docs/INDEX.md`
+
 ## Before Large Operations
 
 You'll see this:
@@ -13,6 +15,8 @@ PLAN: [Strategy 1, Fallback 1, Fallback 2, Fallback 3]
 PRE-FLIGHT: [Verification checks]
 
 Ready?
+
+Prereq: Only proceed when Requirements Brief + Design Spec + Implementation Spec are approved; otherwise pause and request them.
 ```
 
 **Your action:** Say "Go" or "Wait/Constraints"
@@ -108,13 +112,12 @@ Anytime, run:
 
 ## Key Files
 
-| File                                | Purpose                  |
-| ----------------------------------- | ------------------------ |
-| `QA_COACH_OPERATION_PROTOCOL.md`    | Full protocol details    |
-| `QA_COACH_ENHANCED_INSTRUCTIONS.md` | My updated instructions  |
-| `SPEC_VERIFICATION.md`              | Verification guide       |
-| `spec-verify.sh`                    | Auto-verify specs        |
-| `pre-flight-check.sh`               | Pre-operation validation |
+| File | Purpose |
+| `../roles/qa-coach-enhanced-instructions.md` | My updated instructions |
+| `qa-coach-operation-protocol.md` | Full protocol details |
+| `spec-verification.md` | Verification guide |
+| `spec-verify.sh` | Auto-verify specs |
+| `pre-flight-check.sh` | Pre-operation validation |
 
 ---
 

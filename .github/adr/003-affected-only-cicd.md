@@ -60,21 +60,21 @@ Use **Nx affected detection** with **conditional GitHub Actions jobs** triggerin
 - name: Get affected projects
   id: affected
   run: |
-    AFFECTED=$(npx nx show projects --affected --base=origin/main)
-    echo "projects=$AFFECTED" >> $GITHUB_OUTPUT
+   AFFECTED=$(npx nx show projects --affected --base=origin/main)
+   echo "projects=$AFFECTED" >> $GITHUB_OUTPUT
 ```
 
 **Conditional Deploy:**
 
 ```yaml
 deploy_nav_shell:
-  needs: [affected-detection, build-and-test]
-  if: |
-    github.ref == 'refs/heads/main' &&
-    contains(needs.affected-detection.outputs.projects, 'nav-shell')
-  steps:
-    - name: Trigger Render Deploy
-      run: curl -X POST ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
+ needs: [affected-detection, build-and-test]
+ if: |
+  github.ref == 'refs/heads/main' &&
+  contains(needs.affected-detection.outputs.projects, 'nav-shell')
+ steps:
+  - name: Trigger Render Deploy
+    run: curl -X POST ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
 ```
 
 **Render Service Configuration (Dashboard):**
@@ -104,7 +104,7 @@ deploy_nav_shell:
 
 - Regularly verify Nx graph accuracy: `npx nx graph`
 - Add workflow logging for affected detection results
-- Document Render webhook setup in `RENDER_DEPLOYMENT_GUIDE.md`
+- Document Render webhook setup in `docs/guides/render-deployment-guide.md`
 - Monitor for false negatives (changed code not triggering deploy)
 
 ## Alternatives Considered
@@ -114,12 +114,12 @@ deploy_nav_shell:
 ```yaml
 # Rejected: deploy all services on every push
 deploy:
-  steps:
-    - name: Deploy all
-      run: |
-        curl ${{ secrets.RENDER_API_DEPLOY_HOOK }}
-        curl ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
-        curl ${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}
+ steps:
+  - name: Deploy all
+    run: |
+     curl ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+     curl ${{ secrets.RENDER_SHELL_DEPLOY_HOOK }}
+     curl ${{ secrets.RENDER_SHOWCASE_DEPLOY_HOOK }}
 ```
 
 **Rejected because:**
@@ -163,10 +163,10 @@ deploy:
 ```yaml
 # Considered: dynamic job matrix
 strategy:
-  matrix:
-    project: ${{ fromJson(needs.affected.outputs.projects) }}
+ matrix:
+  project: ${{ fromJson(needs.affected.outputs.projects) }}
 steps:
-  - run: npx nx build ${{ matrix.project }}
+ - run: npx nx build ${{ matrix.project }}
 ```
 
 **Not rejected, but current approach preferred:**
@@ -182,5 +182,5 @@ steps:
 - Nx Affected: https://nx.dev/concepts/affected
 - Related: ADR 001 (Runtime Configuration), ADR 002 (Showcase Deployment)
 - Implementation: `.github/workflows/main.yml`
-- Deployment Guide: `RENDER_DEPLOYMENT_GUIDE.md`
+- Deployment Guide: `docs/guides/render-deployment-guide.md`
 - Render Webhooks: https://render.com/docs/deploy-hooks

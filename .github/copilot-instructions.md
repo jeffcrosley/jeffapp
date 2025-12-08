@@ -57,7 +57,10 @@ Creating new pages:
 Create a `.ts` file in `apps/nav-shell/src/app/pages/` with inline template and styles. Prefer Angular's modern control flow syntax (`@if`, `@for`, `@switch`) rather than legacy structural directives. Pages should render UI composed from Nx libraries (e.g., `@jeffapp/ui-components`, `@jeffapp/ui-angular`).
 
 ```typescript
-import { Component, CommonModule } from '@angular/core'
+import {
+	Component,
+	CommonModule
+} from '@angular/core'
 
 @Component({
 	selector: 'app-my-component',
@@ -65,13 +68,13 @@ import { Component, CommonModule } from '@angular/core'
 	imports: [CommonModule],
 	template: `
 		@if (show) {
-		<div class="my-class">{{ data }}</div>
+			<div class="my-class">{{ data }}</div>
 		} @else {
-		<div class="my-class">Hidden</div>
+			<div class="my-class">Hidden</div>
 		}
 		<ul>
 			@for (item of items; track item) {
-			<li>{{ item }}</li>
+				<li>{{ item }}</li>
 			}
 		</ul>
 	`,
@@ -94,6 +97,10 @@ export class MyPage {
 Then import and add to `app.routes.ts` or embed in other pages via router or composition.
 
 ## Development Philosophy & AI Agent Role
+
+**Agent Flow (sequential, default):** User → Requirements Analyst → Designer (lightweight) → Architect → User approval → QA Coach (tests, pre-skipped) → Developer → Reviewer → DevOps. If any upstream artifact is missing, pause and request it before proceeding.
+
+**Documentation:** See `docs/INDEX.md` for the authoritative index of all role SOPs, protocols, and guides.
 
 **Test-Driven Development (TDD):**
 
@@ -141,7 +148,6 @@ Edge cases & verification steps:
 Four complementary libraries demonstrate different approaches:
 
 1. **`@jeffapp/ui-components`** (Stencil - Production Use)
-
    - Built with Stencil for production-quality Web Components
    - Outputs: Custom Elements, dist bundles, loader
    - Use this for: Real application features requiring cross-framework compatibility
@@ -150,7 +156,6 @@ Four complementary libraries demonstrate different approaches:
    - Example: `<app-button label="Click me" variant="primary"></app-button>`
 
 2. **`@jeffapp/ui-components-native`** (Vanilla Web Components - Portfolio Showcase)
-
    - Pure Web Components API (no frameworks/tools)
    - Demonstrates fundamental Web Components knowledge
    - Use this for: Portfolio showcase examples, learning documentation
@@ -158,7 +163,6 @@ Four complementary libraries demonstrate different approaches:
    - Example: `<native-card title="Title" description="Description"></native-card>`
 
 3. **`@jeffapp/ui-angular`** (Angular-Specific Wrappers)
-
    - Angular module with CUSTOM_ELEMENTS_SCHEMA for Web Components integration
    - Type-safe directives/pipes/utilities for Angular apps
    - Use this for: Angular-specific features that don't translate to other frameworks
@@ -252,7 +256,6 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
 **Render Configuration** (configured in Render dashboard, not code):
 
 - **api-gateway** (Node.js Web Service):
-
   - Build Command: `npx nx build api-gateway --configuration=production`
   - Start Command: `node dist/apps/api-gateway/main.js`
   - Port: 3333 (or `process.env.PORT` for Render)
@@ -260,7 +263,6 @@ In CI/CD, use these commands to ensure only changed apps are built, tested, and 
   - Deploy Hook: Set in GitHub secrets as `RENDER_API_DEPLOY_HOOK`
 
 - **nav-shell** (Static Site):
-
   - Build Command: `npx nx build nav-shell --configuration=production`
   - Publish Directory: `dist/apps/nav-shell/browser`
   - **Critical for SPA Routing**: Configure rewrite rules in Render dashboard:

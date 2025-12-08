@@ -1,5 +1,7 @@
 <!-- DevOps Agent Standard Operating Procedure -->
 
+> Canonical index: `docs/INDEX.md`
+
 # DevOps Agent SOP — CI/CD, Deployment & Infrastructure
 
 ## Purpose
@@ -76,7 +78,7 @@ Before engaging on any deployment task:
 - [ ] **Test status:** Verify all required tests are green (or skipped with documented reason)
 - [ ] **Affected projects:** Run `npx nx show projects --affected` — note which apps changed
 - [ ] **Build artifacts:** Confirm `npx nx affected --target=build` succeeds locally
-- [ ] **Render config:** Compare live Render dashboard config to `RENDER_DEPLOYMENT_GUIDE.md`
+- [ ] **Render config:** Compare live Render dashboard config to `docs/guides/render-deployment-guide.md`
 - [ ] **Secrets:** Verify required GitHub Actions secrets exist (names: `RENDER_API_DEPLOY_HOOK`, `RENDER_SHELL_DEPLOY_HOOK`, `RENDER_SHOWCASE_DEPLOY_HOOK`)
 - [ ] **Workflow:** Verify `.github/workflows/main.yml` references correct branches and targets
 
@@ -271,7 +273,7 @@ Once deployment is complete and stable (health checks green, no critical issues)
 
 ## References
 
-- [RENDER_DEPLOYMENT_GUIDE.md](./RENDER_DEPLOYMENT_GUIDE.md) — Deployment architecture & config checklist
+- [render-deployment-guide.md](../guides/render-deployment-guide.md) — Deployment architecture & config checklist
 - [.github/workflows/main.yml](./.github/workflows/main.yml) — CI/CD pipeline definition
 - [nx.json](./nx.json) — Nx build/test/lint config
 - [apps/api-gateway/src/main.ts](./apps/api-gateway/src/main.ts) — API gateway entry & health check

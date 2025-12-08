@@ -1,5 +1,7 @@
 # Workflow Enhancement Summary
 
+> Canonical index: `docs/INDEX.md`
+
 **Date:** December 5, 2025
 **Status:** ✅ Implemented and Ready
 
@@ -20,26 +22,22 @@ Network errors were causing silent failures and inefficient recovery:
 
 Three new documents and two scripts establish a clear operating protocol:
 
-1. **QA_COACH_OPERATION_PROTOCOL.md** (9.0K)
-
+1. **../protocols/qa-coach-operation-protocol.md** (9.0K)
    - Complete protocol for all operations
    - Pre-operation, execution, failure recovery phases
    - Examples of real workflows
 
-2. **QA_COACH_ENHANCED_INSTRUCTIONS.md** (7.8K)
-
+2. **../roles/qa-coach-enhanced-instructions.md** (7.8K)
    - Updated system instructions for QA Coach role
    - Integrates operation protocol
    - Communication standards and success criteria
 
-3. **OPERATION_PROTOCOL_QUICK_REF.md** (Quick reference)
-
+3. **../protocols/operation-protocol-quick-ref.md** (Quick reference)
    - One-page summary of your role
    - What you'll see at each phase
    - How to respond to different situations
 
 4. **spec-verify.sh** (1.9K)
-
    - Automated verification of test specs
    - Quick health checks for E2E and drawer tests
    - Used after every operation
@@ -165,14 +163,14 @@ git status
 
 ## Files Available for Reference
 
-| File                              | Size | Purpose                            |
-| --------------------------------- | ---- | ---------------------------------- |
-| QA_COACH_OPERATION_PROTOCOL.md    | 9.0K | Full protocol specifications       |
-| QA_COACH_ENHANCED_INSTRUCTIONS.md | 7.8K | Updated system instructions        |
-| SPEC_VERIFICATION.md              | 4.7K | Verification guide and checkpoints |
-| OPERATION_PROTOCOL_QUICK_REF.md   | 2.5K | One-page quick reference           |
-| spec-verify.sh                    | 1.9K | Auto-verification script           |
-| pre-flight-check.sh               | 1.1K | Pre-operation validation           |
+| File                                         | Size | Purpose                            |
+| -------------------------------------------- | ---- | ---------------------------------- |
+| ../protocols/qa-coach-operation-protocol.md  | 9.0K | Full protocol specifications       |
+| ../roles/qa-coach-enhanced-instructions.md   | 7.8K | Updated system instructions        |
+| ../protocols/spec-verification.md            | 4.7K | Verification guide and checkpoints |
+| ../protocols/operation-protocol-quick-ref.md | 2.5K | One-page quick reference           |
+| spec-verify.sh                               | 1.9K | Auto-verification script           |
+| pre-flight-check.sh                          | 1.1K | Pre-operation validation           |
 
 ---
 
@@ -210,9 +208,9 @@ git status
 
 Refer to:
 
-- **How do I use the protocol?** → OPERATION_PROTOCOL_QUICK_REF.md
-- **What's the full protocol?** → QA_COACH_OPERATION_PROTOCOL.md
-- **What changed about how QA Coach works?** → QA_COACH_ENHANCED_INSTRUCTIONS.md
-- **How do I verify things?** → SPEC_VERIFICATION.md
+- **How do I use the protocol?** → ../protocols/operation-protocol-quick-ref.md
+- **What's the full protocol?** → ../protocols/qa-coach-operation-protocol.md
+- **What changed about how QA Coach works?** → ../roles/qa-coach-enhanced-instructions.md
+- **How do I verify things?** → ../protocols/spec-verification.md
 
 Or just ask — I'll explain anything about the new workflow!
