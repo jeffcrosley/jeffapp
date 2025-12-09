@@ -5,6 +5,11 @@ dist
 tmp
 out-tsc
 
+# Stencil generated loader artifacts
+libs/ui-components/loader/*.js
+libs/ui-components/loader/*.ts
+!libs/ui-components/loader/index.d.ts
+
 # dependencies
 node_modules
 
