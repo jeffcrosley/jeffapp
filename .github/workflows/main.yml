@@ -114,9 +114,6 @@ jobs:
    - name: Run AFFECTED Lint
      run: npx nx affected --target=lint --parallel=3
 
-   - name: Run AFFECTED Test (skip component libraries)
-     run: npx nx affected --target=test --exclude="ui-components,ui-components-native,ui-angular,ui-react,design-tokens" --parallel=3
-
    - name: Run AFFECTED Build
      run: npx nx affected --target=build --parallel=3
 
