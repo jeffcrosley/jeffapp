@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { Component, inject } from '@angular/core'
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core'
 import {
 	Router,
 	RouterModule
@@ -23,6 +23,7 @@ export interface NavLink {
 		RouterModule,
 		NavigationDrawerComponent
 	],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })

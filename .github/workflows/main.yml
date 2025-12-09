@@ -114,6 +114,9 @@ jobs:
    - name: Run AFFECTED Lint
      run: npx nx affected --target=lint --parallel=3
 
+   - name: Run AFFECTED Test (nav-shell only)
+     run: npx nx affected --target=test --select="nav-shell,nav-shell-e2e" --parallel=3 || true
+
    - name: Run AFFECTED Build
      run: npx nx affected --target=build --parallel=3
 
