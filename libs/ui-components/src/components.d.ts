@@ -22,6 +22,10 @@ export namespace Components {
     }
     interface AppCard {
         /**
+          * The card title
+         */
+        "cardTitle": string;
+        /**
           * The card description text
          */
         "description": string;
@@ -35,14 +39,12 @@ export namespace Components {
          */
         "imageUrl"?: string;
         /**
-          * The card title
-         */
-        "title": string;
-        /**
           * Card variant: default, highlighted, or compact
           * @default 'default'
          */
-        "variant": 'default' | 'highlighted' | 'compact';
+        "variant": | 'default'
+		| 'highlighted'
+		| 'compact';
     }
 }
 export interface AppCardCustomEvent<T> extends CustomEvent<T> {
@@ -57,7 +59,9 @@ declare global {
         new (): HTMLAppButtonElement;
     };
     interface HTMLAppCardElementEventMap {
-        "cardClick": { title: string };
+        "cardClick": {
+		title: string
+	};
     }
     interface HTMLAppCardElement extends Components.AppCard, HTMLStencilElement {
         addEventListener<K extends keyof HTMLAppCardElementEventMap>(type: K, listener: (this: HTMLAppCardElement, ev: AppCardCustomEvent<HTMLAppCardElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
@@ -95,6 +99,10 @@ declare namespace LocalJSX {
     }
     interface AppCard {
         /**
+          * The card title
+         */
+        "cardTitle": string;
+        /**
           * The card description text
          */
         "description": string;
@@ -110,16 +118,16 @@ declare namespace LocalJSX {
         /**
           * Emitted when the card is clicked
          */
-        "onCardClick"?: (event: AppCardCustomEvent<{ title: string }>) => void;
-        /**
-          * The card title
-         */
-        "title": string;
+        "onCardClick"?: (event: AppCardCustomEvent<{
+		title: string
+	}>) => void;
         /**
           * Card variant: default, highlighted, or compact
           * @default 'default'
          */
-        "variant"?: 'default' | 'highlighted' | 'compact';
+        "variant"?: | 'default'
+		| 'highlighted'
+		| 'compact';
     }
     interface IntrinsicElements {
         "app-button": AppButton;

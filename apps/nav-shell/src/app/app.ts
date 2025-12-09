@@ -49,7 +49,7 @@ export class App {
 		{
 			label: 'Components',
 			route: '/components',
-			status: 'beta'
+			status: 'wip'
 		},
 		{
 			label: 'GitHub',

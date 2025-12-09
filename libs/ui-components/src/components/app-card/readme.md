@@ -9,10 +9,10 @@
 
 | Property                   | Attribute     | Description                                          | Type                                      | Default        |
 | -------------------------- | ------------- | ---------------------------------------------------- | ----------------------------------------- | -------------- |
+| `cardTitle` _(required)_   | `card-title`  | The card title                                       | `string`                                  | `undefined`    |
 | `description` _(required)_ | `description` | The card description text                            | `string`                                  | `undefined`    |
 | `imageAlt`                 | `image-alt`   | Alt text for the image (defaults to "Card image")    | `string`                                  | `'Card image'` |
 | `imageUrl`                 | `image-url`   | Optional image URL to display at the top of the card | `string`                                  | `undefined`    |
-| `title` _(required)_       | `title`       | The card title                                       | `string`                                  | `undefined`    |
 | `variant`                  | `variant`     | Card variant: default, highlighted, or compact       | `"compact" \| "default" \| "highlighted"` | `'default'`    |
 
 
