@@ -23,7 +23,8 @@ const loadWebComponents = () => {
 
 	const isTest =
 		typeof globalThis !== 'undefined' &&
-		(globalThis as any).process?.env?.NODE_ENV === 'test'
+		(globalThis as any).process?.env?.NODE_ENV ===
+			'test'
 
 	if (isTest) {
 		// Tests: avoid hitting dist/ and keep DOM queries working
@@ -35,8 +36,12 @@ const loadWebComponents = () => {
 	// Production/runtime: attempt to load built elements from dist (dynamic path
 	// avoids TypeScript resolution when dist/ is not present yet)
 	const distBase = '../dist/components/'
-	void import(distBase + 'app-button.js').catch(() => defineStub('app-button'))
-	void import(distBase + 'app-card.js').catch(() => defineStub('app-card'))
+	void import(distBase + 'app-button.js').catch(
+		() => defineStub('app-button')
+	)
+	void import(distBase + 'app-card.js').catch(() =>
+		defineStub('app-card')
+	)
 }
 
 loadWebComponents()
