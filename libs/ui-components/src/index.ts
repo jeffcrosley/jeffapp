@@ -3,9 +3,10 @@ export type {
 	JSX
 } from './components'
 
-// Runtime loader with test-friendly fallback
-// In production we dynamically import the built custom elements which self-register
-// In test (or when dist isn't built) we register lightweight stubs so DOM queries work
+// Load Web Components with a test-safe path
+// - In production: dynamically import built custom elements (self-register)
+// - In tests (NODE_ENV === 'test'): register stubs and skip disk access to dist/
+
 const defineStub = (tag: string) => {
 	if (typeof customElements === 'undefined') return
 	if (!customElements.get(tag)) {
@@ -17,9 +18,22 @@ const defineStub = (tag: string) => {
 }
 
 const loadWebComponents = () => {
+	// Ensure we only run in browser-like contexts
 	if (typeof window === 'undefined') return
 
-	// Attempt to load the built elements; fall back to stubs if dist is missing
+	const isTest =
+		typeof process !== 'undefined' &&
+		process.env &&
+		process.env.NODE_ENV === 'test'
+
+	if (isTest) {
+		// Tests: avoid hitting dist/ and keep DOM queries working
+		defineStub('app-button')
+		defineStub('app-card')
+		return
+	}
+
+	// Production/runtime: attempt to load built elements, fall back silently
 	void import('../dist/components/app-button.js').catch(
 		() => defineStub('app-button')
 	)
