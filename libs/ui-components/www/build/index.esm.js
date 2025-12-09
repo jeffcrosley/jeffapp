@@ -1,2 +1,2 @@
-import("./p-C0ya1B-n.js");import("./p-CQfA9z1I.js");
+const t=t=>{if(typeof customElements==="undefined")return;if(!customElements.get(t)){customElements.define(t,class extends HTMLElement{})}};const n=()=>{var n,o;if(typeof window==="undefined")return;const e=typeof globalThis!=="undefined"&&((o=(n=globalThis.process)===null||n===void 0?void 0:n.env)===null||o===void 0?void 0:o.NODE_ENV)==="test";if(e){t("app-button");t("app-card");return}const s="../dist/components/";void import(s+"app-button.js").catch((()=>t("app-button")));void import(s+"app-card.js").catch((()=>t("app-card")))};n();
 //# sourceMappingURL=index.esm.js.map

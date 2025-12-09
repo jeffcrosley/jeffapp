@@ -22,9 +22,8 @@ const loadWebComponents = () => {
 	if (typeof window === 'undefined') return
 
 	const isTest =
-		typeof process !== 'undefined' &&
-		process.env &&
-		process.env.NODE_ENV === 'test'
+		typeof globalThis !== 'undefined' &&
+		(globalThis as any).process?.env?.NODE_ENV === 'test'
 
 	if (isTest) {
 		// Tests: avoid hitting dist/ and keep DOM queries working
@@ -33,13 +32,11 @@ const loadWebComponents = () => {
 		return
 	}
 
-	// Production/runtime: attempt to load built elements, fall back silently
-	void import('../dist/components/app-button.js').catch(
-		() => defineStub('app-button')
-	)
-	void import('../dist/components/app-card.js').catch(
-		() => defineStub('app-card')
-	)
+	// Production/runtime: attempt to load built elements from dist (dynamic path
+	// avoids TypeScript resolution when dist/ is not present yet)
+	const distBase = '../dist/components/'
+	void import(distBase + 'app-button.js').catch(() => defineStub('app-button'))
+	void import(distBase + 'app-card.js').catch(() => defineStub('app-card'))
 }
 
 loadWebComponents()
