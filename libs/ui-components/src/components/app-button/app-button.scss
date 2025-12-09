@@ -2,39 +2,54 @@
 // They're injected globally and inherit into shadow DOM via CSS inheritance
 
 :host {
-  display: inline-block;
+	display: inline-block;
 }
 
 .btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-md, 0.5rem);
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: var(--radius-md, 0.5rem);
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s;
+	font-family: inherit;
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 }
 
 .btn-primary {
-  background: var(--color-button-primary-bg, #3b82f6);
-  color: var(--color-button-primary-text, #ffffff);
+	background: var(
+		--color-button-primary-bg,
+		#3b82f6
+	);
+	color: var(--color-button-primary-text, #ffffff);
 
-  &:hover:not(:disabled) {
-    background: var(--color-button-primary-hover, #2563eb);
-  }
+	&:hover:not(:disabled) {
+		background: var(
+			--color-button-primary-hover,
+			#2563eb
+		);
+	}
 }
 
 .btn-secondary {
-  background: var(--color-button-secondary-bg, #059669);
-  color: var(--color-button-secondary-text, #ffffff);
+	background: var(
+		--color-button-secondary-bg,
+		#059669
+	);
+	color: var(
+		--color-button-secondary-text,
+		#ffffff
+	);
 
-  &:hover:not(:disabled) {
-    background: var(--color-button-secondary-hover, #047857);
-  }
+	&:hover:not(:disabled) {
+		background: var(
+			--color-button-secondary-hover,
+			#047857
+		);
+	}
 }

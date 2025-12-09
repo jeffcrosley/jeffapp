@@ -1,4 +1,7 @@
-export type { Components, JSX } from './components'
+export type {
+	Components,
+	JSX
+} from './components'
 
 // Import built custom elements to trigger auto-registration
 // Using require at build time ensures components are available for dev servers
