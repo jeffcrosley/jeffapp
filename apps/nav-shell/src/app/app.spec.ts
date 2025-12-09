@@ -54,7 +54,7 @@ describe('App', () => {
 					{
 						path: 'home',
 						loadComponent: () =>
-							import('./pages/home.component').then(
+							import('./pages/home/home.component').then(
 								(m) => m.HomeComponent
 							)
 					},

@@ -1,3 +1,6 @@
+// Design tokens are available as CSS custom properties from the host context
+// They're injected globally and inherit into shadow DOM via CSS inheritance
+
 :host {
   display: inline-block;
 }
@@ -5,11 +8,12 @@
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md, 0.5rem);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: inherit;
 
   &:disabled {
     opacity: 0.5;
@@ -18,19 +22,19 @@
 }
 
 .btn-primary {
-  background: #3498db;
-  color: white;
+  background: var(--color-button-primary-bg, #3b82f6);
+  color: var(--color-button-primary-text, #ffffff);
 
   &:hover:not(:disabled) {
-    background: #2980b9;
+    background: var(--color-button-primary-hover, #2563eb);
   }
 }
 
 .btn-secondary {
-  background: #95a5a6;
-  color: white;
+  background: var(--color-button-secondary-bg, #059669);
+  color: var(--color-button-secondary-text, #ffffff);
 
   &:hover:not(:disabled) {
-    background: #7f8c8d;
+    background: var(--color-button-secondary-hover, #047857);
   }
 }

@@ -15,13 +15,21 @@
 		"skipDefaultLibCheck": true,
 		"baseUrl": ".",
 		"paths": {
-			"@jeffapp/ui-components": ["libs/ui-components/src/index.ts"],
+			"@jeffapp/ui-components": [
+				"libs/ui-components/src/index.ts"
+			],
 			"@jeffapp/ui-components-native": [
 				"libs/ui-components-native/src/index.ts"
 			],
-			"@jeffapp/ui-angular": ["libs/ui-angular/src/index.ts"],
-			"@jeffapp/ui-react": ["libs/ui-react/src/index.ts"],
-			"@jeffapp/design-tokens": ["libs/design-tokens/src/index.scss"]
+			"@jeffapp/ui-angular": [
+				"libs/ui-angular/src/index.ts"
+			],
+			"@jeffapp/ui-react": [
+				"libs/ui-react/src/index.ts"
+			],
+			"@jeffapp/design-tokens": [
+				"libs/design-tokens/src/index.scss"
+			]
 		}
 	},
 	"exclude": ["node_modules", "tmp"]
