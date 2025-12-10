@@ -3,6 +3,7 @@
 ### Context
 
 We need a reusable, theme-aware icon component usable across frameworks. Requirements:
+
 - Implemented in `libs/ui-components` (Stencil) with TSX (consistent with `app-button`).
 - Icons loaded from a configurable resolver (default Simple Icons CDN) with sanitization on fetch.
 - Global singleton cache with concurrent request deduplication; optional lazy prefetch.

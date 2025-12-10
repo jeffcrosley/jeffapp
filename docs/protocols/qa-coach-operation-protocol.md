@@ -1,4 +1,5 @@
 # QA Coach Operation Protocol
+
 > Canonical index: `docs/INDEX.md`
 
 This document defines how I (QA Coach) will operate to minimize errors and maximize transparency during complex operations.
@@ -20,12 +21,14 @@ This document defines how I (QA Coach) will operate to minimize errors and maxim
 When creating test specs for new components, **always create component skeletons first** to enable full test implementation:
 
 **Required files for Stencil components:**
+
 - `component-name.tsx` — Component skeleton with @Props, @State, render() method
 - `component-name.scss` — Basic styling structure
 - `readme.md` — Component documentation
 - **Component-specific utilities/services** — Place in the component's folder (e.g., `components/app-icon/utils/`, `components/app-icon/services/`)
 
 **Skeleton structure example:**
+
 ```typescript
 import { Component, Host, h, Prop, State } from '@stencil/core'
 
@@ -54,12 +57,14 @@ export class AppComponent {
 ```
 
 **Benefits:**
+
 - Tests can import the component immediately (no lint errors)
 - Full test implementations can be written up front
 - Component structure guides implementation
 - No need to stub imports or use empty component arrays
 
 **File organization:**
+
 - Shared utilities → `libs/ui-components/src/utils/`
 - Component-specific utilities → `libs/ui-components/src/components/component-name/utils/`
 - Component-specific services → `libs/ui-components/src/components/component-name/services/`
@@ -317,13 +322,11 @@ If operations take longer than expected:
 **You only need to:**
 
 1. **Before operations:** Say "Go" or give constraints
-
    - "Use file rewrite only"
    - "Break into batches"
    - "Wait, I need to check something first"
 
 2. **During operations:** Monitor my output (optional)
-
    - I'll tell you if something goes wrong
    - No action needed from you unless I ask
 
