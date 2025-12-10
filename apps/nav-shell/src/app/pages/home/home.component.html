@@ -14,6 +14,7 @@
 			AI-forward engineer, full-pipeline builder, and
 			creative technologist.
 		</p>
+		<!-- <app-icon name="profile" /> -->
 		<div class="hero-cta">
 			<!-- <app-button
 				label="Explore Work"
@@ -31,7 +32,7 @@
 </section>
 
 <!-- Bio Section -->
-<!-- <section class="bio" aria-label="About Me">
+<section class="bio" aria-label="About Me">
 	<div class="bio-content">
 		<p>
 			I'm a passionate engineer who loves building
@@ -49,35 +50,38 @@
 			always looking for the next challenge.
 		</p>
 	</div>
-</section> -->
+</section>
 
 <!-- Skills Section -->
-<!-- <section
+<section
 	class="skills"
 	aria-label="Technical Skills"
 >
 	<h2 class="section-title">Technical Skills</h2>
 	<div class="skills-categories">
-		<div
-			class="skills-category"
-			*ngFor="let category of skills"
-		>
-			<h3 class="skills-category-title">
-				{{ category.category }}
-			</h3>
-			<div class="skills-badges">
-				<app-skill-badge
-					*ngFor="let skill of category.items"
-					[name]="skill.name"
-					[iconUrl]="skill.icon"
-					[iconAlt]="skill.name + ' icon'"
-					[href]="skill.href"
-					target="_blank"
-				></app-skill-badge>
+		@for (category of skills; track $index) {
+			<div class="skills-category">
+				<h3 class="skills-category-title">
+					{{ category.category }}
+				</h3>
+				<div class="skills-badges">
+					@for (
+						skill of category.items;
+						track $index
+					) {
+						<app-skill-badge
+							[name]="skill.name"
+							[iconUrl]="skill.icon"
+							[iconAlt]="skill.name + ' icon'"
+							[href]="skill.href"
+							target="_blank"
+						/>
+					}
+				</div>
 			</div>
-		</div>
+		}
 	</div>
-</section> -->
+</section>
 
 <!-- Highlights Section -->
 <!-- <section

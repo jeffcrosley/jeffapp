@@ -46,6 +46,32 @@ export namespace Components {
 		| 'highlighted'
 		| 'compact';
     }
+    /**
+     * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
+     */
+    interface AppIcon {
+        /**
+          * Whether icon is decorative only
+         */
+        "ariaHidden"?: boolean;
+        /**
+          * Custom aria-label (defaults to icon name)
+         */
+        "ariaLabel"?: string;
+        /**
+          * Icon color - either a jewel-tone palette key or any CSS color value
+         */
+        "color"?: string;
+        /**
+          * Icon name (e.g., "angular", "react", "typescript")
+         */
+        "name": string;
+        /**
+          * Icon size variant
+          * @default 'md'
+         */
+        "size": 'sm' | 'md' | 'lg';
+    }
 }
 export interface AppCardCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -77,9 +103,19 @@ declare global {
         prototype: HTMLAppCardElement;
         new (): HTMLAppCardElement;
     };
+    /**
+     * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
+     */
+    interface HTMLAppIconElement extends Components.AppIcon, HTMLStencilElement {
+    }
+    var HTMLAppIconElement: {
+        prototype: HTMLAppIconElement;
+        new (): HTMLAppIconElement;
+    };
     interface HTMLElementTagNameMap {
         "app-button": HTMLAppButtonElement;
         "app-card": HTMLAppCardElement;
+        "app-icon": HTMLAppIconElement;
     }
 }
 declare namespace LocalJSX {
@@ -129,9 +165,36 @@ declare namespace LocalJSX {
 		| 'highlighted'
 		| 'compact';
     }
+    /**
+     * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
+     */
+    interface AppIcon {
+        /**
+          * Whether icon is decorative only
+         */
+        "ariaHidden"?: boolean;
+        /**
+          * Custom aria-label (defaults to icon name)
+         */
+        "ariaLabel"?: string;
+        /**
+          * Icon color - either a jewel-tone palette key or any CSS color value
+         */
+        "color"?: string;
+        /**
+          * Icon name (e.g., "angular", "react", "typescript")
+         */
+        "name": string;
+        /**
+          * Icon size variant
+          * @default 'md'
+         */
+        "size"?: 'sm' | 'md' | 'lg';
+    }
     interface IntrinsicElements {
         "app-button": AppButton;
         "app-card": AppCard;
+        "app-icon": AppIcon;
     }
 }
 export { LocalJSX as JSX };
@@ -140,6 +203,10 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "app-button": LocalJSX.AppButton & JSXBase.HTMLAttributes<HTMLAppButtonElement>;
             "app-card": LocalJSX.AppCard & JSXBase.HTMLAttributes<HTMLAppCardElement>;
+            /**
+             * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
+             */
+            "app-icon": LocalJSX.AppIcon & JSXBase.HTMLAttributes<HTMLAppIconElement>;
         }
     }
 }

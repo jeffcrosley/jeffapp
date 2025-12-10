@@ -15,6 +15,55 @@ This document defines how I (QA Coach) will operate to minimize errors and maxim
 
 **Precondition:** Do not proceed unless the approved Requirements Brief (Requirements Analyst), Design Spec (Designer, lightweight), and Implementation Spec (Architect) are available. If missing or ambiguous, stop and request them.
 
+### Component Skeleton Creation Guidelines
+
+When creating test specs for new components, **always create component skeletons first** to enable full test implementation:
+
+**Required files for Stencil components:**
+- `component-name.tsx` — Component skeleton with @Props, @State, render() method
+- `component-name.scss` — Basic styling structure
+- `readme.md` — Component documentation
+- **Component-specific utilities/services** — Place in the component's folder (e.g., `components/app-icon/utils/`, `components/app-icon/services/`)
+
+**Skeleton structure example:**
+```typescript
+import { Component, Host, h, Prop, State } from '@stencil/core'
+
+@Component({
+  tag: 'app-component',
+  styleUrl: 'app-component.scss',
+  shadow: true,
+})
+export class AppComponent {
+  @Prop() propName!: string
+  @State() stateName: string | null = null
+
+  // TODO: Implement lifecycle methods
+  // TODO: Implement business logic
+
+  render() {
+    return (
+      <Host>
+        <div class="component-wrapper">
+          {/* TODO: Implement template */}
+        </div>
+      </Host>
+    )
+  }
+}
+```
+
+**Benefits:**
+- Tests can import the component immediately (no lint errors)
+- Full test implementations can be written up front
+- Component structure guides implementation
+- No need to stub imports or use empty component arrays
+
+**File organization:**
+- Shared utilities → `libs/ui-components/src/utils/`
+- Component-specific utilities → `libs/ui-components/src/components/component-name/utils/`
+- Component-specific services → `libs/ui-components/src/components/component-name/services/`
+
 ### Step 1: Operation Briefing
 
 Before attempting ANY operation with >3 steps or modifying >1 file, I will provide:
