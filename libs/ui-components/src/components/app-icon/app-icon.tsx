@@ -5,6 +5,7 @@ import {
 	Prop,
 	State
 } from '@stencil/core'
+import { iconCache } from './services/icon-cache.service'
 import { resolveIconUrl } from './utils/icon-resolver'
 
 /**
@@ -61,7 +62,6 @@ export class AppIcon {
 	@State() hasError = false
 
 	// TODO: Implement theme detection logic
-	// TODO: Implement cache deduplication
 
 	componentWillLoad = async () => {
 		this.svgContent = await this.fetchIcon()
@@ -75,7 +75,7 @@ export class AppIcon {
 			attempt <= AppIcon.MAX_RETRIES;
 			attempt++
 		) {
-			try {
+			const fetcher = async () => {
 				const url = resolveIconUrl(this.name)
 				const response = await fetch(url)
 				if (!response.ok) {
@@ -86,7 +86,11 @@ export class AppIcon {
 				const svgText = await response.text()
 				this.isLoading = false
 				return this.sanitizeSVG(svgText)
+			}
+			try {
+				return await iconCache.get(this.name, fetcher)
 			} catch (error) {
+				iconCache.clear(this.name)
 				if (attempt === AppIcon.MAX_RETRIES) {
 					console.error(
 						`Failed to load icon "${this.name}":`,
@@ -97,8 +101,8 @@ export class AppIcon {
 					return
 				}
 
-				await new Promise((res) =>
-					setTimeout(res, AppIcon.RETRY_DELAY_MS)
+				await this.pauseBeforeRetry(
+					AppIcon.RETRY_DELAY_MS
 				)
 			}
 		}
@@ -114,11 +118,50 @@ export class AppIcon {
 			.replace(/\son\w+="[^"]*"/gi, '')
 	}
 
+	private getColorValue(): string | undefined {
+		if (!this.color) return undefined
+
+		// Palette keys: map to icon color tokens
+		const paletteKeys = [
+			'sapphire',
+			'emerald',
+			'amethyst',
+			'garnet',
+			'amber',
+			'topaz',
+			'onyx',
+			'peridot',
+			'ruby',
+			'citrine'
+		]
+
+		if (
+			paletteKeys.includes(this.color.toLowerCase())
+		) {
+			return `var(--icon-${this.color.toLowerCase()})`
+		}
+
+		// Already a CSS variable or literal color
+		return this.color
+	}
+
+	private pauseBeforeRetry = async (
+		ms: number
+	) => {
+		return new Promise((resolve) =>
+			setTimeout(resolve, ms)
+		)
+	}
+
 	render() {
 		const sizeClass = `icon-${this.size}`
+		const colorValue = this.getColorValue()
+		const hostStyle = colorValue
+			? { '--icon-color': colorValue }
+			: {}
 
 		return (
-			<Host>
+			<Host style={hostStyle}>
 				<div class={`icon-wrapper ${sizeClass}`}>
 					<div
 						class="icon-container"

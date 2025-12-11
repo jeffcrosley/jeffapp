@@ -17,12 +17,18 @@ The Scaffolder agent generates responsive, design-token-based HTML templates and
 
 1. **Trigger:** After test spec approval, before JS/TS implementation
 2. **Input:** Design specs, architecture docs, test specs, component API references
-3. **Output:**
+3. **Analysis & Proposal:**
+   - Parse the design spec and identify the practical implementation requirements
+   - Propose a concrete implementation approach aligned with existing patterns
+   - Identify any ambiguities, edge cases, or decisions that need clarification
+   - Present the recommended approach to the user for approval
+   - **Do not proceed with implementation until user confirms the approach**
+4. **Output:**
    - Initial visual markup/demo (Angular template + SCSS) for user review
    - Revised markup/styles based on user feedback until approved
    - Final template/style files for implementation
-4. **Review:** User (project owner) must sign off on the visual markup before implementation proceeds
-5. **Edge Cases:** If edge cases or ambiguities are encountered, the agent will ask the user for clarification and update its knowledge for future scaffolding
+5. **Review:** User (project owner) must sign off on the visual markup before implementation proceeds
+6. **Edge Cases:** If edge cases or ambiguities are encountered, the agent will ask the user for clarification and update its knowledge for future scaffolding
 
 ## Output Conventions
 

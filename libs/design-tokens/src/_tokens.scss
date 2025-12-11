@@ -25,6 +25,20 @@
 	--color-topaz-500: #f59e0b; // Alert hover
 
 	// ----------------------------------------------------------------------------
+	// Icon Colors (Tech Stack Visualization)
+	// ----------------------------------------------------------------------------
+	--icon-sapphire: #1e5bff;
+	--icon-emerald: #1fa86a;
+	--icon-amethyst: #7a3ff2;
+	--icon-garnet: #c2274b;
+	--icon-amber: #e58b17;
+	--icon-topaz: #1fb3c7;
+	--icon-onyx: #2e3a46;
+	--icon-peridot: #7bcf3b;
+	--icon-ruby: #e04646;
+	--icon-citrine: #f2c94c;
+
+	// ----------------------------------------------------------------------------
 	// Neutrals (Cool Gray Scale)
 	// ----------------------------------------------------------------------------
 	--color-slate-900: #0f172a; // Darkest text
@@ -47,7 +61,8 @@
 	--color-text-disabled: var(--color-slate-400);
 
 	--color-bg-primary: #ffffff;
-	--color-bg-secondary: var(--color-slate-50);
+	--color-bg-secondary: var(--color-slate-100);
+	--color-bg-sidebar: #f4f6fa; // Sidebar/drawer background (lighter, halfway between #e5e7ef and #f8fafc)
 	--color-bg-tertiary: var(--color-slate-100);
 	--color-bg-elevated: #ffffff; // Cards, modals
 
@@ -66,17 +81,27 @@
 	// ----------------------------------------------------------------------------
 	// Component-Specific Tokens
 	// ----------------------------------------------------------------------------
-	--color-button-primary-bg: var(--color-sapphire-600);
+	--color-button-primary-bg: var(
+		--color-sapphire-600
+	);
 	--color-button-primary-text: #ffffff;
-	--color-button-primary-hover: var(--color-sapphire-500);
+	--color-button-primary-hover: var(
+		--color-sapphire-500
+	);
 
-	--color-button-secondary-bg: var(--color-emerald-600);
+	--color-button-secondary-bg: var(
+		--color-emerald-600
+	);
 	--color-button-secondary-text: #ffffff;
-	--color-button-secondary-hover: var(--color-emerald-500);
+	--color-button-secondary-hover: var(
+		--color-emerald-500
+	);
 
 	--color-button-danger-bg: var(--color-ruby-600);
 	--color-button-danger-text: #ffffff;
-	--color-button-danger-hover: var(--color-ruby-500);
+	--color-button-danger-hover: var(
+		--color-ruby-500
+	);
 
 	--color-card-bg: var(--color-bg-elevated);
 	--color-card-border: var(--color-border-primary);
@@ -162,6 +187,20 @@
 	--color-topaz-500: #fbbf24;
 
 	// ----------------------------------------------------------------------------
+	// Icon Colors (Tech Stack Visualization)
+	// ----------------------------------------------------------------------------
+	--icon-sapphire: #6fa1ff;
+	--icon-emerald: #6fd8a8;
+	--icon-amethyst: #b89cff;
+	--icon-garnet: #e7829b;
+	--icon-amber: #f2c075;
+	--icon-topaz: #7edde8;
+	--icon-onyx: #7a8a99;
+	--icon-peridot: #b8f28a;
+	--icon-ruby: #f29999;
+	--icon-citrine: #f7e6a3;
+
+	// ----------------------------------------------------------------------------
 	// Neutrals (Inverted)
 	// ----------------------------------------------------------------------------
 	--color-slate-900: #f8fafc; // Lightest text
@@ -185,6 +224,7 @@
 
 	--color-bg-primary: #0f172a;
 	--color-bg-secondary: #1e293b;
+	--color-bg-sidebar: #181a26; // Sidebar/drawer background (higher contrast)
 	--color-bg-tertiary: #334155;
 	--color-bg-elevated: #1e293b; // Cards, modals slightly elevated
 
@@ -203,17 +243,31 @@
 	// ----------------------------------------------------------------------------
 	// Component-Specific Tokens
 	// ----------------------------------------------------------------------------
-	--color-button-primary-bg: var(--color-sapphire-600);
-	--color-button-primary-text: var(--color-slate-900);
-	--color-button-primary-hover: var(--color-sapphire-500);
+	--color-button-primary-bg: var(
+		--color-sapphire-600
+	);
+	--color-button-primary-text: var(
+		--color-slate-900
+	);
+	--color-button-primary-hover: var(
+		--color-sapphire-500
+	);
 
-	--color-button-secondary-bg: var(--color-emerald-600);
-	--color-button-secondary-text: var(--color-slate-900);
-	--color-button-secondary-hover: var(--color-emerald-500);
+	--color-button-secondary-bg: var(
+		--color-emerald-600
+	);
+	--color-button-secondary-text: var(
+		--color-slate-900
+	);
+	--color-button-secondary-hover: var(
+		--color-emerald-500
+	);
 
 	--color-button-danger-bg: var(--color-ruby-600);
 	--color-button-danger-text: #ffffff;
-	--color-button-danger-hover: var(--color-ruby-500);
+	--color-button-danger-hover: var(
+		--color-ruby-500
+	);
 
 	--color-card-bg: var(--color-bg-elevated);
 	--color-card-border: var(--color-border-primary);

@@ -112,7 +112,10 @@ $backdrop-bg: rgba(0, 0, 0, 0.5);
 	left: 0;
 	width: $drawer-width;
 	height: 100vh;
-	background: var(--color-surface, #fff);
+	background: var(
+		--color-bg-sidebar,
+		var(--color-bg-secondary, #f8fafc)
+	);
 	box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 	transform: translateX(-100%);
 	transition: transform $animation-duration ease;

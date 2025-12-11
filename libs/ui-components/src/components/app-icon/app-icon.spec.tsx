@@ -114,7 +114,7 @@ describe('app-icon', () => {
 		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
-	it.skip('applies palette color when color prop is a jewel key', async () => {
+	it('applies palette color when color prop is a jewel key', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -131,9 +131,7 @@ describe('app-icon', () => {
 			(page.root as HTMLElement).getAttribute(
 				'style'
 			) || ''
-		expect(hostStyle).toContain(
-			'--color-jewel-sapphire'
-		)
+		expect(hostStyle).toContain('--icon-sapphire')
 	})
 
 	it.skip('inherits currentColor by default', async () => {
