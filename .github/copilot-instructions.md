@@ -105,7 +105,10 @@ Then import and add to `app.routes.ts` or embed in other pages via router or com
 
 **Test-Driven Development (TDD):**
 
-- **AI writes tests, user implements code** - This is a strict TDD workflow where AI agents define the tests first, then the user implements the functionality to satisfy them
+- **AI writes both unit and E2E tests** - For every component/feature, draft both unit tests (Jest/Vitest/Stencil) and E2E tests (Playwright) as appropriate.
+- **Unit tests**: Use for pure logic, prop handling, and isolated rendering that does not depend on DOM structure, style inheritance, or async lifecycle quirks.
+- **E2E tests**: Use for DOM structure, style inheritance, computed styles, shadow DOM, and any async rendering or multi-instance scenarios that are unreliable in unit tests (e.g., color inheritance, size classes, focus/keyboard, accessibility, etc.).
+- **Move any inappropriate unit tests to E2E**: If a test fails due to test harness limitations (not component logic), migrate it to E2E and remove/skip from unit suite.
 - **Never implement component/feature logic** - AI agents should ONLY write tests and leave TODO comments for implementation
 - When tests are written but implementation is pending:
   - Use `describe.skip()` or `it.skip()` to disable incomplete test suites (NOT comments)
@@ -124,10 +127,16 @@ Then import and add to `app.routes.ts` or embed in other pages via router or com
 **AI Agent Responsibilities:**
 
 1. Execute straightforward organization/refactoring tasks
-2. Construct and implement tests and components that satisfy them (after discussion/confirmation)
+2. Construct and implement both unit and E2E tests for all features/components, using the right tool for the job (see above)
 3. Proactively raise concerns about best practices, scalability, coupling, and testability
 4. Suggest better approaches when user decisions may limit future flexibility
-5. **Terminal interaction protocol**: When running commands that require user input (confirmations, selections), PAUSE and alert the user to approve the command rather than attempting manual implementation. Wait for user confirmation before proceeding.
+5. **When reviewing or drafting tests:**
+
+- Ensure DOM, style, and async-dependent tests are in E2E suites, not unit tests
+- Unit tests should only cover logic, prop handling, and isolated rendering
+- E2E tests should cover integration, style inheritance, shadow DOM, and browser behaviors
+
+6. **Terminal interaction protocol**: When running commands that require user input (confirmations, selections), PAUSE and alert the user to approve the command rather than attempting manual implementation. Wait for user confirmation before proceeding.
 
 Practical advice for AI edits in this repo:
 

@@ -7,6 +7,7 @@ import {
 } from '@stencil/core'
 import { iconCache } from './services/icon-cache.service'
 import { resolveIconUrl } from './utils/icon-resolver'
+import { sanitizeSVG } from './utils/sanitize-svg'
 
 /**
  * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
@@ -85,7 +86,7 @@ export class AppIcon {
 				}
 				const svgText = await response.text()
 				this.isLoading = false
-				return this.sanitizeSVG(svgText)
+				return sanitizeSVG(svgText)
 			}
 			try {
 				return await iconCache.get(this.name, fetcher)
@@ -106,16 +107,6 @@ export class AppIcon {
 				)
 			}
 		}
-	}
-
-	private sanitizeSVG = (svg: string): string => {
-		// Basic sanitization - remove <script> tags and on* attributes
-		return svg
-			.replace(
-				/<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-				''
-			)
-			.replace(/\son\w+="[^"]*"/gi, '')
 	}
 
 	private getColorValue(): string | undefined {
@@ -158,7 +149,7 @@ export class AppIcon {
 		const colorValue = this.getColorValue()
 		const hostStyle = colorValue
 			? { '--icon-color': colorValue }
-			: {}
+			: { color: 'inherit' }
 
 		return (
 			<Host style={hostStyle}>

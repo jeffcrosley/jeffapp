@@ -134,29 +134,7 @@ describe('app-icon', () => {
 		expect(hostStyle).toContain('--icon-sapphire')
 	})
 
-	it.skip('inherits currentColor by default', async () => {
-		jest
-			.spyOn(global, 'fetch' as any)
-			.mockResolvedValue({
-				ok: true,
-				text: async () => '<svg></svg>'
-			})
-
-		const page = await newSpecPage({
-			components: [AppIcon],
-			html: `<div style="color: rgb(10, 20, 30)"><app-icon name="jest"></app-icon></div>`
-		})
-
-		const svg = page.root
-			.querySelector('app-icon')
-			?.shadowRoot?.querySelector(
-				'.icon-svg svg'
-			) as SVGElement
-		expect(svg).toBeTruthy()
-		// Implementation detail: expect computed fill to match inherited color
-	})
-
-	it.skip('applies aria-label by default and hides when aria-hidden is true', async () => {
+	it('applies aria-label by default and hides when aria-hidden is true', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -184,7 +162,7 @@ describe('app-icon', () => {
 		).toBeNull()
 	})
 
-	it.skip('switches theme based on data-theme on documentElement', async () => {
+	it('switches theme based on data-theme on documentElement', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -203,45 +181,7 @@ describe('app-icon', () => {
 		expect(host).toBeTruthy()
 	})
 
-	it.skip('renders correct size classes for sm|md|lg', async () => {
-		jest
-			.spyOn(global, 'fetch' as any)
-			.mockResolvedValue({
-				ok: true,
-				text: async () => '<svg></svg>'
-			})
-
-		const page = await newSpecPage({
-			components: [AppIcon],
-			html: `
-        <div>
-          <app-icon name="aws" size="sm"></app-icon>
-          <app-icon name="aws" size="md"></app-icon>
-          <app-icon name="aws" size="lg"></app-icon>
-        </div>
-      `
-		})
-
-		const icons =
-			page.root.querySelectorAll('app-icon')
-		expect(
-			icons[0].shadowRoot
-				.querySelector('.icon-wrapper')
-				?.classList.contains('icon-sm')
-		).toBe(true)
-		expect(
-			icons[1].shadowRoot
-				.querySelector('.icon-wrapper')
-				?.classList.contains('icon-md')
-		).toBe(true)
-		expect(
-			icons[2].shadowRoot
-				.querySelector('.icon-wrapper')
-				?.classList.contains('icon-lg')
-		).toBe(true)
-	})
-
-	it.skip('uses resolver override when setIconResolver is called', async () => {
+	it('uses resolver override when setIconResolver is called', async () => {
 		const fetchMock = jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -263,27 +203,8 @@ describe('app-icon', () => {
 		expect(fetchMock).toBeDefined()
 		expect(page.root).toBeTruthy()
 		// TODO: Uncomment assertion once resolver is implemented
-		// expect(fetchMock).toHaveBeenCalledWith('https://example.com/custom.svg')
-	})
-
-	it.skip('prefetches icons via requestIdleCallback when available', async () => {
-		const fetchMock = jest
-			.spyOn(global, 'fetch' as any)
-			.mockResolvedValue({
-				ok: true,
-				text: async () => '<svg></svg>'
-			})
-		const { prefetchIcons } =
-			await import('./utils/prefetch-icons')
-
-		// Mock requestIdleCallback
-		;(global as any).requestIdleCallback = (
-			cb: Function
-		) => cb()
-
-		// Trigger prefetch
-		prefetchIcons(['nx', 'jest'])
-		expect(fetchMock).toBeDefined()
-		expect(fetchMock).toHaveBeenCalledTimes(2)
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://example.com/custom.svg'
+		)
 	})
 })

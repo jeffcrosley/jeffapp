@@ -14,7 +14,6 @@
 			AI-forward engineer, full-pipeline builder, and
 			creative technologist.
 		</p>
-		<!-- <app-icon name="angular" color="sapphire" /> -->
 		<div class="hero-cta">
 			<!-- <app-button
 				label="Explore Work"
@@ -53,14 +52,20 @@
 </section>
 
 <!-- Skills Section -->
-<!-- <section
+<section
 	class="skills"
 	aria-label="Technical Skills"
 >
 	<h2 class="section-title">Technical Skills</h2>
 	<div class="skills-categories">
 		@for (category of skills; track $index) {
-			<div class="skills-category">
+			<app-icon
+				name="angular"
+				color="ruby"
+				size="md"
+			/>
+
+			<!-- <div class="skills-category">
 				<h3 class="skills-category-title">
 					{{ category.category }}
 				</h3>
@@ -78,10 +83,10 @@
 						/>
 					}
 				</div>
-			</div>
+			</div> -->
 		}
 	</div>
-</section> -->
+</section>
 
 <!-- Highlights Section -->
 <!-- <section
