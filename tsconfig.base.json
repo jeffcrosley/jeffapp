@@ -18,6 +18,9 @@
 			"@jeffapp/ui-components": [
 				"libs/ui-components/src/index.ts"
 			],
+			"@jeffapp/ui-components/loader": [
+				"libs/ui-components/loader"
+			],
 			"@jeffapp/ui-components-native": [
 				"libs/ui-components-native/src/index.ts"
 			],

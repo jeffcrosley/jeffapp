@@ -1,10 +1,11 @@
 import {
 	Component,
-	Host,
 	h,
+	Host,
 	Prop,
 	State
 } from '@stencil/core'
+import { resolveIconUrl } from './utils/icon-resolver'
 
 /**
  * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
@@ -61,6 +62,35 @@ export class AppIcon {
 	// TODO: Implement sanitizeSVG() to strip dangerous content
 	// TODO: Implement theme detection logic
 	// TODO: Implement cache deduplication
+
+	componentWillLoad = async () => {
+		this.svgContent = await this.fetchIcon()
+	}
+
+	private fetchIcon = async () => {
+		this.isLoading = true
+
+		try {
+			const url = resolveIconUrl(this.name)
+			const response = await fetch(url)
+			if (!response.ok) {
+				throw new Error(
+					`Failed to fetch icon: ${response.status} ${response.statusText}`
+				)
+			}
+			const svgText = await response.text()
+			this.isLoading = false
+			return svgText
+		} catch (error) {
+			this.hasError = true
+			console.error(
+				`Failed to load icon "${this.name}":`,
+				error
+			)
+			this.isLoading = false
+			return
+		}
+	}
 
 	render() {
 		const sizeClass = `icon-${this.size}`
