@@ -1,9 +1,9 @@
 import { newSpecPage } from '@stencil/core/testing'
 import { AppIcon } from './app-icon'
 
-// TODO: Remove .skip when component implementation is complete
 // NOTE: Tests assume fetch-based loading, sanitization, retry, caching, palette + theme handling, and fallback behavior per ADR 007.
-describe.skip('app-icon', () => {
+// TODO: Remove .skip from each test as implementation progresses
+describe('app-icon', () => {
 	beforeEach(() => {
 		jest.resetAllMocks()
 		// Default to light theme
@@ -35,7 +35,6 @@ describe.skip('app-icon', () => {
 	})
 
 	it('falls back after one retry when fetch keeps failing', async () => {
-		jest.useFakeTimers()
 		const fetchMock = jest
 			.spyOn(global, 'fetch' as any)
 			.mockRejectedValueOnce(new Error('netfail'))
@@ -46,8 +45,10 @@ describe.skip('app-icon', () => {
 			html: `<app-icon name="react"></app-icon>`
 		})
 
-		// Advance retry timer (~3s)
-		jest.advanceTimersByTime(3000)
+		// Wait for retry delay to complete (3s + buffer for fetch)
+		await new Promise((resolve) =>
+			setTimeout(resolve, 3500)
+		)
 		await page.waitForChanges()
 
 		expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -56,11 +57,9 @@ describe.skip('app-icon', () => {
 				'.icon-fallback'
 			)
 		expect(fallback).toBeTruthy()
-		jest.useRealTimers()
-	})
+	}, 10000)
 
 	it('succeeds on second attempt after initial failure', async () => {
-		jest.useFakeTimers()
 		const fetchMock = jest
 			.spyOn(global, 'fetch' as any)
 			.mockRejectedValueOnce(new Error('netfail'))
@@ -75,7 +74,10 @@ describe.skip('app-icon', () => {
 			html: `<app-icon name="nodejs"></app-icon>`
 		})
 
-		jest.advanceTimersByTime(3000)
+		// Wait for retry delay to complete (3s + buffer for fetch)
+		await new Promise((resolve) =>
+			setTimeout(resolve, 3500)
+		)
 		await page.waitForChanges()
 
 		expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -87,8 +89,7 @@ describe.skip('app-icon', () => {
 				'.icon-fallback'
 			)
 		).toBeNull()
-		jest.useRealTimers()
-	})
+	}, 10000)
 
 	it('dedupes concurrent fetches for the same icon', async () => {
 		const fetchMock = jest
@@ -113,7 +114,7 @@ describe.skip('app-icon', () => {
 		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
-	it('applies palette color when color prop is a jewel key', async () => {
+	it.skip('applies palette color when color prop is a jewel key', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -135,7 +136,7 @@ describe.skip('app-icon', () => {
 		)
 	})
 
-	it('inherits currentColor by default', async () => {
+	it.skip('inherits currentColor by default', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -157,7 +158,7 @@ describe.skip('app-icon', () => {
 		// Implementation detail: expect computed fill to match inherited color
 	})
 
-	it('applies aria-label by default and hides when aria-hidden is true', async () => {
+	it.skip('applies aria-label by default and hides when aria-hidden is true', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -185,7 +186,7 @@ describe.skip('app-icon', () => {
 		).toBeNull()
 	})
 
-	it('switches theme based on data-theme on documentElement', async () => {
+	it.skip('switches theme based on data-theme on documentElement', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -204,7 +205,7 @@ describe.skip('app-icon', () => {
 		expect(host).toBeTruthy()
 	})
 
-	it('renders correct size classes for sm|md|lg', async () => {
+	it.skip('renders correct size classes for sm|md|lg', async () => {
 		jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -242,7 +243,7 @@ describe.skip('app-icon', () => {
 		).toBe(true)
 	})
 
-	it('uses resolver override when setIconResolver is called', async () => {
+	it.skip('uses resolver override when setIconResolver is called', async () => {
 		const fetchMock = jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({
@@ -267,7 +268,7 @@ describe.skip('app-icon', () => {
 		// expect(fetchMock).toHaveBeenCalledWith('https://example.com/custom.svg')
 	})
 
-	it('prefetches icons via requestIdleCallback when available', async () => {
+	it.skip('prefetches icons via requestIdleCallback when available', async () => {
 		const fetchMock = jest
 			.spyOn(global, 'fetch' as any)
 			.mockResolvedValue({

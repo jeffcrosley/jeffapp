@@ -17,6 +17,9 @@ import { resolveIconUrl } from './utils/icon-resolver'
 	shadow: true
 })
 export class AppIcon {
+	private static readonly MAX_RETRIES = 1
+	private static readonly RETRY_DELAY_MS = 3000
+
 	/**
 	 * Icon name (e.g., "angular", "react", "typescript")
 	 */
@@ -57,9 +60,6 @@ export class AppIcon {
 	 */
 	@State() hasError = false
 
-	// TODO: Implement componentWillLoad() to fetch icon
-	// TODO: Implement fetchIcon() with retry logic
-	// TODO: Implement sanitizeSVG() to strip dangerous content
 	// TODO: Implement theme detection logic
 	// TODO: Implement cache deduplication
 
@@ -70,26 +70,48 @@ export class AppIcon {
 	private fetchIcon = async () => {
 		this.isLoading = true
 
-		try {
-			const url = resolveIconUrl(this.name)
-			const response = await fetch(url)
-			if (!response.ok) {
-				throw new Error(
-					`Failed to fetch icon: ${response.status} ${response.statusText}`
+		for (
+			let attempt = 0;
+			attempt <= AppIcon.MAX_RETRIES;
+			attempt++
+		) {
+			try {
+				const url = resolveIconUrl(this.name)
+				const response = await fetch(url)
+				if (!response.ok) {
+					throw new Error(
+						`Failed to fetch icon: ${response.status} ${response.statusText}`
+					)
+				}
+				const svgText = await response.text()
+				this.isLoading = false
+				return this.sanitizeSVG(svgText)
+			} catch (error) {
+				if (attempt === AppIcon.MAX_RETRIES) {
+					console.error(
+						`Failed to load icon "${this.name}":`,
+						error
+					)
+					this.hasError = true
+					this.isLoading = false
+					return
+				}
+
+				await new Promise((res) =>
+					setTimeout(res, AppIcon.RETRY_DELAY_MS)
 				)
 			}
-			const svgText = await response.text()
-			this.isLoading = false
-			return svgText
-		} catch (error) {
-			this.hasError = true
-			console.error(
-				`Failed to load icon "${this.name}":`,
-				error
-			)
-			this.isLoading = false
-			return
 		}
+	}
+
+	private sanitizeSVG = (svg: string): string => {
+		// Basic sanitization - remove <script> tags and on* attributes
+		return svg
+			.replace(
+				/<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+				''
+			)
+			.replace(/\son\w+="[^"]*"/gi, '')
 	}
 
 	render() {
