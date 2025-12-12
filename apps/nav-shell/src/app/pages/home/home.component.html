@@ -59,13 +59,7 @@
 	<h2 class="section-title">Technical Skills</h2>
 	<div class="skills-categories">
 		@for (category of skills; track $index) {
-			<app-icon
-				name="angular"
-				color="ruby"
-				size="md"
-			/>
-
-			<!-- <div class="skills-category">
+			<div class="skills-category">
 				<h3 class="skills-category-title">
 					{{ category.category }}
 				</h3>
@@ -74,16 +68,14 @@
 						skill of category.items;
 						track $index
 					) {
-						<app-skill-badge
+						<app-icon
 							[name]="skill.name"
-							[iconUrl]="skill.icon"
-							[iconAlt]="skill.name + ' icon'"
-							[href]="skill.href"
-							target="_blank"
+							[color]="skill.color"
+							size="md"
 						/>
 					}
 				</div>
-			</div> -->
+			</div>
 		}
 	</div>
 </section>

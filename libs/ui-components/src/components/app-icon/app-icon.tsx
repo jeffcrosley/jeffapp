@@ -7,7 +7,6 @@ import {
 } from '@stencil/core'
 import { iconCache } from './services/icon-cache.service'
 import { resolveIconUrl } from './utils/icon-resolver'
-import { sanitizeSVG } from './utils/sanitize-svg'
 
 /**
  * Icon component that loads SVG icons from CDN with caching, sanitization, and theming.
@@ -76,20 +75,11 @@ export class AppIcon {
 			attempt <= AppIcon.MAX_RETRIES;
 			attempt++
 		) {
-			const fetcher = async () => {
-				const url = resolveIconUrl(this.name)
-				const response = await fetch(url)
-				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch icon: ${response.status} ${response.statusText}`
-					)
-				}
-				const svgText = await response.text()
-				this.isLoading = false
-				return sanitizeSVG(svgText)
-			}
+			const url = resolveIconUrl(this.name)
 			try {
-				return await iconCache.get(this.name, fetcher)
+				return await iconCache
+					.get(url)
+					.finally(() => (this.isLoading = false))
 			} catch (error) {
 				iconCache.clear(this.name)
 				if (attempt === AppIcon.MAX_RETRIES) {
@@ -98,7 +88,6 @@ export class AppIcon {
 						error
 					)
 					this.hasError = true
-					this.isLoading = false
 					return
 				}
 

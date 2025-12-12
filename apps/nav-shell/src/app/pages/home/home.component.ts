@@ -20,19 +20,16 @@ export class HomeComponent {
 			category: 'Frontend',
 			items: [
 				{
-					name: 'Angular',
-					icon: '/assets/icons/angular.svg',
-					href: 'https://angular.io/'
+					name: 'angular',
+					color: 'ruby'
 				},
 				{
-					name: 'React',
-					icon: '/assets/icons/react.svg',
-					href: 'https://react.dev/'
+					name: 'react',
+					color: 'sapphire'
 				},
 				{
-					name: 'Stencil',
-					icon: '/assets/icons/stencil.svg',
-					href: 'https://stenciljs.com/'
+					name: 'stencil',
+					color: 'amethyst'
 				}
 			]
 		},
@@ -40,29 +37,25 @@ export class HomeComponent {
 			category: 'Backend',
 			items: [
 				{
-					name: 'Node.js',
-					icon: '/assets/icons/nodejs.svg',
-					href: 'https://nodejs.org/'
+					name: 'nodedotjs',
+					color: 'emerald'
 				},
 				{
-					name: 'Express',
-					icon: '/assets/icons/express.svg',
-					href: 'https://expressjs.com/'
+					name: 'express',
+					color: 'onyx'
 				}
 			]
 		},
 		{
-			category: 'Cloud',
+			category: 'Dababase',
 			items: [
 				{
-					name: 'AWS',
-					icon: '/assets/icons/aws.svg',
-					href: 'https://aws.amazon.com/'
+					name: 'postgresql',
+					color: 'topaz'
 				},
 				{
-					name: 'Vercel',
-					icon: '/assets/icons/vercel.svg',
-					href: 'https://vercel.com/'
+					name: 'mongodb',
+					color: 'peridot'
 				}
 			]
 		},
@@ -70,14 +63,12 @@ export class HomeComponent {
 			category: 'Dev Tools',
 			items: [
 				{
-					name: 'Nx',
-					icon: '/assets/icons/nx.svg',
-					href: 'https://nx.dev/'
+					name: 'nx',
+					color: 'amethys'
 				},
 				{
-					name: 'Jest',
-					icon: '/assets/icons/jest.svg',
-					href: 'https://jestjs.io/'
+					name: 'docker',
+					color: 'sapphire'
 				}
 			]
 		},
@@ -85,14 +76,8 @@ export class HomeComponent {
 			category: 'AI/ML',
 			items: [
 				{
-					name: 'OpenAI',
-					icon: '/assets/icons/openai.svg',
-					href: 'https://openai.com/'
-				},
-				{
-					name: 'LangChain',
-					icon: '/assets/icons/langchain.svg',
-					href: 'https://langchain.com/'
+					name: 'githubcopilot',
+					color: 'onyx'
 				}
 			]
 		}

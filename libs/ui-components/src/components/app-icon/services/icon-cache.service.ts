@@ -3,58 +3,55 @@
  * Deduplicates concurrent requests for the same icon.
  */
 
-interface CacheEntry {
-  promise: Promise<string>
-  resolved: boolean
-  content: string | null
-}
+import { sanitizeSVG } from '../utils/sanitize-svg'
 
 class IconCacheService {
-  private cache = new Map<string, CacheEntry>()
+	private cache = new Map<
+		string,
+		Promise<string>
+	>()
+	/**
+	 * Get cached icon or initiate fetch
+	 */
+	async get(url: string): Promise<string> {
 
-  /**
-   * Get cached icon or initiate fetch
-   */
-  async get(name: string, fetcher: () => Promise<string>): Promise<string> {
-    const existing = this.cache.get(name)
 
-    // Return existing promise if in-flight
-    if (existing && !existing.resolved) {
-      return existing.promise
-    }
+		const cached = this.cache.get(url)
+		console.log('Cached value:', url, cached)
+		if (cached) return cached
 
-    // Return cached content if available
-    if (existing && existing.resolved && existing.content) {
-      return existing.content
-    }
+		const fetchPromise = fetch(url)
+			.then((resp) => {
+				if (!resp.ok)
+					throw new Error(
+						`Failed to fetch icon: ${resp.status} ${resp.statusText}`
+					)
+				return resp.text()
+			})
+			.then((svgText) => sanitizeSVG(svgText))
+			.catch((error) => {
+				this.cache.delete(url)
+				throw error
+			})
 
-    // Create new fetch promise
-    const promise = fetcher().then((content) => {
-      const entry = this.cache.get(name)
-      if (entry) {
-        entry.resolved = true
-        entry.content = content
-      }
-      return content
-    })
+		this.cache.set(url, fetchPromise)
 
-    this.cache.set(name, { promise, resolved: false, content: null })
-    return promise
-  }
+		return fetchPromise
+	}
 
-  /**
-   * Clear cache entry
-   */
-  clear(name: string): void {
-    this.cache.delete(name)
-  }
+	/**
+	 * Clear cache entry
+	 */
+	clear(name: string): void {
+		this.cache.delete(name)
+	}
 
-  /**
-   * Clear all cache entries
-   */
-  clearAll(): void {
-    this.cache.clear()
-  }
+	/**
+	 * Clear all cache entries
+	 */
+	clearAll(): void {
+		this.cache.clear()
+	}
 }
 
 // Export singleton instance
