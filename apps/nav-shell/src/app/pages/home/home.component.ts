@@ -23,10 +23,10 @@ export class HomeComponent {
 					name: 'angular',
 					color: 'ruby'
 				},
-				{
-					name: 'react',
-					color: 'sapphire'
-				},
+				// {
+				// 	name: 'react',
+				// 	color: 'sapphire'
+				// },
 				{
 					name: 'stencil',
 					color: 'amethyst'
@@ -46,30 +46,38 @@ export class HomeComponent {
 				}
 			]
 		},
-		{
-			category: 'Dababase',
-			items: [
-				{
-					name: 'postgresql',
-					color: 'topaz'
-				},
-				{
-					name: 'mongodb',
-					color: 'peridot'
-				}
-			]
-		},
+		// {
+		// 	category: 'Dababase',
+		// 	items: [
+		// 		{
+		// 			name: 'postgresql',
+		// 			color: 'topaz'
+		// 		},
+		// 		{
+		// 			name: 'mongodb',
+		// 			color: 'peridot'
+		// 		}
+		// 	]
+		// },
 		{
 			category: 'Dev Tools',
 			items: [
 				{
-					name: 'nx',
-					color: 'amethys'
+					name: 'github',
+					color: 'garnet'
 				},
 				{
-					name: 'docker',
-					color: 'sapphire'
+					name: 'nx',
+					color: 'amethyst'
+				},
+				{
+					name: 'render',
+					color: 'onyx'
 				}
+				// {
+				// 	name: 'docker',
+				// 	color: 'sapphire'
+				// }
 			]
 		},
 		{
@@ -77,7 +85,19 @@ export class HomeComponent {
 			items: [
 				{
 					name: 'githubcopilot',
-					color: 'onyx'
+					color: 'sapphire'
+				},
+				{
+					name: 'openai',
+					color: 'amethyst'
+				},
+				{
+					name: 'googlegemini',
+					color: 'topaz'
+				},
+				{
+					name: 'claude',
+					color: 'amber'
 				}
 			]
 		}
