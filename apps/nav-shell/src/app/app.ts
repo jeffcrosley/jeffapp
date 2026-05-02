@@ -48,6 +48,11 @@ export class App {
 			status: 'wip'
 		},
 		{
+			label: 'Dashboard',
+			route: '/dashboard',
+			status: 'wip'
+		},
+		{
 			label: 'Components',
 			route: '/components',
 			status: 'wip'

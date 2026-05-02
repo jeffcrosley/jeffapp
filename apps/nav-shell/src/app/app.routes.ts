@@ -2,6 +2,7 @@ import { Route } from '@angular/router'
 import { AboutComponent } from './pages/about.component'
 import { ComponentsComponent } from './pages/components.component'
 import { ContactComponent } from './pages/contact.component'
+import { DashboardComponent } from './pages/dashboard.component'
 import { HomeComponent } from './pages/home/home.component'
 
 export const appRoutes: Route[] = [
@@ -25,6 +26,10 @@ export const appRoutes: Route[] = [
 	{
 		path: 'components',
 		component: ComponentsComponent
+	},
+	{
+		path: 'dashboard',
+		component: DashboardComponent
 	},
 	{
 		path: '**',
