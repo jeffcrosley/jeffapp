@@ -1,8 +1,10 @@
 // apps/api-gateway/src/main.ts
 
+import cors from 'cors';
 import express from 'express';
 
 export const app = express();
+app.use(cors({ origin: 'https://jeffcrosley.com' }));
 const port = process.env.PORT || 3333;
 
 const MCP_BASE = 'https://mcp.jeffcrosley.com';

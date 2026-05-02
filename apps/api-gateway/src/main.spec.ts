@@ -18,20 +18,54 @@ function stopServer(server: http.Server): Promise<void> {
 }
 
 // Use Node's http.request so global.fetch mocks don't interfere
-function httpGet(port: number, path: string): Promise<{ status: number; body: unknown }> {
+function httpGet(
+  port: number,
+  path: string,
+  options: { headers?: Record<string, string> } = {}
+): Promise<{ status: number; body: unknown; headers: Record<string, string | string[]> }> {
   return new Promise((resolve, reject) => {
-    const req = http.get(`http://localhost:${port}${path}`, (res) => {
-      let raw = '';
-      res.on('data', (chunk) => (raw += chunk));
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode ?? 0, body: JSON.parse(raw) });
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
+    const req = http.get(
+      { hostname: 'localhost', port, path, headers: options.headers ?? {} },
+      (res) => {
+        let raw = '';
+        res.on('data', (chunk) => (raw += chunk));
+        res.on('end', () => {
+          try {
+            resolve({
+              status: res.statusCode ?? 0,
+              body: JSON.parse(raw),
+              headers: res.headers as Record<string, string | string[]>,
+            });
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    );
     req.on('error', reject);
+  });
+}
+
+function httpOptions(
+  port: number,
+  path: string,
+  headers: Record<string, string>
+): Promise<{ status: number; headers: Record<string, string | string[]> }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { method: 'OPTIONS', hostname: 'localhost', port, path, headers },
+      (res) => {
+        res.resume();
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers as Record<string, string | string[]>,
+          })
+        );
+      }
+    );
+    req.on('error', reject);
+    req.end();
   });
 }
 
@@ -139,6 +173,33 @@ describe('api-gateway', () => {
 
       const { status } = await httpGet(port, '/api/gtd/tasks');
       expect(status).toBe(502);
+    });
+  });
+
+  describe('CORS', () => {
+    it('returns Access-Control-Allow-Origin for allowed origin', async () => {
+      const { headers } = await httpGet(port, '/health', {
+        headers: { Origin: 'https://jeffcrosley.com' },
+      });
+      expect(headers['access-control-allow-origin']).toBe('https://jeffcrosley.com');
+    });
+
+    it('returns the configured origin header regardless of request origin', async () => {
+      // cors with a string origin always sends the configured value;
+      // browsers enforce the restriction by comparing with the actual request origin.
+      const { headers } = await httpGet(port, '/health', {
+        headers: { Origin: 'https://evil.com' },
+      });
+      expect(headers['access-control-allow-origin']).toBe('https://jeffcrosley.com');
+    });
+
+    it('handles preflight OPTIONS request', async () => {
+      const { status, headers } = await httpOptions(port, '/health', {
+        Origin: 'https://jeffcrosley.com',
+        'Access-Control-Request-Method': 'GET',
+      });
+      expect(status).toBe(204);
+      expect(headers['access-control-allow-origin']).toBe('https://jeffcrosley.com');
     });
   });
 });
