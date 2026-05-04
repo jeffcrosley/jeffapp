@@ -129,8 +129,9 @@ app.get('/api/gtd/health', async (req, res) => {
   try {
     await getAccessToken();
     res.status(200).json({ reachable: true });
-  } catch {
-    res.status(503).json({ reachable: false, error: 'MCP server unreachable' });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(503).json({ reachable: false, error: 'MCP server unreachable', detail });
   }
 });
 
@@ -156,8 +157,9 @@ app.get('/api/gtd/tasks', async (req, res) => {
     const tasks = parsed?.tasks ?? [];
     const total = parsed?.total ?? 0;
     res.status(200).json({ tasks, total });
-  } catch {
-    res.status(502).json({ error: 'Failed to query tasks' });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to query tasks', detail });
   }
 });
 
