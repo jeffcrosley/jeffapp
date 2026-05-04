@@ -10,6 +10,19 @@ interface GtdTask {
   updated_at?: string;
 }
 
+interface BriefTask {
+  id: string;
+  title: string;
+  project?: string;
+}
+
+interface Brief {
+  slug: string;
+  filename: string;
+  agent: string;
+  tasks: BriefTask[];
+}
+
 interface ProjectGroup {
   name: string;
   tasks: GtdTask[];
@@ -51,25 +64,40 @@ interface ProjectGroup {
         }
       </div>
 
-      <!-- In-Flight Tasks -->
+      <!-- Work In Progress -->
       <div class="dashboard-section">
-        <h3>In-Flight Tasks</h3>
-        @if (tasksLoading) {
-          <p class="muted">Loading tasks…</p>
+        <h3>Work In Progress</h3>
+        @if (briefsLoading) {
+          <p class="muted">Loading briefs…</p>
         }
-        @if (!tasksLoading && tasksError) {
-          <p class="muted error">{{ tasksError }}</p>
+        @if (!briefsLoading && briefsError) {
+          <p class="muted error">{{ briefsError }}</p>
         }
-        @if (!tasksLoading && !tasksError && inFlightTasks.length === 0) {
-          <p class="muted">No in-progress tasks.</p>
+        @if (!briefsLoading && !briefsError && briefs.length === 0) {
+          <p class="muted">No active work.</p>
         }
-        @if (!tasksLoading && !tasksError && inFlightTasks.length > 0) {
-          <div class="task-list">
-            @for (task of inFlightTasks; track task.id) {
-              <div class="task-card">
-                <span class="task-title">{{ task.title }}</span>
-                @if (task.project) {
-                  <span class="task-project">{{ task.project }}</span>
+        @if (!briefsLoading && !briefsError && briefs.length > 0) {
+          <div class="brief-list">
+            @for (brief of briefs; track brief.slug) {
+              <div class="brief-card">
+                <div class="brief-header">
+                  <span class="brief-title">{{ toTitleCase(brief.slug) }}</span>
+                  <span class="agent-badge">{{ toTitleCase(brief.agent) }}</span>
+                </div>
+                @if (brief.tasks.length === 0) {
+                  <p class="muted">Brief in queue — no tasks claimed yet</p>
+                }
+                @if (brief.tasks.length > 0) {
+                  <div class="task-list">
+                    @for (task of brief.tasks; track task.id) {
+                      <div class="task-card">
+                        <span class="task-title">{{ task.title }}</span>
+                        @if (task.project) {
+                          <span class="task-project">{{ task.project }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
                 }
               </div>
             }
@@ -223,6 +251,47 @@ interface ProjectGroup {
             }
           }
 
+          .brief-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+
+            .brief-card {
+              padding: 18px 20px;
+              background: #f8f9fa;
+              border-radius: 10px;
+              border-left: 4px solid #9b59b6;
+
+              .brief-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
+
+                .brief-title {
+                  font-size: 1rem;
+                  color: #2c3e50;
+                  font-weight: 600;
+                }
+
+                .agent-badge {
+                  font-size: 0.8rem;
+                  color: #9b59b6;
+                  font-weight: 500;
+                  background: rgba(155, 89, 182, 0.1);
+                  padding: 2px 8px;
+                  border-radius: 4px;
+                }
+              }
+
+              .task-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              }
+            }
+          }
+
           .project-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -297,8 +366,12 @@ export class DashboardComponent implements OnInit {
   protected inFlightTasks: GtdTask[] = [];
   protected hotProjects: ProjectGroup[] = [];
 
+  protected briefsLoading = true;
+  protected briefsError = '';
+  protected briefs: Brief[] = [];
+
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadHealth(), this.loadTasks()]);
+    await Promise.all([this.loadHealth(), this.loadTasks(), this.loadBriefs()]);
   }
 
   private async loadHealth(): Promise<void> {
@@ -334,6 +407,27 @@ export class DashboardComponent implements OnInit {
     } finally {
       this.tasksLoading = false;
     }
+  }
+
+  private async loadBriefs(): Promise<void> {
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/gtd/briefs`);
+      if (!res.ok) {
+        this.briefsError = 'Failed to load briefs';
+      } else {
+        const body = await res.json() as { briefs?: Brief[] };
+        this.briefs = body.briefs ?? [];
+      }
+    } catch {
+      this.briefsError = 'Could not reach gateway';
+    } finally {
+      this.briefsLoading = false;
+    }
+  }
+
+  protected toTitleCase(s: string): string {
+    return s.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   private deriveHotProjects(tasks: GtdTask[]): ProjectGroup[] {

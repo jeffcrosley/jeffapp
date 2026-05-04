@@ -257,6 +257,99 @@ describe('api-gateway', () => {
     });
   });
 
+  describe('GET /api/gtd/briefs', () => {
+    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
+      const { status, body } = await httpGet(port, '/api/gtd/briefs');
+      expect(status).toBe(503);
+      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
+    });
+
+    it('returns correct brief shape with tasks cross-referenced', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockTasks = [
+        { id: 't1', title: 'Task 1', project: 'jeffapp', notes: '2026-05-04-saturn-aia-e2e-day1.md', claimed_by: 'saturn' },
+      ];
+      const mockFilenames = ['2026-05-04-saturn-aia-e2e-day1.md', '2026-05-04-mercury-dashboard.md'];
+
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({
+          result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] },
+        }),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({
+          result: { content: [{ text: JSON.stringify(mockFilenames) }] },
+        }),
+      });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/briefs');
+      expect(status).toBe(200);
+      const b = body as { briefs: Array<{ slug: string; filename: string; agent: string; tasks: unknown[] }> };
+      expect(b.briefs).toHaveLength(2);
+      expect(b.briefs[0].slug).toBe('aia-e2e-day1');
+      expect(b.briefs[0].agent).toBe('saturn');
+      expect(b.briefs[0].tasks).toHaveLength(1);
+      expect(b.briefs[1].slug).toBe('dashboard');
+      expect(b.briefs[1].agent).toBe('mercury');
+      expect(b.briefs[1].tasks).toHaveLength(0);
+    });
+
+    it('returns { briefs: [] } when fs_list_dir returns no .md files', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({
+          result: { content: [{ text: JSON.stringify(['archive/old-brief']) }] },
+        }),
+      });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/briefs');
+      expect(status).toBe(200);
+      expect((body as { briefs: unknown[] }).briefs).toEqual([]);
+    });
+
+    it('returns { briefs: [] } with 200 when fs_list_dir call fails', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+      });
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/briefs');
+      expect(status).toBe(200);
+      expect((body as { briefs: unknown[] }).briefs).toEqual([]);
+    });
+  });
+
   describe('Accept header', () => {
     const jsonMcpResponse = {
       ok: true,
