@@ -300,7 +300,7 @@ export class DashboardComponent implements OnInit {
   private async loadHealth(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
-      const res = await fetch(`${base}/api/gtd/health`);
+      const res = await fetch(`${base}/api/gtd/health`, { credentials: 'include' });
       if (res.status === 503) {
         this.healthError = 'GTD token not configured';
       } else {
@@ -317,7 +317,7 @@ export class DashboardComponent implements OnInit {
   private async loadRecentTasks(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
-      const res = await fetch(`${base}/api/gtd/tasks/recent`);
+      const res = await fetch(`${base}/api/gtd/tasks/recent`, { credentials: 'include' });
       if (!res.ok) {
         this.tasksError = res.status === 503 ? 'GTD token not configured' : 'Failed to load tasks';
       } else {
@@ -334,7 +334,7 @@ export class DashboardComponent implements OnInit {
   private async loadBriefs(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
-      const res = await fetch(`${base}/api/gtd/briefs`);
+      const res = await fetch(`${base}/api/gtd/briefs`, { credentials: 'include' });
       if (!res.ok) {
         this.briefsError = 'Failed to load briefs';
       } else {

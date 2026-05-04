@@ -13,7 +13,12 @@ export class AuthService {
 
 	async checkAuth(): Promise<boolean> {
 		try {
-			await firstValueFrom(this.http.get(`${this.env.getApiGatewayUrl()}/auth/me`, { withCredentials: true }));
+			const base = this.env.getApiGatewayUrl();
+			if (!base) {
+				this.isLoggedIn.set(false);
+				return false;
+			}
+			await firstValueFrom(this.http.get(`${base}/auth/me`, { withCredentials: true }));
 			this.isLoggedIn.set(true);
 			return true;
 		} catch {
