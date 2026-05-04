@@ -109,11 +109,11 @@ async function mcpFsList(path: string): Promise<string[]> {
     };
     const text = body?.result?.content?.[0]?.text;
     if (!text) return [];
-    const data: unknown = JSON.parse(text);
-    if (Array.isArray(data)) {
-      return data.filter((f): f is string => typeof f === 'string');
-    }
-    return [];
+    return text
+      .split('\n')
+      .filter(line => line.startsWith('FILE'))
+      .map(line => line.replace(/^FILE\s+/, '').trim())
+      .filter(name => name.length > 0);
   } catch {
     return [];
   }
