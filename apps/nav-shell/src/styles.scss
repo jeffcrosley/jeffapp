@@ -23,6 +23,9 @@
 	--color-badge-wip-text: #856404;
 	--color-badge-beta-bg: #d1ecf1;
 	--color-badge-beta-text: #0c5460;
+	--color-wip-accent-bg: rgba(124, 58, 237, 0.1);
+	--color-status-online: #2ecc71;
+	--color-status-loading: #f39c12;
 }
 
 [data-theme='dark'] {
@@ -39,6 +42,9 @@
 	--color-badge-wip-text: #ffd54f;
 	--color-badge-beta-bg: #1e3a3f;
 	--color-badge-beta-text: #81d4fa;
+	--color-wip-accent-bg: rgba(167, 139, 250, 0.15);
+	--color-status-online: #2ecc71;
+	--color-status-loading: #f59e0b;
 }
 
 // ============================================================================

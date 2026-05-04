@@ -196,6 +196,33 @@ app.get('/api/gtd/tasks', async (req, res) => {
   }
 });
 
+app.get('/api/gtd/tasks/recent', async (req, res) => {
+  if (!getGtdToken()) {
+    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
+    return;
+  }
+  try {
+    const upstream = await mcpCall('gtd_query_tasks', { limit: 100, offset: 0 });
+    if (!upstream.ok) {
+      res.status(upstream.status).json({ error: 'Upstream MCP error' });
+      return;
+    }
+    const body = (await parseMcpResponse(upstream)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    const content = body?.result?.content?.[0]?.text;
+    const parsed = content
+      ? (JSON.parse(content) as { tasks?: unknown[]; total?: number })
+      : null;
+    const tasks = parsed?.tasks ?? [];
+    const total = parsed?.total ?? 0;
+    res.status(200).json({ tasks, total });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to query recent tasks', detail });
+  }
+});
+
 app.get('/api/gtd/briefs', async (req, res) => {
   if (!getGtdToken()) {
     res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });

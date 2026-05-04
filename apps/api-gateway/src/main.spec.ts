@@ -257,6 +257,60 @@ describe('api-gateway', () => {
     });
   });
 
+  describe('GET /api/gtd/tasks/recent', () => {
+    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
+      const { status, body } = await httpGet(port, '/api/gtd/tasks/recent');
+      expect(status).toBe(503);
+      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
+    });
+
+    it('returns tasks across all statuses from MCP JSON response', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockTasks = [
+        { id: '1', title: 'In-progress task', status: 'in-progress', updated_at: new Date().toISOString() },
+        { id: '2', title: 'Done task', status: 'done', updated_at: new Date().toISOString() },
+      ];
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({
+          result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 2 }) }] },
+        }),
+      });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/tasks/recent');
+      expect(status).toBe(200);
+      expect((body as { tasks: unknown[] }).tasks).toEqual(mockTasks);
+      expect((body as { total: number }).total).toBe(2);
+    });
+
+    it('calls MCP with limit 100 and no status filter', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+      });
+      global.fetch = mockFetch;
+
+      await httpGet(port, '/api/gtd/tasks/recent');
+
+      const toolCall = mockFetch.mock.calls[2];
+      const body = JSON.parse(toolCall[1].body as string) as { params: { arguments: Record<string, unknown> } };
+      expect(body.params.arguments['limit']).toBe(100);
+      expect(body.params.arguments['status']).toBeUndefined();
+    });
+  });
+
   describe('GET /api/gtd/briefs', () => {
     it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
       const { status, body } = await httpGet(port, '/api/gtd/briefs');

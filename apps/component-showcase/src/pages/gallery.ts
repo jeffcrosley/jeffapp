@@ -77,6 +77,30 @@ export function renderGallery(container: HTMLElement): void {
 &lt;native-badge label="Deprecated" variant="warning"&gt;&lt;/native-badge&gt;</code></pre>
           </details>
         </div>
+
+        <div class="component-demo">
+          <h3>WIP Card Component</h3>
+          <div class="demo-area wip-cards">
+            <wip-card
+              slug="jeffapp-phase-2"
+              agent="mercury"
+              tasks='[{"id":"1","title":"Add dark mode support","project":"jeffapp"},{"id":"2","title":"Mobile padding fix","project":"jeffapp"}]'
+            ></wip-card>
+            <wip-card
+              slug="portfolio-refresh"
+              agent="venus"
+              tasks='[]'
+            ></wip-card>
+          </div>
+          <details class="code-example">
+            <summary>View Code</summary>
+            <pre><code>&lt;wip-card
+  slug="jeffapp-phase-2"
+  agent="mercury"
+  tasks='[{"id":"1","title":"Add dark mode support","project":"jeffapp"}]'
+&gt;&lt;/wip-card&gt;</code></pre>
+          </details>
+        </div>
       </section>
 
       <section class="component-section integration-notes">
