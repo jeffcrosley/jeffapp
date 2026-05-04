@@ -219,6 +219,57 @@ describe('api-gateway', () => {
       const { status } = await httpGet(port, '/api/gtd/tasks');
       expect(status).toBe(502);
     });
+
+    it('includes error detail in 502 response', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockRejectedValueOnce(new Error('MCP initialize failed: 406'));
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/tasks');
+      expect(status).toBe(502);
+      expect((body as { detail: string }).detail).toMatch(/406/);
+    });
+  });
+
+  describe('Accept header', () => {
+    it('sends Accept header on MCP initialize call', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+      });
+      global.fetch = mockFetch;
+
+      await httpGet(port, '/api/gtd/tasks');
+
+      const initCall = mockFetch.mock.calls[1];
+      expect(initCall[1].headers['Accept']).toBe('application/json, text/event-stream');
+    });
+
+    it('sends Accept header on MCP tools/call', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+      });
+      global.fetch = mockFetch;
+
+      await httpGet(port, '/api/gtd/tasks');
+
+      const toolCall = mockFetch.mock.calls[2];
+      expect(toolCall[1].headers['Accept']).toBe('application/json, text/event-stream');
+    });
   });
 
   describe('token cache (getAccessToken)', () => {
