@@ -13,25 +13,19 @@ export function getGtdToken(): string | null {
   return process.env['GTD_AGENT_TOKEN'] ?? null;
 }
 
-// ── OAuth client_credentials token cache ─────────────────────────────────────
-
 interface TokenCache {
   accessToken: string;
-  expiresAt: number; // ms timestamp
+  expiresAt: number;
 }
 
 let _tokenCache: TokenCache | null = null;
+let _sessionCache: { sessionId: string } | null = null;
 
-/** Reset the in-memory token cache. Exported for testing only. */
 export function _resetTokenCache(): void {
   _tokenCache = null;
+  _sessionCache = null;
 }
 
-/**
- * Exchange GTD_AGENT_TOKEN for a proper OAuth access token using the
- * client_credentials grant. Caches the result and re-exchanges when
- * within 60 seconds of expiry.
- */
 export async function getAccessToken(): Promise<string> {
   const now = Date.now();
   if (_tokenCache && _tokenCache.expiresAt - now > 60_000) {
@@ -59,9 +53,11 @@ export async function getAccessToken(): Promise<string> {
   return _tokenCache.accessToken;
 }
 
-export async function mcpCall(method: string, args: Record<string, unknown>): Promise<Response> {
+async function getMcpSessionId(): Promise<string> {
+  if (_sessionCache) return _sessionCache.sessionId;
+
   const token = await getAccessToken();
-  return fetch(`${MCP_BASE}/mcp`, {
+  const resp = await fetch(`${MCP_BASE}/mcp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,21 +65,59 @@ export async function mcpCall(method: string, args: Record<string, unknown>): Pr
     },
     body: JSON.stringify({
       jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: { name: method, arguments: args },
+      id: 0,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'jeffapp-api-gateway', version: '1.0.0' },
+      },
     }),
   });
+
+  if (!resp.ok) throw new Error(`MCP initialize failed: ${resp.status}`);
+
+  const sessionId = resp.headers.get('mcp-session-id');
+  if (!sessionId) throw new Error('MCP initialize did not return session ID');
+
+  _sessionCache = { sessionId };
+  return sessionId;
 }
 
-// --- Health Check ---
+export async function mcpCall(method: string, args: Record<string, unknown>): Promise<Response> {
+  const doCall = async (sessionId: string): Promise<Response> => {
+    const token = await getAccessToken();
+    return fetch(`${MCP_BASE}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'mcp-session-id': sessionId,
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: method, arguments: args },
+      }),
+    });
+  };
+
+  const sessionId = await getMcpSessionId();
+  const resp = await doCall(sessionId);
+
+  if (resp.status === 404) {
+    _sessionCache = null;
+    return doCall(await getMcpSessionId());
+  }
+
+  return resp;
+}
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', service: 'API Gateway' });
 });
 
-// --- GTD Routes ---
-
-// GET /api/gtd/health — verify we can obtain an MCP access token
 app.get('/api/gtd/health', async (req, res) => {
   if (!getGtdToken()) {
     res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
@@ -97,7 +131,6 @@ app.get('/api/gtd/health', async (req, res) => {
   }
 });
 
-// GET /api/gtd/tasks?status=in-progress — query MCP gtd_query_tasks
 app.get('/api/gtd/tasks', async (req, res) => {
   if (!getGtdToken()) {
     res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
