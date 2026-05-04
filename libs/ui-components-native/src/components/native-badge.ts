@@ -27,7 +27,7 @@ class NativeBadge extends HTMLElement {
       error: '#e74c3c',
       info: '#3498db',
     };
-    return colors[status] || colors.info;
+    return colors[status] || colors['info'];
   }
 
   private render() {
