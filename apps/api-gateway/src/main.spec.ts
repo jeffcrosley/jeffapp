@@ -287,7 +287,7 @@ describe('api-gateway', () => {
         status: 200,
         headers: { get: () => 'application/json' },
         json: async () => ({
-          result: { content: [{ text: JSON.stringify(mockFilenames) }] },
+          result: { content: [{ text: mockFilenames.map((f: string) => `FILE  ${f}`).join('\n') }] },
         }),
       });
       global.fetch = mockFetch;
@@ -320,7 +320,7 @@ describe('api-gateway', () => {
         status: 200,
         headers: { get: () => 'application/json' },
         json: async () => ({
-          result: { content: [{ text: JSON.stringify(['archive/old-brief']) }] },
+          result: { content: [{ text: 'DIR  archive' }] },
         }),
       });
       global.fetch = mockFetch;
