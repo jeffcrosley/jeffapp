@@ -4,6 +4,7 @@ import {
 	provideBrowserGlobalErrorListeners,
 	provideZoneChangeDetection
 } from '@angular/core'
+import { provideHttpClient } from '@angular/common/http'
 import { provideRouter } from '@angular/router'
 import { appRoutes } from './app.routes'
 import { EnvironmentService } from './services/environment.service'
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
 		provideZoneChangeDetection({
 			eventCoalescing: true
 		}),
+		provideHttpClient(),
 		provideRouter(appRoutes),
 		{
 			provide: APP_INITIALIZER,
