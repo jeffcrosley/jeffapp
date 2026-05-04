@@ -1,5 +1,5 @@
 import http from 'http';
-import { app, _resetTokenCache, getAccessToken } from './main';
+import { app, _resetTokenCache, getAccessToken, parseMcpResponse } from './main';
 
 type AddressInfo = { port: number };
 
@@ -161,7 +161,7 @@ describe('api-gateway', () => {
       expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
     });
 
-    it('returns tasks array and total from MCP response', async () => {
+    it('returns tasks array and total from MCP JSON response', async () => {
       process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockTasks = [
         {
@@ -178,9 +178,31 @@ describe('api-gateway', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => 'application/json' },
         json: async () => ({
           result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] },
         }),
+      });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/tasks?status=in-progress');
+      expect(status).toBe(200);
+      expect((body as { tasks: unknown[] }).tasks).toEqual(mockTasks);
+      expect((body as { total: number }).total).toBe(1);
+    });
+
+    it('returns tasks array and total from MCP SSE response', async () => {
+      process.env['GTD_AGENT_TOKEN'] = 'test-token';
+      const mockTasks = [{ id: '2', title: 'SSE task', status: 'in-progress' }];
+      const ssePayload = `event: message\ndata: ${JSON.stringify({ result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] } })}\n\n`;
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'text/event-stream' },
+        text: async () => ssePayload,
       });
       global.fetch = mockFetch;
 
@@ -198,6 +220,7 @@ describe('api-gateway', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => 'application/json' },
         json: async () => ({ result: {} }),
       });
       global.fetch = mockFetch;
@@ -235,16 +258,19 @@ describe('api-gateway', () => {
   });
 
   describe('Accept header', () => {
+    const jsonMcpResponse = {
+      ok: true,
+      status: 200,
+      headers: { get: () => 'application/json' },
+      json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
+    };
+
     it('sends Accept header on MCP initialize call', async () => {
       process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockFetch = jest.fn() as jest.Mock;
       mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
-      });
+      mockFetch.mockResolvedValueOnce(jsonMcpResponse);
       global.fetch = mockFetch;
 
       await httpGet(port, '/api/gtd/tasks');
@@ -258,11 +284,7 @@ describe('api-gateway', () => {
       const mockFetch = jest.fn() as jest.Mock;
       mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
-      });
+      mockFetch.mockResolvedValueOnce(jsonMcpResponse);
       global.fetch = mockFetch;
 
       await httpGet(port, '/api/gtd/tasks');
@@ -316,6 +338,33 @@ describe('api-gateway', () => {
       }) as jest.Mock;
 
       await expect(getAccessToken()).rejects.toThrow('Token exchange failed: 401');
+    });
+  });
+
+  describe('parseMcpResponse', () => {
+    const makeResp = (body: string, contentType: string) =>
+      ({
+        headers: { get: (h: string) => (h === 'content-type' ? contentType : null) },
+        text: async () => body,
+        json: async () => JSON.parse(body),
+      }) as unknown as Response;
+
+    it('parses plain JSON response', async () => {
+      const payload = { result: { content: [{ text: 'hi' }] } };
+      const resp = makeResp(JSON.stringify(payload), 'application/json');
+      await expect(parseMcpResponse(resp)).resolves.toEqual(payload);
+    });
+
+    it('parses SSE response by extracting the data line', async () => {
+      const payload = { result: { content: [{ text: 'hi' }] } };
+      const sse = `event: message\ndata: ${JSON.stringify(payload)}\n\n`;
+      const resp = makeResp(sse, 'text/event-stream');
+      await expect(parseMcpResponse(resp)).resolves.toEqual(payload);
+    });
+
+    it('throws when SSE has no data line', async () => {
+      const resp = makeResp('event: message\n\n', 'text/event-stream');
+      await expect(parseMcpResponse(resp)).rejects.toThrow('No data line found in SSE response');
     });
   });
 

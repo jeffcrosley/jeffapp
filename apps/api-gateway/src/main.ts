@@ -86,6 +86,20 @@ async function getMcpSessionId(): Promise<string> {
   return sessionId;
 }
 
+export async function parseMcpResponse(resp: Response): Promise<unknown> {
+  const ct = resp.headers.get('content-type') ?? '';
+  if (ct.includes('text/event-stream')) {
+    const text = await resp.text();
+    for (const line of text.split('\n')) {
+      if (line.startsWith('data:')) {
+        return JSON.parse(line.slice(5).trim());
+      }
+    }
+    throw new Error('No data line found in SSE response');
+  }
+  return resp.json();
+}
+
 export async function mcpCall(method: string, args: Record<string, unknown>): Promise<Response> {
   const doCall = async (sessionId: string): Promise<Response> => {
     const token = await getAccessToken();
@@ -147,7 +161,7 @@ app.get('/api/gtd/tasks', async (req, res) => {
       res.status(upstream.status).json({ error: 'Upstream MCP error' });
       return;
     }
-    const body = (await upstream.json()) as {
+    const body = (await parseMcpResponse(upstream)) as {
       result?: { content?: Array<{ text?: string }> };
     };
     const content = body?.result?.content?.[0]?.text;
