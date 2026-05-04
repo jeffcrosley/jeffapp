@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { EnvironmentService } from '../../services/environment.service';
 
 @Component({
 	selector: 'app-login',
@@ -9,62 +10,22 @@ import { Router, ActivatedRoute } from '@angular/router';
 	template: `
 		<main class="login-shell">
 			<h1>Sign in</h1>
-			@if (error()) {
-				<div class="error" role="alert">{{ error() }}</div>
-			}
+			@if (error()) { <div class="error" role="alert">{{ error() }}</div> }
 			<label>
 				<span>Password</span>
-				<input
-					type="password"
-					[(ngModel)]="password"
-					autocomplete="current-password"
-					required
-				/>
+				<input type="password" [(ngModel)]="password" autocomplete="current-password" required />
 			</label>
 			<button type="button" (click)="submit()" [disabled]="submitting()">
 				{{ submitting() ? 'Signing in…' : 'Sign in' }}
 			</button>
 		</main>
 	`,
-	styles: [`
-		.login-shell {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			min-height: 100vh;
-			gap: 1rem;
-			padding: 2rem;
-		}
-
-		label {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-			width: 100%;
-			max-width: 320px;
-		}
-
-		input {
-			width: 100%;
-		}
-
-		button {
-			min-height: 44px;
-			width: 100%;
-			max-width: 320px;
-		}
-
-		.error {
-			color: var(--color-error, #c0392b);
-			font-size: 0.9rem;
-		}
-	`],
 })
 export class LoginPage {
 	password = '';
 	error = signal('');
 	submitting = signal(false);
+	private env = inject(EnvironmentService);
 
 	constructor(private router: Router, private route: ActivatedRoute) {}
 
@@ -73,7 +34,7 @@ export class LoginPage {
 		this.submitting.set(true);
 		this.error.set('');
 		try {
-			const resp = await fetch('/auth/login', {
+			const resp = await fetch(`${this.env.getApiGatewayUrl()}/auth/login`, {
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
