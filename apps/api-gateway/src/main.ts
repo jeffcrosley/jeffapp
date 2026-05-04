@@ -69,9 +69,9 @@ export async function mcpCall(method: string, args: Record<string, unknown>): Pr
     },
     body: JSON.stringify({
       jsonrpc: '2.0',
+      id: 1,
       method: 'tools/call',
       params: { name: method, arguments: args },
-      id: 1,
     }),
   });
 }
@@ -83,19 +83,15 @@ app.get('/health', (req, res) => {
 
 // --- GTD Routes ---
 
-// GET /api/gtd/health — forward to mcp.jeffcrosley.com/health
+// GET /api/gtd/health — verify we can obtain an MCP access token
 app.get('/api/gtd/health', async (req, res) => {
   if (!getGtdToken()) {
     res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
     return;
   }
   try {
-    const accessToken = await getAccessToken();
-    const upstream = await fetch(`${MCP_BASE}/health`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const body = await upstream.json();
-    res.status(upstream.status).json({ reachable: upstream.ok, upstream: body });
+    await getAccessToken();
+    res.status(200).json({ reachable: true });
   } catch {
     res.status(503).json({ reachable: false, error: 'MCP server unreachable' });
   }
@@ -118,8 +114,12 @@ app.get('/api/gtd/tasks', async (req, res) => {
       result?: { content?: Array<{ text?: string }> };
     };
     const content = body?.result?.content?.[0]?.text;
-    const tasks = content ? JSON.parse(content) : [];
-    res.status(200).json({ tasks });
+    const parsed = content
+      ? (JSON.parse(content) as { tasks?: unknown[]; total?: number })
+      : null;
+    const tasks = parsed?.tasks ?? [];
+    const total = parsed?.total ?? 0;
+    res.status(200).json({ tasks, total });
   } catch {
     res.status(502).json({ error: 'Failed to query tasks' });
   }
