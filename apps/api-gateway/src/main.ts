@@ -8,6 +8,7 @@ app.use(cors({ origin: 'https://jeffcrosley.com' }));
 const port = process.env.PORT || 3333;
 
 const MCP_BASE = 'https://mcp.jeffcrosley.com';
+const MCP_ACCEPT = 'application/json, text/event-stream';
 
 export function getGtdToken(): string | null {
   return process.env['GTD_AGENT_TOKEN'] ?? null;
@@ -60,6 +61,7 @@ async function getMcpSessionId(): Promise<string> {
   const resp = await fetch(`${MCP_BASE}/mcp`, {
     method: 'POST',
     headers: {
+      Accept: MCP_ACCEPT,
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
@@ -90,6 +92,7 @@ export async function mcpCall(method: string, args: Record<string, unknown>): Pr
     return fetch(`${MCP_BASE}/mcp`, {
       method: 'POST',
       headers: {
+        Accept: MCP_ACCEPT,
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         'mcp-session-id': sessionId,
