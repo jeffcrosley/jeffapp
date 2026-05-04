@@ -294,6 +294,9 @@ export class DashboardComponent implements OnInit {
   protected briefs: Brief[] = [];
 
   async ngOnInit(): Promise<void> {
+    if (!this.env.getApiGatewayUrl()) {
+      await this.env.loadConfig();
+    }
     await Promise.all([this.loadHealth(), this.loadRecentTasks(), this.loadBriefs()]);
   }
 
@@ -301,7 +304,9 @@ export class DashboardComponent implements OnInit {
     try {
       const base = this.env.getApiGatewayUrl();
       const res = await fetch(`${base}/api/gtd/health`, { credentials: 'include' });
-      if (res.status === 503) {
+      if (res.status === 401) {
+        this.healthError = 'Session expired — please reload';
+      } else if (res.status === 503) {
         this.healthError = 'GTD token not configured';
       } else {
         const body = await res.json() as { reachable?: boolean };
@@ -319,7 +324,7 @@ export class DashboardComponent implements OnInit {
       const base = this.env.getApiGatewayUrl();
       const res = await fetch(`${base}/api/gtd/tasks/recent`, { credentials: 'include' });
       if (!res.ok) {
-        this.tasksError = res.status === 503 ? 'GTD token not configured' : 'Failed to load tasks';
+        this.tasksError = res.status === 401 ? 'Session expired — please reload' : res.status === 503 ? 'GTD token not configured' : 'Failed to load tasks';
       } else {
         const body = await res.json() as { tasks?: GtdTask[] };
         this.hotProjects = this.deriveHotProjects(body.tasks ?? []);
@@ -336,7 +341,7 @@ export class DashboardComponent implements OnInit {
       const base = this.env.getApiGatewayUrl();
       const res = await fetch(`${base}/api/gtd/briefs`, { credentials: 'include' });
       if (!res.ok) {
-        this.briefsError = 'Failed to load briefs';
+        this.briefsError = res.status === 401 ? 'Session expired — please reload' : 'Failed to load briefs';
       } else {
         const body = await res.json() as { briefs?: Brief[] };
         this.briefs = body.briefs ?? [];

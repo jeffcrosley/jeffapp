@@ -51,11 +51,13 @@ authRouter.post('/login', loginRateLimiter, async (req, res) => {
 });
 
 authRouter.get('/me', (req, res) => {
+  res.set('Cache-Control', 'no-store');
   if (!(req.session as any)?.user?.id) return res.status(401).json({ error: 'unauthorized' });
   res.status(200).json({ user: { id: (req.session as any).user.id } });
 });
 
 authRouter.post('/logout', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const token = (req.session as any)?.mcp?.accessToken;
   if (token) {
     fetch(`${MCP_BASE}/token/revoke`, {
