@@ -66,7 +66,7 @@ authRouter.post('/logout', async (req, res) => {
         client_secret: process.env.GTD_AGENT_TOKEN!,
         token,
       }).toString(),
-    }).catch(() => {});
+    }).catch(() => { /* best-effort revocation — ignore errors */ });
   }
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: 'session_error' });

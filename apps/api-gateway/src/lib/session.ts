@@ -51,7 +51,7 @@ export async function getSessionMcpToken(req: any): Promise<string> {
   });
 
   if (!resp.ok) {
-    req.session.destroy(() => {});
+    req.session.destroy(() => { /* fire-and-forget destroy on refresh failure */ });
     throw new Error('Session expired — refresh failed');
   }
 

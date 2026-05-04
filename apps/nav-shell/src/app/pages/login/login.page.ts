@@ -26,8 +26,8 @@ export class LoginPage {
 	error = signal('');
 	submitting = signal(false);
 	private env = inject(EnvironmentService);
-
-	constructor(private router: Router, private route: ActivatedRoute) {}
+	private router = inject(Router);
+	private route = inject(ActivatedRoute);
 
 	async submit() {
 		if (!this.password || this.submitting()) return;
