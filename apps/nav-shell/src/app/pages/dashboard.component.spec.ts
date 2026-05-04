@@ -147,13 +147,14 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
 
       const el: HTMLElement = fixture.nativeElement;
-      const briefCards = el.querySelectorAll('.brief-card');
-      expect(briefCards.length).toBe(1);
-      const taskCards = el.querySelectorAll('.task-card');
-      expect(taskCards.length).toBe(2);
-      expect(el.textContent).toContain('Write tests');
-      expect(el.textContent).toContain('Deploy gateway');
-      expect(el.textContent).toContain('Aia E2e Day1');
+      const wipCards = el.querySelectorAll('wip-card');
+      expect(wipCards.length).toBe(1);
+      expect(wipCards[0].getAttribute('slug')).toBe('aia-e2e-day1');
+      expect(wipCards[0].getAttribute('agent')).toBe('saturn');
+      const tasks = JSON.parse(wipCards[0].getAttribute('tasks') ?? '[]');
+      expect(tasks.length).toBe(2);
+      expect(tasks[0].title).toBe('Write tests');
+      expect(tasks[1].title).toBe('Deploy gateway');
     });
 
     it('should derive hot projects from recent tasks', async () => {
@@ -250,10 +251,12 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
 
       const el: HTMLElement = fixture.nativeElement;
-      expect(el.querySelector('.brief-card')).toBeTruthy();
-      expect(el.textContent).toContain('Dashboard Brief View');
-      expect(el.textContent).toContain('Mercury');
-      expect(el.textContent).toContain('Add briefs endpoint');
+      const wipCard = el.querySelector('wip-card');
+      expect(wipCard).toBeTruthy();
+      expect(wipCard?.getAttribute('slug')).toBe('dashboard-brief-view');
+      expect(wipCard?.getAttribute('agent')).toBe('mercury');
+      const tasks = JSON.parse(wipCard?.getAttribute('tasks') ?? '[]');
+      expect(tasks[0].title).toBe('Add briefs endpoint');
     });
 
     it('renders empty state when briefs array is empty', async () => {
@@ -267,7 +270,7 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
 
       const el: HTMLElement = fixture.nativeElement;
-      expect(el.querySelector('.brief-card')).toBeNull();
+      expect(el.querySelector('wip-card')).toBeNull();
       expect(el.textContent).toContain('No active work');
     });
 
@@ -291,7 +294,11 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
 
       const el: HTMLElement = fixture.nativeElement;
-      expect(el.textContent).toContain('Brief in queue');
+      const wipCard = el.querySelector('wip-card');
+      expect(wipCard).toBeTruthy();
+      expect(wipCard?.getAttribute('slug')).toBe('empty-brief');
+      const tasks = JSON.parse(wipCard?.getAttribute('tasks') ?? '[]');
+      expect(tasks.length).toBe(0);
     });
   });
 });

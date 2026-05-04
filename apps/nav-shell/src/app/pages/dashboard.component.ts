@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject } from '@angular/core';
+import '@jeffapp/ui-components-native';
 import { EnvironmentService } from '../services/environment.service';
 
 interface GtdTask {
@@ -33,6 +34,7 @@ interface ProjectGroup {
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <section class="dashboard-container">
       <div class="dashboard-header">
@@ -79,27 +81,11 @@ interface ProjectGroup {
         @if (!briefsLoading && !briefsError && briefs.length > 0) {
           <div class="brief-list">
             @for (brief of briefs; track brief.slug) {
-              <div class="brief-card">
-                <div class="brief-header">
-                  <span class="brief-title">{{ toTitleCase(brief.slug) }}</span>
-                  <span class="agent-badge">{{ toTitleCase(brief.agent) }}</span>
-                </div>
-                @if (brief.tasks.length === 0) {
-                  <p class="muted">Brief in queue — no tasks claimed yet</p>
-                }
-                @if (brief.tasks.length > 0) {
-                  <div class="task-list">
-                    @for (task of brief.tasks; track task.id) {
-                      <div class="task-card">
-                        <span class="task-title">{{ task.title }}</span>
-                        @if (task.project) {
-                          <span class="task-project">{{ task.project }}</span>
-                        }
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
+              <wip-card
+                [attr.slug]="brief.slug"
+                [attr.agent]="brief.agent"
+                [attr.tasks]="tasksJson(brief.tasks)"
+              ></wip-card>
             }
           </div>
         }
@@ -141,18 +127,18 @@ interface ProjectGroup {
           text-align: center;
           margin-bottom: 50px;
           padding-bottom: 30px;
-          border-bottom: 2px solid #ecf0f1;
+          border-bottom: 2px solid var(--color-border-primary);
 
           h2 {
             font-size: 2.5rem;
-            color: #2c3e50;
+            color: var(--color-text-primary);
             margin-bottom: 10px;
             font-weight: 700;
           }
 
           .subtitle {
             font-size: 1.1rem;
-            color: #7f8c8d;
+            color: var(--color-text-muted);
             margin: 0;
           }
         }
@@ -162,23 +148,23 @@ interface ProjectGroup {
 
           h3 {
             font-size: 1.5rem;
-            color: #2c3e50;
+            color: var(--color-text-primary);
             margin-bottom: 20px;
             font-weight: 600;
 
             .section-hint {
               font-size: 0.9rem;
-              color: #95a5a6;
+              color: var(--color-text-muted);
               font-weight: 400;
             }
           }
 
           .muted {
-            color: #95a5a6;
+            color: var(--color-text-muted);
             font-size: 0.95rem;
 
             &.error {
-              color: #e74c3c;
+              color: var(--color-ruby-600);
             }
           }
 
@@ -194,60 +180,29 @@ interface ProjectGroup {
               flex-shrink: 0;
 
               &.online {
-                background: #2ecc71;
+                background: var(--color-status-online);
                 box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
               }
 
               &.offline {
-                background: #e74c3c;
+                background: var(--color-ruby-600);
               }
 
               &.loading {
-                background: #f39c12;
+                background: var(--color-status-loading);
                 animation: pulse 1.2s ease-in-out infinite;
               }
             }
 
             .status-label {
               font-size: 1rem;
-              color: #2c3e50;
+              color: var(--color-text-primary);
               font-weight: 500;
             }
 
             .status-detail {
               font-size: 0.9rem;
-              color: #95a5a6;
-            }
-          }
-
-          .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-
-            .task-card {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 14px 18px;
-              background: #f8f9fa;
-              border-radius: 8px;
-              border-left: 3px solid #3498db;
-              gap: 12px;
-
-              .task-title {
-                font-size: 0.95rem;
-                color: #2c3e50;
-                font-weight: 500;
-                flex: 1;
-              }
-
-              .task-project {
-                font-size: 0.85rem;
-                color: #3498db;
-                font-weight: 500;
-                white-space: nowrap;
-              }
+              color: var(--color-text-muted);
             }
           }
 
@@ -255,41 +210,6 @@ interface ProjectGroup {
             display: flex;
             flex-direction: column;
             gap: 16px;
-
-            .brief-card {
-              padding: 18px 20px;
-              background: #f8f9fa;
-              border-radius: 10px;
-              border-left: 4px solid #9b59b6;
-
-              .brief-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 12px;
-
-                .brief-title {
-                  font-size: 1rem;
-                  color: #2c3e50;
-                  font-weight: 600;
-                }
-
-                .agent-badge {
-                  font-size: 0.8rem;
-                  color: #9b59b6;
-                  font-weight: 500;
-                  background: rgba(155, 89, 182, 0.1);
-                  padding: 2px 8px;
-                  border-radius: 4px;
-                }
-              }
-
-              .task-list {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-              }
-            }
           }
 
           .project-list {
@@ -299,9 +219,9 @@ interface ProjectGroup {
 
             .project-card {
               padding: 18px 20px;
-              background: #f8f9fa;
+              background: var(--color-bg-secondary);
               border-radius: 10px;
-              border-top: 3px solid #3498db;
+              border-top: 3px solid var(--color-primary);
               transition: transform 0.2s ease, box-shadow 0.2s ease;
 
               &:hover {
@@ -317,20 +237,20 @@ interface ProjectGroup {
 
                 .project-name {
                   font-size: 1rem;
-                  color: #2c3e50;
+                  color: var(--color-text-primary);
                   font-weight: 600;
                 }
 
                 .project-count {
                   font-size: 0.8rem;
-                  color: #7f8c8d;
+                  color: var(--color-text-secondary);
                   font-weight: 500;
                 }
               }
 
               .project-updated {
                 font-size: 0.8rem;
-                color: #95a5a6;
+                color: var(--color-text-muted);
               }
             }
           }
@@ -350,6 +270,10 @@ interface ProjectGroup {
             grid-template-columns: 1fr;
           }
         }
+
+        @media (max-width: 600px) {
+          padding: 20px 16px;
+        }
       }
     `,
   ],
@@ -363,7 +287,6 @@ export class DashboardComponent implements OnInit {
 
   protected tasksLoading = true;
   protected tasksError = '';
-  protected inFlightTasks: GtdTask[] = [];
   protected hotProjects: ProjectGroup[] = [];
 
   protected briefsLoading = true;
@@ -371,7 +294,7 @@ export class DashboardComponent implements OnInit {
   protected briefs: Brief[] = [];
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadHealth(), this.loadTasks(), this.loadBriefs()]);
+    await Promise.all([this.loadHealth(), this.loadRecentTasks(), this.loadBriefs()]);
   }
 
   private async loadHealth(): Promise<void> {
@@ -391,16 +314,15 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private async loadTasks(): Promise<void> {
+  private async loadRecentTasks(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
-      const res = await fetch(`${base}/api/gtd/tasks?status=in-progress`);
+      const res = await fetch(`${base}/api/gtd/tasks/recent`);
       if (!res.ok) {
         this.tasksError = res.status === 503 ? 'GTD token not configured' : 'Failed to load tasks';
       } else {
         const body = await res.json() as { tasks?: GtdTask[] };
-        this.inFlightTasks = body.tasks ?? [];
-        this.hotProjects = this.deriveHotProjects(this.inFlightTasks);
+        this.hotProjects = this.deriveHotProjects(body.tasks ?? []);
       }
     } catch {
       this.tasksError = 'Could not reach gateway';
@@ -428,6 +350,10 @@ export class DashboardComponent implements OnInit {
 
   protected toTitleCase(s: string): string {
     return s.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  protected tasksJson(tasks: BriefTask[]): string {
+    return JSON.stringify(tasks);
   }
 
   private deriveHotProjects(tasks: GtdTask[]): ProjectGroup[] {

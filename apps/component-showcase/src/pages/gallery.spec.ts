@@ -75,6 +75,13 @@ describe('Gallery Page', () => {
     expect(badges.length).toBeGreaterThan(0);
   });
 
+  it('should render wip-card custom elements', () => {
+    renderGallery(container);
+
+    const wipCards = container.querySelectorAll('wip-card');
+    expect(wipCards.length).toBeGreaterThan(0);
+  });
+
   it('should include integration notes section', () => {
     renderGallery(container);
 
