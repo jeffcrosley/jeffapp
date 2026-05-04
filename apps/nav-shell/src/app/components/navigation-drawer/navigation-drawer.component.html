@@ -60,4 +60,9 @@
 			}
 		</ul>
 	</nav>
+	@if (auth.isLoggedIn()) {
+		<footer class="drawer-footer">
+			<button class="drawer-logout" (click)="auth.logout()">Sign out</button>
+		</footer>
+	}
 </aside>

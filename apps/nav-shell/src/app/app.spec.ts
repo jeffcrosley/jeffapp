@@ -2,6 +2,7 @@ import {
 	ComponentFixture,
 	TestBed
 } from '@angular/core/testing'
+import { provideHttpClient } from '@angular/common/http'
 import { By } from '@angular/platform-browser'
 import {
 	Router,
@@ -45,6 +46,7 @@ describe('App', () => {
 		await TestBed.configureTestingModule({
 			imports: [App],
 			providers: [
+				provideHttpClient(),
 				provideRouter([
 					{
 						path: '',

@@ -2,17 +2,21 @@
 
 import cors from 'cors';
 import express from 'express';
+import { redisClient, buildSessionMiddleware, requireSession, getSessionMcpToken } from './lib/session';
+import { authRouter } from './lib/auth-routes';
 
 export const app = express();
-app.use(cors({ origin: 'https://jeffcrosley.com' }));
+
+app.set('trust proxy', 1);
+app.use(cors({ origin: 'https://jeffcrosley.com', credentials: true }));
+app.use(buildSessionMiddleware());
+app.use('/auth', express.json(), authRouter);
+app.use('/api/gtd', requireSession);
+
 const port = process.env.PORT || 3333;
 
-const MCP_BASE = 'https://mcp.jeffcrosley.com';
+const MCP_BASE = process.env.MCP_BASE_URL ?? 'https://mcp.jeffcrosley.com';
 const MCP_ACCEPT = 'application/json, text/event-stream';
-
-export function getGtdToken(): string | null {
-  return process.env['GTD_AGENT_TOKEN'] ?? null;
-}
 
 interface TokenCache {
   accessToken: string;
@@ -54,10 +58,9 @@ export async function getAccessToken(): Promise<string> {
   return _tokenCache.accessToken;
 }
 
-async function getMcpSessionId(): Promise<string> {
+async function getMcpSessionId(token: string): Promise<string> {
   if (_sessionCache) return _sessionCache.sessionId;
 
-  const token = await getAccessToken();
   const resp = await fetch(`${MCP_BASE}/mcp`, {
     method: 'POST',
     headers: {
@@ -100,9 +103,9 @@ export async function parseMcpResponse(resp: Response): Promise<unknown> {
   return resp.json();
 }
 
-async function mcpFsList(path: string): Promise<string[]> {
+async function mcpFsList(path: string, token: string): Promise<string[]> {
   try {
-    const resp = await mcpCall('fs_list_dir', { path });
+    const resp = await mcpCall('fs_list_dir', { path }, token);
     if (!resp.ok) return [];
     const body = (await parseMcpResponse(resp)) as {
       result?: { content?: Array<{ text?: string }> };
@@ -119,9 +122,8 @@ async function mcpFsList(path: string): Promise<string[]> {
   }
 }
 
-export async function mcpCall(method: string, args: Record<string, unknown>): Promise<Response> {
+export async function mcpCall(method: string, args: Record<string, unknown>, token: string): Promise<Response> {
   const doCall = async (sessionId: string): Promise<Response> => {
-    const token = await getAccessToken();
     return fetch(`${MCP_BASE}/mcp`, {
       method: 'POST',
       headers: {
@@ -139,12 +141,12 @@ export async function mcpCall(method: string, args: Record<string, unknown>): Pr
     });
   };
 
-  const sessionId = await getMcpSessionId();
+  const sessionId = await getMcpSessionId(token);
   const resp = await doCall(sessionId);
 
   if (resp.status === 404) {
     _sessionCache = null;
-    return doCall(await getMcpSessionId());
+    return doCall(await getMcpSessionId(token));
   }
 
   return resp;
@@ -155,12 +157,8 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api/gtd/health', async (req, res) => {
-  if (!getGtdToken()) {
-    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
-    return;
-  }
   try {
-    await getAccessToken();
+    await getSessionMcpToken(req);
     res.status(200).json({ reachable: true });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
@@ -169,13 +167,10 @@ app.get('/api/gtd/health', async (req, res) => {
 });
 
 app.get('/api/gtd/tasks', async (req, res) => {
-  if (!getGtdToken()) {
-    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
-    return;
-  }
   const status = (req.query['status'] as string) || 'in-progress';
   try {
-    const upstream = await mcpCall('gtd_query_tasks', { limit: 50, offset: 0, status });
+    const token = await getSessionMcpToken(req);
+    const upstream = await mcpCall('gtd_query_tasks', { limit: 50, offset: 0, status }, token);
     if (!upstream.ok) {
       res.status(upstream.status).json({ error: 'Upstream MCP error' });
       return;
@@ -197,12 +192,9 @@ app.get('/api/gtd/tasks', async (req, res) => {
 });
 
 app.get('/api/gtd/tasks/recent', async (req, res) => {
-  if (!getGtdToken()) {
-    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
-    return;
-  }
   try {
-    const upstream = await mcpCall('gtd_query_tasks', { limit: 100, offset: 0 });
+    const token = await getSessionMcpToken(req);
+    const upstream = await mcpCall('gtd_query_tasks', { limit: 100, offset: 0 }, token);
     if (!upstream.ok) {
       res.status(upstream.status).json({ error: 'Upstream MCP error' });
       return;
@@ -224,15 +216,12 @@ app.get('/api/gtd/tasks/recent', async (req, res) => {
 });
 
 app.get('/api/gtd/briefs', async (req, res) => {
-  if (!getGtdToken()) {
-    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
-    return;
-  }
   try {
     type Task = { id?: string; title?: string; project?: string; notes?: string; claimed_by?: string };
     let allTasks: Task[] = [];
+    const token = await getSessionMcpToken(req);
     try {
-      const tasksResp = await mcpCall('gtd_query_tasks', { status: 'in-progress', limit: 50, offset: 0 });
+      const tasksResp = await mcpCall('gtd_query_tasks', { status: 'in-progress', limit: 50, offset: 0 }, token);
       if (tasksResp.ok) {
         const tasksBody = (await parseMcpResponse(tasksResp)) as {
           result?: { content?: Array<{ text?: string }> };
@@ -247,7 +236,7 @@ app.get('/api/gtd/briefs', async (req, res) => {
       // tasks unavailable; briefs still render without task cross-reference
     }
 
-    const filenames = await mcpFsList('/home/jeffcrosley/Personal/GTD/briefs/');
+    const filenames = await mcpFsList('/home/jeffcrosley/Personal/GTD/briefs/', token);
     const mdFiles = filenames.filter(f => f.endsWith('.md') && !f.startsWith('archive/'));
 
     const briefs = mdFiles
@@ -271,8 +260,16 @@ app.get('/api/gtd/briefs', async (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`\n🚀 API Gateway is running on port ${port}`);
-    console.log(`Access the health check at http://localhost:${port}/health`);
-  });
+  redisClient
+    .connect()
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`\n🚀 API Gateway is running on port ${port}`);
+        console.log(`Access the health check at http://localhost:${port}/health`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to connect to Redis:', err);
+      process.exit(1);
+    });
 }

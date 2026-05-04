@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common'
 import {
 	Component,
 	HostListener,
+	inject,
 	input,
 	output
 } from '@angular/core'
 import { RouterModule } from '@angular/router'
 import { NavLink } from '../../app'
 import { FeatureStatusDirective } from '../../directives/feature-status.directive'
+import { AuthService } from '../../services/auth.service'
 
 const PORTFOLIO_TITLE = 'JeffApp'
 
@@ -40,6 +42,7 @@ export class NavigationDrawerComponent {
 	drawerCloseRequested = output<void>()
 
 	title = PORTFOLIO_TITLE
+	protected auth = inject(AuthService)
 
 	onClickHamburgerButton = (): void =>
 		this.drawerToggleRequested.emit()

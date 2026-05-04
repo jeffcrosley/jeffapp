@@ -1,4 +1,13 @@
 import http from 'http';
+
+// Mock session module — use no-op middleware and a mock getSessionMcpToken for GTD route tests
+jest.mock('./lib/session', () => ({
+  redisClient: { connect: jest.fn() },
+  buildSessionMiddleware: () => (_req: any, _res: any, next: any) => next(),
+  requireSession: (_req: any, _res: any, next: any) => next(),
+  getSessionMcpToken: jest.fn().mockResolvedValue('mock-session-token'),
+}));
+
 import { app, _resetTokenCache, getAccessToken, parseMcpResponse } from './main';
 
 type AddressInfo = { port: number };
@@ -68,12 +77,6 @@ function httpOptions(
   });
 }
 
-const TOKEN_RESPONSE = {
-  ok: true,
-  status: 200,
-  json: async () => ({ access_token: 'mock-access-token', expires_in: 3600 }),
-};
-
 const SESSION_ID = 'test-session-id';
 
 const INIT_RESPONSE = {
@@ -83,9 +86,9 @@ const INIT_RESPONSE = {
   json: async () => ({}),
 };
 
-function mockFetchWithTokenExchange(...upstreamResponses: object[]): jest.Mock {
+function mockFetchForMcpCall(...upstreamResponses: object[]): jest.Mock {
   const mock = jest.fn() as jest.Mock;
-  mock.mockResolvedValueOnce(TOKEN_RESPONSE);
+  mock.mockResolvedValueOnce(INIT_RESPONSE);
   for (const r of upstreamResponses) {
     mock.mockResolvedValueOnce(r);
   }
@@ -119,50 +122,15 @@ describe('api-gateway', () => {
   });
 
   describe('GET /api/gtd/health', () => {
-    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
-      const { status, body } = await httpGet(port, '/api/gtd/health');
-      expect(status).toBe(503);
-      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
-    });
-
-    it('returns reachable:true when token exchange succeeds', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      global.fetch = mockFetchWithTokenExchange();
-
+    it('returns reachable:true when session token is available', async () => {
       const { status, body } = await httpGet(port, '/api/gtd/health');
       expect(status).toBe(200);
       expect((body as { reachable: boolean }).reachable).toBe(true);
     });
-
-    it('makes no outbound call beyond the token exchange', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = mockFetchWithTokenExchange();
-      global.fetch = mockFetch;
-
-      await httpGet(port, '/api/gtd/health');
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('returns reachable:false when token exchange throws', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      global.fetch = jest.fn().mockRejectedValueOnce(new Error('Network error')) as jest.Mock;
-
-      const { status, body } = await httpGet(port, '/api/gtd/health');
-      expect(status).toBe(503);
-      expect((body as { reachable: boolean }).reachable).toBe(false);
-    });
   });
 
   describe('GET /api/gtd/tasks', () => {
-    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
-      const { status, body } = await httpGet(port, '/api/gtd/tasks');
-      expect(status).toBe(503);
-      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
-    });
-
     it('returns tasks array and total from MCP JSON response', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockTasks = [
         {
           id: '1',
@@ -172,10 +140,7 @@ describe('api-gateway', () => {
           updated_at: new Date().toISOString(),
         },
       ];
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
+      global.fetch = mockFetchForMcpCall({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
@@ -183,7 +148,6 @@ describe('api-gateway', () => {
           result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] },
         }),
       });
-      global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/tasks?status=in-progress');
       expect(status).toBe(200);
@@ -192,19 +156,14 @@ describe('api-gateway', () => {
     });
 
     it('returns tasks array and total from MCP SSE response', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockTasks = [{ id: '2', title: 'SSE task', status: 'in-progress' }];
       const ssePayload = `event: message\ndata: ${JSON.stringify({ result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] } })}\n\n`;
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
+      global.fetch = mockFetchForMcpCall({
         ok: true,
         status: 200,
         headers: { get: () => 'text/event-stream' },
         text: async () => ssePayload,
       });
-      global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/tasks?status=in-progress');
       expect(status).toBe(200);
@@ -213,17 +172,12 @@ describe('api-gateway', () => {
     });
 
     it('returns empty tasks and zero total when MCP content is missing', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
+      global.fetch = mockFetchForMcpCall({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
         json: async () => ({ result: {} }),
       });
-      global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/tasks');
       expect(status).toBe(200);
@@ -232,24 +186,18 @@ describe('api-gateway', () => {
     });
 
     it('returns 502 when MCP call throws', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockRejectedValueOnce(new Error('Connection refused'));
-      global.fetch = mockFetch;
+      global.fetch = jest.fn() as jest.Mock;
+      (global.fetch as jest.Mock).mockResolvedValueOnce(INIT_RESPONSE);
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Connection refused'));
 
       const { status } = await httpGet(port, '/api/gtd/tasks');
       expect(status).toBe(502);
     });
 
     it('includes error detail in 502 response', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockRejectedValueOnce(new Error('MCP initialize failed: 406'));
-      global.fetch = mockFetch;
+      global.fetch = jest.fn() as jest.Mock;
+      (global.fetch as jest.Mock).mockResolvedValueOnce(INIT_RESPONSE);
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('MCP initialize failed: 406'));
 
       const { status, body } = await httpGet(port, '/api/gtd/tasks');
       expect(status).toBe(502);
@@ -258,22 +206,12 @@ describe('api-gateway', () => {
   });
 
   describe('GET /api/gtd/tasks/recent', () => {
-    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
-      const { status, body } = await httpGet(port, '/api/gtd/tasks/recent');
-      expect(status).toBe(503);
-      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
-    });
-
     it('returns tasks across all statuses from MCP JSON response', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockTasks = [
         { id: '1', title: 'In-progress task', status: 'in-progress', updated_at: new Date().toISOString() },
         { id: '2', title: 'Done task', status: 'done', updated_at: new Date().toISOString() },
       ];
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
+      global.fetch = mockFetchForMcpCall({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
@@ -281,7 +219,6 @@ describe('api-gateway', () => {
           result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 2 }) }] },
         }),
       });
-      global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/tasks/recent');
       expect(status).toBe(200);
@@ -290,11 +227,7 @@ describe('api-gateway', () => {
     });
 
     it('calls MCP with limit 100 and no status filter', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
+      const mockFetch = mockFetchForMcpCall({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
@@ -304,7 +237,8 @@ describe('api-gateway', () => {
 
       await httpGet(port, '/api/gtd/tasks/recent');
 
-      const toolCall = mockFetch.mock.calls[2];
+      // Call index 1 is the MCP tools/call (after INIT_RESPONSE at index 0)
+      const toolCall = mockFetch.mock.calls[1];
       const body = JSON.parse(toolCall[1].body as string) as { params: { arguments: Record<string, unknown> } };
       expect(body.params.arguments['limit']).toBe(100);
       expect(body.params.arguments['status']).toBeUndefined();
@@ -312,21 +246,13 @@ describe('api-gateway', () => {
   });
 
   describe('GET /api/gtd/briefs', () => {
-    it('returns 503 when GTD_AGENT_TOKEN is not set', async () => {
-      const { status, body } = await httpGet(port, '/api/gtd/briefs');
-      expect(status).toBe(503);
-      expect((body as { error: string }).error).toMatch(/GTD_AGENT_TOKEN/);
-    });
-
     it('returns correct brief shape with tasks cross-referenced', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockTasks = [
         { id: 't1', title: 'Task 1', project: 'jeffapp', notes: '2026-05-04-saturn-aia-e2e-day1.md', claimed_by: 'saturn' },
       ];
       const mockFilenames = ['2026-05-04-saturn-aia-e2e-day1.md', '2026-05-04-mercury-dashboard.md'];
 
       const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -359,9 +285,7 @@ describe('api-gateway', () => {
     });
 
     it('returns { briefs: [] } when fs_list_dir returns no .md files', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -385,9 +309,7 @@ describe('api-gateway', () => {
     });
 
     it('returns { briefs: [] } with 200 when fs_list_dir call fails', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
       const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -413,30 +335,22 @@ describe('api-gateway', () => {
     };
 
     it('sends Accept header on MCP initialize call', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce(jsonMcpResponse);
+      const mockFetch = mockFetchForMcpCall(jsonMcpResponse);
       global.fetch = mockFetch;
 
       await httpGet(port, '/api/gtd/tasks');
 
-      const initCall = mockFetch.mock.calls[1];
+      const initCall = mockFetch.mock.calls[0];
       expect(initCall[1].headers['Accept']).toBe('application/json, text/event-stream');
     });
 
     it('sends Accept header on MCP tools/call', async () => {
-      process.env['GTD_AGENT_TOKEN'] = 'test-token';
-      const mockFetch = jest.fn() as jest.Mock;
-      mockFetch.mockResolvedValueOnce(TOKEN_RESPONSE);
-      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce(jsonMcpResponse);
+      const mockFetch = mockFetchForMcpCall(jsonMcpResponse);
       global.fetch = mockFetch;
 
       await httpGet(port, '/api/gtd/tasks');
 
-      const toolCall = mockFetch.mock.calls[2];
+      const toolCall = mockFetch.mock.calls[1];
       expect(toolCall[1].headers['Accept']).toBe('application/json, text/event-stream');
     });
   });
