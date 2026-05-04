@@ -100,6 +100,25 @@ export async function parseMcpResponse(resp: Response): Promise<unknown> {
   return resp.json();
 }
 
+async function mcpFsList(path: string): Promise<string[]> {
+  try {
+    const resp = await mcpCall('fs_list_dir', { path });
+    if (!resp.ok) return [];
+    const body = (await parseMcpResponse(resp)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    const text = body?.result?.content?.[0]?.text;
+    if (!text) return [];
+    const data: unknown = JSON.parse(text);
+    if (Array.isArray(data)) {
+      return data.filter((f): f is string => typeof f === 'string');
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export async function mcpCall(method: string, args: Record<string, unknown>): Promise<Response> {
   const doCall = async (sessionId: string): Promise<Response> => {
     const token = await getAccessToken();
@@ -174,6 +193,53 @@ app.get('/api/gtd/tasks', async (req, res) => {
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     res.status(502).json({ error: 'Failed to query tasks', detail });
+  }
+});
+
+app.get('/api/gtd/briefs', async (req, res) => {
+  if (!getGtdToken()) {
+    res.status(503).json({ error: 'GTD_AGENT_TOKEN not configured' });
+    return;
+  }
+  try {
+    type Task = { id?: string; title?: string; project?: string; notes?: string; claimed_by?: string };
+    let allTasks: Task[] = [];
+    try {
+      const tasksResp = await mcpCall('gtd_query_tasks', { status: 'in-progress', limit: 50, offset: 0 });
+      if (tasksResp.ok) {
+        const tasksBody = (await parseMcpResponse(tasksResp)) as {
+          result?: { content?: Array<{ text?: string }> };
+        };
+        const tasksText = tasksBody?.result?.content?.[0]?.text;
+        if (tasksText) {
+          const tasksData = JSON.parse(tasksText) as { tasks?: Task[] };
+          allTasks = tasksData?.tasks ?? [];
+        }
+      }
+    } catch {
+      // tasks unavailable; briefs still render without task cross-reference
+    }
+
+    const filenames = await mcpFsList('/home/jeffcrosley/Personal/GTD/briefs/');
+    const mdFiles = filenames.filter(f => f.endsWith('.md') && !f.startsWith('archive/'));
+
+    const briefs = mdFiles
+      .map(filename => {
+        const base = filename.replace(/\.md$/, '');
+        const match = base.match(/^\d{4}-\d{2}-\d{2}-([^-]+)-(.+)$/);
+        if (!match) return null;
+        const [, agent, slug] = match;
+        const tasks = allTasks
+          .filter(t => t.notes?.includes(filename) || t.claimed_by === agent)
+          .map(t => ({ id: t.id ?? '', title: t.title ?? '', project: t.project }));
+        return { slug, filename, agent, tasks };
+      })
+      .filter((b): b is NonNullable<typeof b> => b !== null);
+
+    res.status(200).json({ briefs });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to query briefs', detail });
   }
 });
 

@@ -40,6 +40,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ tasks: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ briefs: [] }),
         });
 
       fixture.detectChanges();
@@ -61,7 +66,7 @@ describe('DashboardComponent', () => {
       const el: HTMLElement = fixture.nativeElement;
       const headings = Array.from(el.querySelectorAll('h3')).map(h => h.textContent?.trim());
       expect(headings.some(h => h?.includes('System Health'))).toBe(true);
-      expect(headings.some(h => h?.includes('In-Flight Tasks'))).toBe(true);
+      expect(headings.some(h => h?.includes('Work In Progress'))).toBe(true);
       expect(headings.some(h => h?.includes('Hot Projects'))).toBe(true);
     });
 
@@ -71,9 +76,9 @@ describe('DashboardComponent', () => {
       expect(indicator).toBeTruthy();
     });
 
-    it('should show empty state for tasks when none returned', () => {
+    it('should show empty state for briefs when none returned', () => {
       const el: HTMLElement = fixture.nativeElement;
-      expect(el.textContent).toContain('No in-progress tasks');
+      expect(el.textContent).toContain('No active work');
     });
   });
 
@@ -89,6 +94,11 @@ describe('DashboardComponent', () => {
           ok: false,
           status: 503,
           json: async () => ({ error: 'GTD_AGENT_TOKEN not configured' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ briefs: [] }),
         });
 
       fixture.detectChanges();
@@ -102,10 +112,17 @@ describe('DashboardComponent', () => {
   });
 
   describe('tasks rendering', () => {
-    it('should render in-flight task cards', async () => {
-      const tasks = [
-        { id: '1', title: 'Write tests', project: 'jeffapp', status: 'in-progress', updated_at: new Date().toISOString() },
-        { id: '2', title: 'Deploy gateway', project: 'jeffapp', status: 'in-progress', updated_at: new Date().toISOString() },
+    it('should render brief cards with nested tasks', async () => {
+      const briefs = [
+        {
+          slug: 'aia-e2e-day1',
+          filename: '2026-05-04-saturn-aia-e2e-day1.md',
+          agent: 'saturn',
+          tasks: [
+            { id: 't1', title: 'Write tests', project: 'jeffapp' },
+            { id: 't2', title: 'Deploy gateway', project: 'jeffapp' },
+          ],
+        },
       ];
 
       (global.fetch as jest.Mock)
@@ -117,7 +134,12 @@ describe('DashboardComponent', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          json: async () => ({ tasks }),
+          json: async () => ({ tasks: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ briefs }),
         });
 
       fixture.detectChanges();
@@ -125,10 +147,13 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
 
       const el: HTMLElement = fixture.nativeElement;
-      const cards = el.querySelectorAll('.task-card');
-      expect(cards.length).toBe(2);
+      const briefCards = el.querySelectorAll('.brief-card');
+      expect(briefCards.length).toBe(1);
+      const taskCards = el.querySelectorAll('.task-card');
+      expect(taskCards.length).toBe(2);
       expect(el.textContent).toContain('Write tests');
       expect(el.textContent).toContain('Deploy gateway');
+      expect(el.textContent).toContain('Aia E2e Day1');
     });
 
     it('should derive hot projects from recent tasks', async () => {
@@ -151,6 +176,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ tasks }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ briefs: [] }),
         });
 
       fixture.detectChanges();
@@ -182,6 +212,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ tasks }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ briefs: [] }),
         });
 
       fixture.detectChanges();
@@ -191,6 +226,72 @@ describe('DashboardComponent', () => {
       const el: HTMLElement = fixture.nativeElement;
       const projectCards = el.querySelectorAll('.project-card');
       expect(projectCards.length).toBe(0);
+    });
+  });
+
+  describe('Work In Progress section', () => {
+    it('renders brief cards when briefs data is present', async () => {
+      const briefs = [
+        {
+          slug: 'dashboard-brief-view',
+          filename: '2026-05-04-mercury-dashboard-brief-view.md',
+          agent: 'mercury',
+          tasks: [{ id: 't1', title: 'Add briefs endpoint', project: 'jeffapp' }],
+        },
+      ];
+
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('.brief-card')).toBeTruthy();
+      expect(el.textContent).toContain('Dashboard Brief View');
+      expect(el.textContent).toContain('Mercury');
+      expect(el.textContent).toContain('Add briefs endpoint');
+    });
+
+    it('renders empty state when briefs array is empty', async () => {
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs: [] }) });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('.brief-card')).toBeNull();
+      expect(el.textContent).toContain('No active work');
+    });
+
+    it('shows queue message when brief has no tasks claimed', async () => {
+      const briefs = [
+        {
+          slug: 'empty-brief',
+          filename: '2026-05-04-saturn-empty-brief.md',
+          agent: 'saturn',
+          tasks: [],
+        },
+      ];
+
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.textContent).toContain('Brief in queue');
     });
   });
 });
