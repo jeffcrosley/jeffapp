@@ -14,13 +14,13 @@ export class AuthService {
 	async checkAuth(): Promise<boolean> {
 		try {
 			const base = this.env.getApiGatewayUrl();
-			if (!base) {
-				this.isLoggedIn.set(false);
-				return false;
-			}
-			await firstValueFrom(this.http.get(`${base}/auth/me`, { withCredentials: true }));
-			this.isLoggedIn.set(true);
-			return true;
+			if (!base) { this.isLoggedIn.set(false); return false; }
+			const resp = await fetch(`${base}/auth/me`, {
+				credentials: 'include',
+				cache: 'no-store',
+			});
+			this.isLoggedIn.set(resp.ok);
+			return resp.ok;
 		} catch {
 			this.isLoggedIn.set(false);
 			return false;
