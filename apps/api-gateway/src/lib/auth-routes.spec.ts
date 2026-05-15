@@ -1,5 +1,6 @@
 import http from 'http';
 import session from 'express-session';
+import type { Request, Response, NextFunction } from 'express';
 
 // Mock session module before importing app
 const memoryStore = new session.MemoryStore();
@@ -14,13 +15,13 @@ const sessionMiddleware = session({
 jest.mock('./session', () => ({
   redisClient: { connect: jest.fn() },
   buildSessionMiddleware: () => sessionMiddleware,
-  requireSession: (req: any, res: any, next: any) => {
+  requireSession: (req: Request, res: Response, next: NextFunction) => {
     if (!req.session?.user?.id || !req.session?.mcp?.accessToken) {
       return res.status(401).json({ error: 'unauthorized' });
     }
     next();
   },
-  getSessionMcpToken: jest.fn().mockImplementation(async (req: any) => {
+  getSessionMcpToken: jest.fn().mockImplementation(async (req: Request) => {
     const mcp = req.session?.mcp;
     if (!mcp?.accessToken) throw new Error('No MCP token in session');
     return mcp.accessToken;

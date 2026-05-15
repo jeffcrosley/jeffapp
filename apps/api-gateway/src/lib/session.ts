@@ -1,15 +1,28 @@
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
+import { Request, Response, NextFunction } from 'express';
 
-export const redisClient = createClient({ url: process.env.SESSION_REDIS_URL! });
+declare module 'express-session' {
+  interface SessionData {
+    user?: { id: string; loginAt: number };
+    mcp?: {
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: number;
+      issuedAt: number;
+    };
+  }
+}
+
+export const redisClient = createClient({ url: process.env['SESSION_REDIS_URL'] as string });
 
 export function buildSessionMiddleware() {
   if (!process.env.SESSION_SECRET) throw new Error('SESSION_SECRET is required');
   if (!process.env.SESSION_REDIS_URL) throw new Error('SESSION_REDIS_URL is required');
 
   return session({
-    store: new RedisStore({ client: redisClient as any, prefix: 'jeffapp:sess:' }),
+    store: new RedisStore({ client: redisClient as never, prefix: 'jeffapp:sess:' }),
     secret: process.env.SESSION_SECRET,
     name: 'jeffapp.sid',
     resave: false,
@@ -25,15 +38,15 @@ export function buildSessionMiddleware() {
   });
 }
 
-export function requireSession(req: any, res: any, next: any) {
-  if (!req.session?.user?.id || !req.session?.mcp?.accessToken) {
+export function requireSession(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.user?.id || !req.session.mcp?.accessToken) {
     return res.status(401).json({ error: 'unauthorized' });
   }
   next();
 }
 
-export async function getSessionMcpToken(req: any): Promise<string> {
-  const mcp = req.session?.mcp;
+export async function getSessionMcpToken(req: Request): Promise<string> {
+  const mcp = req.session.mcp;
   if (!mcp) throw new Error('No MCP token in session');
 
   const now = Date.now() / 1000;
@@ -46,7 +59,7 @@ export async function getSessionMcpToken(req: any): Promise<string> {
       grant_type: 'refresh_token',
       refresh_token: mcp.refreshToken,
       client_id: 'jeffapp',
-      client_secret: process.env.GTD_AGENT_TOKEN!,
+      client_secret: process.env['GTD_AGENT_TOKEN'] as string,
     }).toString(),
   });
 

@@ -103,6 +103,48 @@ export async function parseMcpResponse(resp: Response): Promise<unknown> {
   return resp.json();
 }
 
+async function mcpReadFile(path: string, token: string): Promise<string | null> {
+  try {
+    const resp = await mcpCall('fs_read_file', { path }, token);
+    if (!resp.ok) return null;
+    const body = (await parseMcpResponse(resp)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    return body?.result?.content?.[0]?.text ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function parseTaskIdsFromContent(content: string): string[] {
+  const match = content.match(/[-*]\s*Task IDs?:\s*([^\n]+)/);
+  if (!match) return [];
+  return match[1]
+    .split(',')
+    .map(id => id.trim())
+    .filter(id => /^task_\d{8}_\d{3,}$/.test(id));
+}
+
+async function mcpGetTask(
+  id: string,
+  token: string
+): Promise<{ id: string; title: string; status: string } | null> {
+  try {
+    const resp = await mcpCall('gtd_get_task', { id }, token);
+    if (!resp.ok) return null;
+    const body = (await parseMcpResponse(resp)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    const text = body?.result?.content?.[0]?.text;
+    if (!text) return null;
+    const task = JSON.parse(text) as { id?: string; title?: string; status?: string };
+    if (!task.id) return null;
+    return { id: task.id, title: task.title ?? '', status: task.status ?? '' };
+  } catch {
+    return null;
+  }
+}
+
 async function mcpFsList(path: string, token: string): Promise<string[]> {
   try {
     const resp = await mcpCall('fs_list_dir', { path }, token);
@@ -217,42 +259,34 @@ app.get('/api/gtd/tasks/recent', async (req, res) => {
 
 app.get('/api/gtd/briefs', async (req, res) => {
   try {
-    type Task = { id?: string; title?: string; project?: string; notes?: string; claimed_by?: string };
-    let allTasks: Task[] = [];
     const token = await getSessionMcpToken(req);
-    try {
-      const tasksResp = await mcpCall('gtd_query_tasks', { status: 'in-progress', limit: 50, offset: 0 }, token);
-      if (tasksResp.ok) {
-        const tasksBody = (await parseMcpResponse(tasksResp)) as {
-          result?: { content?: Array<{ text?: string }> };
-        };
-        const tasksText = tasksBody?.result?.content?.[0]?.text;
-        if (tasksText) {
-          const tasksData = JSON.parse(tasksText) as { tasks?: Task[] };
-          allTasks = tasksData?.tasks ?? [];
-        }
-      }
-    } catch {
-      // tasks unavailable; briefs still render without task cross-reference
-    }
-
     const filenames = await mcpFsList('/home/jeffcrosley/Personal/GTD/briefs/', token);
     const mdFiles = filenames.filter(f => f.endsWith('.md') && !f.startsWith('archive/'));
 
-    const briefs = mdFiles
-      .map(filename => {
+    const briefs = await Promise.all(
+      mdFiles.map(async filename => {
         const base = filename.replace(/\.md$/, '');
         const match = base.match(/^\d{4}-\d{2}-\d{2}-([^-]+)-(.+)$/);
         if (!match) return null;
         const [, agent, slug] = match;
-        const tasks = allTasks
-          .filter(t => t.notes?.includes(filename) || t.claimed_by === agent)
-          .map(t => ({ id: t.id ?? '', title: t.title ?? '', project: t.project }));
+
+        const content = await mcpReadFile(
+          `/home/jeffcrosley/Personal/GTD/briefs/${filename}`,
+          token
+        );
+        const taskIds = content ? parseTaskIdsFromContent(content) : [];
+
+        const tasks = (
+          await Promise.all(taskIds.map(id => mcpGetTask(id, token)))
+        ).filter((t): t is NonNullable<typeof t> => t !== null);
+
         return { slug, filename, agent, tasks };
       })
-      .filter((b): b is NonNullable<typeof b> => b !== null);
+    );
 
-    res.status(200).json({ briefs });
+    res.status(200).json({
+      briefs: briefs.filter((b): b is NonNullable<typeof b> => b !== null),
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     res.status(502).json({ error: 'Failed to query briefs', detail });

@@ -14,6 +14,7 @@ interface GtdTask {
 interface BriefTask {
   id: string;
   title: string;
+  status?: string;
   project?: string;
 }
 
@@ -97,10 +98,13 @@ interface ProjectGroup {
         @if (tasksLoading) {
           <p class="muted">Loading projects…</p>
         }
-        @if (!tasksLoading && hotProjects.length === 0) {
+        @if (!tasksLoading && tasksError) {
+          <p class="muted error">{{ tasksError }}</p>
+        }
+        @if (!tasksLoading && !tasksError && hotProjects.length === 0) {
           <p class="muted">No recently active projects.</p>
         }
-        @if (!tasksLoading && hotProjects.length > 0) {
+        @if (!tasksLoading && !tasksError && hotProjects.length > 0) {
           <div class="project-list">
             @for (project of hotProjects; track project.name) {
               <div class="project-card">
