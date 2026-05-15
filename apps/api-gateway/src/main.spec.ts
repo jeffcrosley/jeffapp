@@ -1,10 +1,11 @@
 import http from 'http';
+import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
 
 // Mock session module — use no-op middleware and a mock getSessionMcpToken for GTD route tests
 jest.mock('./lib/session', () => ({
   redisClient: { connect: jest.fn() },
-  buildSessionMiddleware: () => (_req: any, _res: any, next: any) => next(),
-  requireSession: (_req: any, _res: any, next: any) => next(),
+  buildSessionMiddleware: () => (_req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => next(),
+  requireSession: (_req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => next(),
   getSessionMcpToken: jest.fn().mockResolvedValue('mock-session-token'),
 }));
 
@@ -246,30 +247,33 @@ describe('api-gateway', () => {
   });
 
   describe('GET /api/gtd/briefs', () => {
-    it('returns correct brief shape with tasks cross-referenced', async () => {
-      const mockTasks = [
-        { id: 't1', title: 'Task 1', project: 'jeffapp', notes: '2026-05-04-saturn-aia-e2e-day1.md', claimed_by: 'saturn' },
-      ];
-      const mockFilenames = ['2026-05-04-saturn-aia-e2e-day1.md', '2026-05-04-mercury-dashboard.md'];
+    const jsonResp = (data: unknown) => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'application/json' },
+      json: async () => data,
+    });
 
+    it('parses task IDs from brief content and hydrates tasks', async () => {
       const mockFetch = jest.fn() as jest.Mock;
+      // call 1: getMcpSessionId
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: { get: () => 'application/json' },
-        json: async () => ({
-          result: { content: [{ text: JSON.stringify({ tasks: mockTasks, total: 1 }) }] },
-        }),
-      });
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: { get: () => 'application/json' },
-        json: async () => ({
-          result: { content: [{ text: mockFilenames.map((f: string) => `FILE  ${f}`).join('\n') }] },
-        }),
-      });
+      // call 2: fs_list_dir
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: 'FILE  2026-05-04-saturn-aia-e2e-day1.md\nFILE  2026-05-04-mercury-dashboard.md' }] },
+      }));
+      // call 3: fs_read_file for brief 1 (has a task ID)
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: '## Context\n- Task IDs: task_20260504_001\n' }] },
+      }));
+      // call 4: fs_read_file for brief 2 (no task IDs)
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: '## Context\n- No tasks referenced\n' }] },
+      }));
+      // call 5: gtd_get_task for task_20260504_001
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: JSON.stringify({ id: 'task_20260504_001', title: 'Task 1', status: 'in-progress' }) }] },
+      }));
       global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/briefs');
@@ -279,28 +283,39 @@ describe('api-gateway', () => {
       expect(b.briefs[0].slug).toBe('aia-e2e-day1');
       expect(b.briefs[0].agent).toBe('saturn');
       expect(b.briefs[0].tasks).toHaveLength(1);
+      expect((b.briefs[0].tasks[0] as { id: string; title: string; status: string }).id).toBe('task_20260504_001');
+      expect((b.briefs[0].tasks[0] as { id: string; title: string; status: string }).title).toBe('Task 1');
+      expect((b.briefs[0].tasks[0] as { id: string; title: string; status: string }).status).toBe('in-progress');
       expect(b.briefs[1].slug).toBe('dashboard');
       expect(b.briefs[1].agent).toBe('mercury');
       expect(b.briefs[1].tasks).toHaveLength(0);
     });
 
+    it('omits tasks whose IDs are not found in the task store', async () => {
+      const mockFetch = jest.fn() as jest.Mock;
+      mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: 'FILE  2026-05-04-saturn-missing-task.md' }] },
+      }));
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: '## Context\n- Task IDs: task_20260504_999\n' }] },
+      }));
+      // gtd_get_task returns not-ok for missing task
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+      global.fetch = mockFetch;
+
+      const { status, body } = await httpGet(port, '/api/gtd/briefs');
+      expect(status).toBe(200);
+      const b = body as { briefs: Array<{ tasks: unknown[] }> };
+      expect(b.briefs[0].tasks).toHaveLength(0);
+    });
+
     it('returns { briefs: [] } when fs_list_dir returns no .md files', async () => {
       const mockFetch = jest.fn() as jest.Mock;
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: { get: () => 'application/json' },
-        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
-      });
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: { get: () => 'application/json' },
-        json: async () => ({
-          result: { content: [{ text: 'DIR  archive' }] },
-        }),
-      });
+      mockFetch.mockResolvedValueOnce(jsonResp({
+        result: { content: [{ text: 'DIR  archive' }] },
+      }));
       global.fetch = mockFetch;
 
       const { status, body } = await httpGet(port, '/api/gtd/briefs');
@@ -311,12 +326,6 @@ describe('api-gateway', () => {
     it('returns { briefs: [] } with 200 when fs_list_dir call fails', async () => {
       const mockFetch = jest.fn() as jest.Mock;
       mockFetch.mockResolvedValueOnce(INIT_RESPONSE);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: { get: () => 'application/json' },
-        json: async () => ({ result: { content: [{ text: JSON.stringify({ tasks: [], total: 0 }) }] } }),
-      });
       mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
       global.fetch = mockFetch;
 

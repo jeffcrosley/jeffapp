@@ -18,7 +18,7 @@ authRouter.post('/login', loginRateLimiter, async (req, res) => {
     body: new URLSearchParams({
       grant_type: 'password',
       client_id: 'jeffapp',
-      client_secret: process.env.GTD_AGENT_TOKEN!,
+      client_secret: process.env['GTD_AGENT_TOKEN'] as string,
       username,
       password,
     }).toString(),
@@ -34,16 +34,16 @@ authRouter.post('/login', loginRateLimiter, async (req, res) => {
   };
   const now = Date.now() / 1000;
 
-  (req.session as any).regenerate((err: Error) => {
+  req.session.regenerate((err: unknown) => {
     if (err) return res.status(500).json({ error: 'session_error' });
-    (req.session as any).user = { id: 'jeff', loginAt: now };
-    (req.session as any).mcp = {
+    req.session.user = { id: 'jeff', loginAt: now };
+    req.session.mcp = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token ?? '',
       expiresAt: now + data.expires_in,
       issuedAt: now,
     };
-    (req.session as any).save((saveErr: Error) => {
+    req.session.save((saveErr: unknown) => {
       if (saveErr) return res.status(500).json({ error: 'session_error' });
       res.status(200).json({ user: { id: 'jeff' } });
     });
@@ -52,20 +52,21 @@ authRouter.post('/login', loginRateLimiter, async (req, res) => {
 
 authRouter.get('/me', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  if (!(req.session as any)?.user?.id) return res.status(401).json({ error: 'unauthorized' });
-  res.status(200).json({ user: { id: (req.session as any).user.id } });
+  const userId = req.session.user?.id;
+  if (!userId) return res.status(401).json({ error: 'unauthorized' });
+  res.status(200).json({ user: { id: userId } });
 });
 
 authRouter.post('/logout', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const token = (req.session as any)?.mcp?.accessToken;
+  const token = req.session.mcp?.accessToken;
   if (token) {
     fetch(`${MCP_BASE}/token/revoke`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         client_id: 'jeffapp',
-        client_secret: process.env.GTD_AGENT_TOKEN!,
+        client_secret: process.env['GTD_AGENT_TOKEN'] as string,
         token,
       }).toString(),
     }).catch(() => { /* best-effort revocation — ignore errors */ });
