@@ -446,11 +446,11 @@ describe('api-gateway', () => {
       expect(headers['access-control-allow-origin']).toBe('https://jeffcrosley.com');
     });
 
-    it('returns the configured origin header regardless of request origin', async () => {
+    it('does not return CORS header for non-allowed origins', async () => {
       const { headers } = await httpGet(port, '/health', {
         headers: { Origin: 'https://evil.com' },
       });
-      expect(headers['access-control-allow-origin']).toBe('https://jeffcrosley.com');
+      expect(headers['access-control-allow-origin']).toBeUndefined();
     });
 
     it('handles preflight OPTIONS request', async () => {

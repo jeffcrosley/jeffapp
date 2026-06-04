@@ -6,11 +6,9 @@
  * @see .github/adr/001-runtime-configuration.md
  */
 export interface NavShellConfig {
-	/** URL for the component showcase app (iframe source) */
 	showcaseUrl: string
-
-	/** URL for the API gateway backend */
 	apiGatewayUrl: string
+	authentikIssuer: string
 }
 
 /**
@@ -19,7 +17,8 @@ export interface NavShellConfig {
  */
 export const DEFAULT_DEV_CONFIG: NavShellConfig = {
 	showcaseUrl: 'http://localhost:4201',
-	apiGatewayUrl: 'http://localhost:3333'
+	apiGatewayUrl: 'http://localhost:3333',
+	authentikIssuer: 'http://104.131.79.117:9000/application/o/jeffapp/'
 }
 
 /**
