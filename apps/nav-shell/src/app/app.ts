@@ -43,6 +43,11 @@ export class App {
 			status: 'stable'
 		},
 		{
+			label: 'Traffic Light',
+			route: '/traffic-light',
+			status: 'wip'
+		},
+		{
 			label: 'About',
 			route: '/about',
 			status: 'wip'

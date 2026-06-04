@@ -4,13 +4,18 @@ import cors from 'cors';
 import express from 'express';
 import { redisClient, buildSessionMiddleware, requireSession, getSessionMcpToken } from './lib/session';
 import { authRouter } from './lib/auth-routes';
+import { statusRouter } from './lib/status-routes';
 
 export const app = express();
 
 app.set('trust proxy', 1);
-app.use(cors({ origin: 'https://jeffcrosley.com', credentials: true }));
+app.use(cors({
+  origin: ['https://jeffcrosley.com', 'http://localhost:4200'],
+  credentials: true,
+}));
 app.use(buildSessionMiddleware());
 app.use('/auth', express.json(), authRouter);
+app.use('/api/status', express.json(), statusRouter);
 app.use('/api/gtd', requireSession);
 
 const port = process.env.PORT || 3333;

@@ -1,0 +1,72 @@
+<section class="traffic-light-shell">
+  <header class="tl-header">
+    <h1>How are you?</h1>
+    <button class="logout-btn" (click)="logout()">Sign out</button>
+  </header>
+
+  @if (error()) {
+    <div class="tl-error" role="alert">{{ error() }}</div>
+  }
+
+  <div class="tl-buttons">
+    @for (c of colors; track c.key) {
+      <button
+        class="tl-btn {{ c.cssClass }}"
+        [disabled]="sending()"
+        (click)="pressColor(c.key)"
+      >
+        <span class="tl-emoji">{{ c.emoji }}</span>
+        <span class="tl-label">{{ c.label }}</span>
+      </button>
+    }
+  </div>
+
+  @if (myStatus()) {
+    <div class="tl-current">
+      <h2>Your status</h2>
+      <div class="status-card">
+        <span class="status-emoji">{{ colorEmoji(myStatus()!.color) }}</span>
+        <span class="status-time">{{ timeAgo(myStatus()!.created_at) }}</span>
+      </div>
+    </div>
+  }
+
+  @for (other of otherStatuses(); track other.user.id) {
+    <div class="tl-other">
+      <h2>{{ other.user.name }}</h2>
+      @if (other.event) {
+        <div class="status-card">
+          <span class="status-emoji">{{ colorEmoji(other.event.color) }}</span>
+          <span class="status-time">{{ timeAgo(other.event.created_at) }}</span>
+          @if (!other.event.acknowledged_at) {
+            <button class="ack-btn" (click)="acknowledge(other.event.id)">
+              Acknowledge
+            </button>
+          } @else {
+            <span class="ack-done">Acknowledged</span>
+          }
+        </div>
+      } @else {
+        <p class="no-status">No status yet</p>
+      }
+    </div>
+  }
+
+  @if (history().length > 0) {
+    <div class="tl-history">
+      <h2>Recent</h2>
+      <ul class="history-list">
+        @for (evt of history(); track evt.id) {
+          <li class="history-item">
+            <span class="history-emoji">{{ colorEmoji(evt.color) }}</span>
+            <span class="history-name">{{ evt.user_name }}</span>
+            <span class="history-time">{{ timeAgo(evt.created_at) }}</span>
+            @if (evt.acknowledged_at) {
+              <span class="history-ack">{{ evt.acknowledged_by_name }} ack'd</span>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>

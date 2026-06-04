@@ -139,7 +139,7 @@ describe('App', () => {
 		it('should pass navigationLinks to drawer', () => {
 			expect(component.navigationLinks).toBeDefined()
 			expect(component.navigationLinks.length).toBe(
-				5
+				6
 			)
 		})
 

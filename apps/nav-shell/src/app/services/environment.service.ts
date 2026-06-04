@@ -55,6 +55,13 @@ export class EnvironmentService {
     return this.config?.apiGatewayUrl ?? DEFAULT_DEV_CONFIG.apiGatewayUrl;
   }
 
+  getAuthentikIssuer(): string {
+    if (this.isLocalDevelopment()) {
+      return DEFAULT_DEV_CONFIG.authentikIssuer;
+    }
+    return this.config?.authentikIssuer ?? DEFAULT_DEV_CONFIG.authentikIssuer;
+  }
+
   /**
    * Check if running in local development mode
    * Detects localhost, 127.0.0.1, or .local domains
