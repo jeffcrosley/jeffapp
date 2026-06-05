@@ -5,7 +5,6 @@ import { ContactComponent } from './pages/contact.component'
 import { DashboardComponent } from './pages/dashboard.component'
 import { HomeComponent } from './pages/home/home.component'
 import { authGuard } from './guards/auth.guard'
-import { LoginPage } from './pages/login/login.page'
 import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component'
 import { TrafficLightPage } from './pages/traffic-light/traffic-light.page'
 
@@ -17,7 +16,8 @@ export const appRoutes: Route[] = [
 	},
 	{
 		path: 'login',
-		component: LoginPage
+		redirectTo: '/',
+		pathMatch: 'full'
 	},
 	{
 		path: 'auth/callback',
@@ -33,7 +33,8 @@ export const appRoutes: Route[] = [
 	},
 	{
 		path: 'contact',
-		component: ContactComponent
+		component: ContactComponent,
+		canActivate: [authGuard]
 	},
 	{
 		path: 'components',
