@@ -5,7 +5,21 @@ import { Request, Response, NextFunction } from 'express';
 
 declare module 'express-session' {
   interface SessionData {
-    user?: { id: string; loginAt: number };
+    user?: {
+      id: string;
+      email?: string;
+      name?: string;
+      role?: 'jeff_admin' | 'family_member';
+      groups?: string[];
+      loginAt: number;
+    };
+    oidc?: {
+      accessToken: string;
+      refreshToken: string;
+      idToken: string;
+      expiresAt: number;
+      issuedAt: number;
+    };
     mcp?: {
       accessToken: string;
       refreshToken: string;
@@ -39,7 +53,7 @@ export function buildSessionMiddleware() {
 }
 
 export function requireSession(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.user?.id || !req.session.mcp?.accessToken) {
+  if (!req.session.user?.id) {
     return res.status(401).json({ error: 'unauthorized' });
   }
   next();
@@ -52,15 +66,27 @@ export async function getSessionMcpToken(req: Request): Promise<string> {
   const now = Date.now() / 1000;
   if (mcp.expiresAt - now > 60) return mcp.accessToken;
 
-  const resp = await fetch(`${process.env.MCP_BASE_URL}/token`, {
+  const MCP_BASE_URL = process.env.MCP_BASE_URL ?? 'https://mcp.jeffcrosley.com';
+  const GTD_AGENT_TOKEN = process.env['GTD_AGENT_TOKEN'] as string;
+
+  // OIDC sessions store no refresh token — use client_credentials to renew
+  const grantBody = mcp.refreshToken
+    ? new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: mcp.refreshToken,
+        client_id: 'jeffapp',
+        client_secret: GTD_AGENT_TOKEN,
+      })
+    : new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: 'jeffapp',
+        client_secret: GTD_AGENT_TOKEN,
+      });
+
+  const resp = await fetch(`${MCP_BASE_URL}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: mcp.refreshToken,
-      client_id: 'jeffapp',
-      client_secret: process.env['GTD_AGENT_TOKEN'] as string,
-    }).toString(),
+    body: grantBody.toString(),
   });
 
   if (!resp.ok) {

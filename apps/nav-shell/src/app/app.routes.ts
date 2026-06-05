@@ -5,7 +5,6 @@ import { ContactComponent } from './pages/contact.component'
 import { DashboardComponent } from './pages/dashboard.component'
 import { HomeComponent } from './pages/home/home.component'
 import { authGuard } from './guards/auth.guard'
-import { oidcAuthGuard } from './guards/oidc-auth.guard'
 import { LoginPage } from './pages/login/login.page'
 import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component'
 import { TrafficLightPage } from './pages/traffic-light/traffic-light.page'
@@ -48,7 +47,7 @@ export const appRoutes: Route[] = [
 	{
 		path: 'traffic-light',
 		component: TrafficLightPage,
-		canActivate: [oidcAuthGuard]
+		canActivate: [authGuard]
 	},
 	{
 		path: '**',
