@@ -28,12 +28,25 @@ export class AuthService {
 	}
 
 	async logout(): Promise<void> {
+		let endSessionUrl: string | null = null;
 		try {
-			await firstValueFrom(this.http.post(`${this.env.getApiGatewayUrl()}/auth/logout`, {}, { withCredentials: true }));
+			const resp = await firstValueFrom(
+				this.http.post<{ ok: boolean; endSessionUrl?: string }>(
+					`${this.env.getApiGatewayUrl()}/auth/logout`,
+					{},
+					{ withCredentials: true }
+				)
+			);
+			endSessionUrl = resp.endSessionUrl ?? null;
 		} catch {
 			// swallow logout errors — session cleanup proceeds regardless
 		}
 		this.isLoggedIn.set(false);
-		this.router.navigateByUrl('/login');
+		if (endSessionUrl) {
+			// OIDC session: redirect through Authentik end-session to clear SSO session
+			window.location.href = endSessionUrl;
+		} else {
+			this.router.navigateByUrl('/login');
+		}
 	}
 }
