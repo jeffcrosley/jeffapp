@@ -46,7 +46,7 @@ export class AuthService {
 			// OIDC session: redirect through Authentik end-session to clear SSO session
 			window.location.href = endSessionUrl;
 		} else {
-			this.router.navigateByUrl('/login');
+			this.router.navigateByUrl('/');
 		}
 	}
 }
