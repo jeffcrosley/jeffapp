@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getPool } from './db';
-import { AuthenticatedRequest, requireJwt } from './jwt';
+import { AuthenticatedRequest, requireAuth } from './jwt';
 import {
   sendSignalNotification,
   formatStatusMessage,
@@ -8,7 +8,7 @@ import {
 } from './notify';
 
 export const statusRouter = Router();
-statusRouter.use(requireJwt);
+statusRouter.use(requireAuth);
 
 statusRouter.post('/', async (req: AuthenticatedRequest, res) => {
   const { color, note } = req.body ?? {};

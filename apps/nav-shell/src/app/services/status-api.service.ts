@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { EnvironmentService } from './environment.service';
-import { OidcAuthService } from './oidc-auth.service';
 
 export interface StatusEvent {
   id: string;
@@ -22,16 +21,6 @@ export interface AppUser {
 @Injectable({ providedIn: 'root' })
 export class StatusApiService {
   private env = inject(EnvironmentService);
-  private oidc = inject(OidcAuthService);
-
-  private get headers(): Record<string, string> {
-    const token = this.oidc.getAccessToken();
-    if (!token) throw new Error('Not authenticated');
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    };
-  }
 
   private get base(): string {
     return `${this.env.getApiGatewayUrl()}/api/status`;
@@ -40,7 +29,8 @@ export class StatusApiService {
   async postStatus(color: string, note?: string): Promise<StatusEvent> {
     const resp = await fetch(`${this.base}`, {
       method: 'POST',
-      headers: this.headers,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ color, note: note ?? null }),
     });
     if (!resp.ok) throw new Error(`POST /status failed: ${resp.status}`);
@@ -50,7 +40,7 @@ export class StatusApiService {
 
   async getCurrentStatus(userId: string): Promise<StatusEvent | null> {
     const resp = await fetch(`${this.base}/current/${userId}`, {
-      headers: this.headers,
+      credentials: 'include',
     });
     if (!resp.ok) throw new Error(`GET /status/current failed: ${resp.status}`);
     const data = await resp.json() as { event: StatusEvent | null };
@@ -60,7 +50,8 @@ export class StatusApiService {
   async acknowledge(eventId: string): Promise<StatusEvent> {
     const resp = await fetch(`${this.base}/${eventId}/acknowledge`, {
       method: 'POST',
-      headers: this.headers,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
     });
     if (!resp.ok) throw new Error(`POST /acknowledge failed: ${resp.status}`);
     const data = await resp.json() as { event: StatusEvent };
@@ -70,7 +61,7 @@ export class StatusApiService {
   async getHistory(limit = 50, offset = 0): Promise<{ events: StatusEvent[]; total: number }> {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     const resp = await fetch(`${this.base}/history?${params}`, {
-      headers: this.headers,
+      credentials: 'include',
     });
     if (!resp.ok) throw new Error(`GET /history failed: ${resp.status}`);
     return resp.json() as Promise<{ events: StatusEvent[]; total: number }>;
@@ -78,7 +69,7 @@ export class StatusApiService {
 
   async getMe(): Promise<AppUser> {
     const resp = await fetch(`${this.base}/me`, {
-      headers: this.headers,
+      credentials: 'include',
     });
     if (!resp.ok) throw new Error(`GET /me failed: ${resp.status}`);
     const data = await resp.json() as { user: AppUser };
@@ -87,7 +78,7 @@ export class StatusApiService {
 
   async getUsers(): Promise<AppUser[]> {
     const resp = await fetch(`${this.base}/users`, {
-      headers: this.headers,
+      credentials: 'include',
     });
     if (!resp.ok) throw new Error(`GET /users failed: ${resp.status}`);
     const data = await resp.json() as { users: AppUser[] };

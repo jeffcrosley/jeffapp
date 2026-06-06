@@ -11,12 +11,14 @@ import { TrafficLightPage } from './pages/traffic-light/traffic-light.page'
 export const appRoutes: Route[] = [
 	{
 		path: '',
-		redirectTo: 'home',
-		pathMatch: 'full'
-	},
-	{
-		path: 'login',
-		redirectTo: '/',
+		redirectTo: () => {
+			const returnUrl = sessionStorage.getItem('auth_return_url')
+			if (returnUrl) {
+				sessionStorage.removeItem('auth_return_url')
+				return returnUrl
+			}
+			return '/traffic-light'
+		},
 		pathMatch: 'full'
 	},
 	{
@@ -25,11 +27,13 @@ export const appRoutes: Route[] = [
 	},
 	{
 		path: 'home',
-		component: HomeComponent
+		component: HomeComponent,
+		canActivate: [authGuard]
 	},
 	{
 		path: 'about',
-		component: AboutComponent
+		component: AboutComponent,
+		canActivate: [authGuard]
 	},
 	{
 		path: 'contact',
@@ -38,7 +42,8 @@ export const appRoutes: Route[] = [
 	},
 	{
 		path: 'components',
-		component: ComponentsComponent
+		component: ComponentsComponent,
+		canActivate: [authGuard]
 	},
 	{
 		path: 'dashboard',
@@ -52,6 +57,6 @@ export const appRoutes: Route[] = [
 	},
 	{
 		path: '**',
-		redirectTo: '/home'
+		redirectTo: '/traffic-light'
 	}
 ]

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StatusApiService, StatusEvent, AppUser } from '../../services/status-api.service';
-import { OidcAuthService } from '../../services/oidc-auth.service';
+import { AuthService } from '../../services/auth.service';
 
 interface ColorOption {
   key: string;
@@ -33,7 +33,7 @@ const COLOR_EMOJI: Record<string, string> = {
 })
 export class TrafficLightPage implements OnInit, OnDestroy {
   private api = inject(StatusApiService);
-  private oidc = inject(OidcAuthService);
+  private auth = inject(AuthService);
 
   colors = COLORS;
   sending = signal(false);
@@ -93,7 +93,7 @@ export class TrafficLightPage implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.oidc.logout();
+    this.auth.logout();
   }
 
   private async loadData(): Promise<void> {

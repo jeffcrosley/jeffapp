@@ -53,16 +53,16 @@ authRouter.get('/callback', async (req, res) => {
   const { code, state, error } = req.query as Record<string, string>;
 
   if (error) {
-    return res.redirect(`${APP_BASE_URL}?error=auth_error`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=auth_error`);
   }
   if (!code || !state) {
-    return res.redirect(`${APP_BASE_URL}?error=missing_params`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=missing_params`);
   }
 
   const pkceKey = `jeffapp:pkce:${state}`;
   const storedRaw = await redisClient.get(pkceKey);
   if (!storedRaw) {
-    return res.redirect(`${APP_BASE_URL}?error=invalid_state`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=invalid_state`);
   }
   const stored = String(storedRaw);
 
@@ -87,7 +87,7 @@ authRouter.get('/callback', async (req, res) => {
 
   if (!tokenResp.ok) {
     console.error('[auth/callback] token exchange failed:', tokenResp.status, await tokenResp.text());
-    return res.redirect(`${APP_BASE_URL}?error=token_exchange_failed`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=token_exchange_failed`);
   }
 
   const tokens = (await tokenResp.json()) as {
@@ -107,7 +107,7 @@ authRouter.get('/callback', async (req, res) => {
     idPayload = payload as Record<string, unknown>;
   } catch (err) {
     console.error('[auth/callback] ID token validation failed:', err);
-    return res.redirect(`${APP_BASE_URL}?error=invalid_id_token`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=invalid_id_token`);
   }
 
   const groups = (idPayload['groups'] as string[] | undefined) ?? [];
@@ -116,7 +116,7 @@ authRouter.get('/callback', async (req, res) => {
   else if (groups.includes('jeffapp-family')) role = 'family_member';
 
   if (!role) {
-    return res.redirect(`${APP_BASE_URL}?error=access_denied`);
+    return res.redirect(`${APP_BASE_URL}/auth/callback?error=access_denied`);
   }
 
   const now = Date.now() / 1000;
@@ -167,12 +167,12 @@ authRouter.get('/callback', async (req, res) => {
   }
 
   req.session.regenerate((err) => {
-    if (err) return res.redirect(`${APP_BASE_URL}?error=session_error`);
+    if (err) return res.redirect(`${APP_BASE_URL}/auth/callback?error=session_error`);
     req.session.user = sessionUser;
     req.session.oidc = oidcData;
     if (mcpData) req.session.mcp = mcpData;
     req.session.save((saveErr) => {
-      if (saveErr) return res.redirect(`${APP_BASE_URL}?error=session_error`);
+      if (saveErr) return res.redirect(`${APP_BASE_URL}/auth/callback?error=session_error`);
       res.redirect(APP_BASE_URL);
     });
   });
