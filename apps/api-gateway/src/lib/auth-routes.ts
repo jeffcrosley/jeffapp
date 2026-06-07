@@ -7,6 +7,8 @@ import { redisClient } from './session';
 const MCP_BASE = process.env.MCP_BASE_URL ?? 'https://mcp.jeffcrosley.com';
 const AUTHENTIK_ISSUER =
   process.env['AUTHENTIK_ISSUER'] ?? 'https://auth.jeffcrosley.com/application/o/jeffapp/';
+// Generic endpoints (authorize, token) omit app slug - derive base by stripping it
+const AUTHENTIK_BASE = AUTHENTIK_ISSUER.replace(/[^/]+\/$/, '');
 const AUTHENTIK_JWKS_URI =
   process.env['AUTHENTIK_JWKS_URI'] ?? 'https://auth.jeffcrosley.com/application/o/jeffapp/jwks/';
 const AUTHENTIK_CLIENT_ID = process.env['AUTHENTIK_CLIENT_ID'] ?? 'jeffapp';
@@ -45,7 +47,7 @@ authRouter.get('/login', async (req, res) => {
     code_challenge_method: 'S256',
   });
 
-  res.redirect(302, `${AUTHENTIK_ISSUER}authorize/?${params.toString()}`);
+  res.redirect(302, `${AUTHENTIK_BASE}authorize/?${params.toString()}`);
 });
 
 // GET /auth/callback — receive authorization code forwarded from Angular AuthCallbackComponent
@@ -72,7 +74,7 @@ authRouter.get('/callback', async (req, res) => {
   };
   await redisClient.del(pkceKey);
 
-  const tokenResp = await fetch(`${AUTHENTIK_ISSUER}token/`, {
+  const tokenResp = await fetch(`${AUTHENTIK_BASE}token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
