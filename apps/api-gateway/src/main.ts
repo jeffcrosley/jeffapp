@@ -2,9 +2,13 @@
 
 import cors from 'cors';
 import express from 'express';
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import { redisClient, buildSessionMiddleware, requireSession, getSessionMcpToken } from './lib/session';
+import { eventBusClient } from './lib/redis';
 import { authRouter } from './lib/auth-routes';
 import { statusRouter } from './lib/status-routes';
+import { registerSseRoute } from './lib/sse';
+import { publishEvent } from './lib/publish';
 
 export const app = express();
 
@@ -298,9 +302,81 @@ app.get('/api/gtd/briefs', async (req, res) => {
   }
 });
 
+// ─── SSE (must be before body-parsing middleware for this route) ───────────────
+registerSseRoute(app);
+
+// ─── R2 / dispatch ─────────────────────────────────────────────────────────────
+function getR2Client(): S3Client {
+  const accountId = process.env['R2_ACCOUNT_ID'];
+  if (!accountId) throw new Error('R2_ACCOUNT_ID not set');
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: process.env['R2_ACCESS_KEY_ID'] ?? '',
+      secretAccessKey: process.env['R2_SECRET_ACCESS_KEY'] ?? '',
+    },
+  });
+}
+
+const R2_BUCKET = process.env['R2_BUCKET'] ?? 'jeffcrosley-gtd';
+const DISPATCH_PREFIX = 'factory/dispatches/';
+
+app.get('/api/dispatches', requireSession, async (_req, res) => {
+  try {
+    const r2 = getR2Client();
+    const list = await r2.send(
+      new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: DISPATCH_PREFIX })
+    );
+
+    const objects = list.Contents ?? [];
+    const dispatches = await Promise.all(
+      objects.map(async (obj) => {
+        if (!obj.Key) return null;
+        const data = await r2.send(
+          new GetObjectCommand({ Bucket: R2_BUCKET, Key: obj.Key })
+        );
+        const text = await data.Body?.transformToString();
+        if (!text) return null;
+        return JSON.parse(text) as Record<string, unknown>;
+      })
+    );
+
+    const sorted = dispatches
+      .filter((d): d is Record<string, unknown> => d !== null)
+      .sort((a, b) => {
+        const ta = String(a['created_at'] ?? '');
+        const tb = String(b['created_at'] ?? '');
+        return tb.localeCompare(ta);
+      })
+      .slice(0, 20);
+
+    res.json(sorted);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to list dispatches', detail });
+  }
+});
+
+// ─── Internal webhook (dispatch worker → api-gateway → SSE) ───────────────────
+app.post('/internal/dispatch-event', express.json(), (req, res) => {
+  const token = req.headers['x-internal-token'];
+  if (!process.env['JEFFAPP_INTERNAL_TOKEN'] || token !== process.env['JEFFAPP_INTERNAL_TOKEN']) {
+    res.status(403).json({ error: 'forbidden' });
+    return;
+  }
+  const { type, data } = req.body as { type?: string; data?: unknown };
+  if (type) {
+    publishEvent('jeff:dispatch', type, data).catch(() => {});
+  }
+  res.json({ ok: true });
+});
+
 if (require.main === module) {
-  redisClient
-    .connect()
+  Promise.all([
+    redisClient.connect(),
+    eventBusClient.connect(),
+  ])
     .then(() => {
       app.listen(port, () => {
         console.log(`\n🚀 API Gateway is running on port ${port}`);
