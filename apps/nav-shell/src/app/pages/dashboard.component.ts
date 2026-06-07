@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import '@jeffapp/ui-components-native';
 import { EnvironmentService } from '../services/environment.service';
+import { EventBusService, BusEvent } from '../services/event-bus.service';
 
 interface GtdTask {
   id: string;
@@ -29,6 +31,18 @@ interface ProjectGroup {
   name: string;
   tasks: GtdTask[];
   latestUpdate: string;
+}
+
+interface Dispatch {
+  dispatch_id: string;
+  agent?: string;
+  brief_path?: string;
+  status?: string;
+  created_at?: string;
+  claimed_at?: string;
+  completed_at?: string;
+  session_name?: string;
+  error?: string;
 }
 
 @Component({
@@ -63,6 +77,37 @@ interface ProjectGroup {
           <div class="status-row">
             <span class="indicator" [class.online]="healthOnline" [class.offline]="!healthOnline"></span>
             <span class="status-label">{{ healthOnline ? 'Online' : 'Degraded' }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Dispatch Status -->
+      <div class="dashboard-section">
+        <h3>Dispatch Status <span class="section-hint">(recent 20)</span></h3>
+        @if (dispatchesLoading) {
+          <p class="muted">Loading dispatches…</p>
+        }
+        @if (!dispatchesLoading && dispatchesError) {
+          <p class="muted error">{{ dispatchesError }}</p>
+        }
+        @if (!dispatchesLoading && !dispatchesError && dispatches.length === 0) {
+          <p class="muted">No dispatches found.</p>
+        }
+        @if (!dispatchesLoading && !dispatchesError && dispatches.length > 0) {
+          <div class="dispatch-list">
+            @for (d of dispatches; track d.dispatch_id) {
+              <div class="dispatch-row">
+                <span class="dispatch-badge" [class]="'badge-' + (d.status ?? 'unknown')">
+                  {{ d.status ?? 'unknown' }}
+                </span>
+                <span class="dispatch-agent">{{ d.agent ?? '—' }}</span>
+                <span class="dispatch-brief">{{ briefSlug(d.brief_path) }}</span>
+                <span class="dispatch-time">{{ formatRelative(d.created_at ?? '') }}</span>
+                @if (d.session_name) {
+                  <span class="dispatch-session muted">{{ d.session_name }}</span>
+                }
+              </div>
+            }
           </div>
         }
       </div>
@@ -210,6 +255,75 @@ interface ProjectGroup {
             }
           }
 
+          .dispatch-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+
+            .dispatch-row {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 10px 14px;
+              background: var(--color-bg-secondary);
+              border-radius: 8px;
+              font-size: 0.9rem;
+              flex-wrap: wrap;
+
+              .dispatch-badge {
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                flex-shrink: 0;
+
+                &.badge-running, &.badge-claimed {
+                  background: rgba(52, 152, 219, 0.15);
+                  color: var(--color-primary);
+                }
+                &.badge-completed {
+                  background: rgba(46, 204, 113, 0.15);
+                  color: var(--color-status-online);
+                }
+                &.badge-failed {
+                  background: rgba(231, 76, 60, 0.15);
+                  color: var(--color-ruby-600);
+                }
+                &.badge-pending, &.badge-unknown {
+                  background: rgba(149, 165, 166, 0.15);
+                  color: var(--color-text-muted);
+                }
+              }
+
+              .dispatch-agent {
+                font-weight: 600;
+                color: var(--color-text-primary);
+                min-width: 60px;
+              }
+
+              .dispatch-brief {
+                color: var(--color-text-secondary);
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+
+              .dispatch-time {
+                color: var(--color-text-muted);
+                font-size: 0.8rem;
+                flex-shrink: 0;
+              }
+
+              .dispatch-session {
+                font-size: 0.75rem;
+                font-family: monospace;
+              }
+            }
+          }
+
           .brief-list {
             display: flex;
             flex-direction: column;
@@ -282,8 +396,10 @@ interface ProjectGroup {
     `,
   ],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private env = inject(EnvironmentService);
+  private eventBus = inject(EventBusService);
+  private eventSub: Subscription | null = null;
 
   protected healthLoading = true;
   protected healthError = '';
@@ -297,11 +413,39 @@ export class DashboardComponent implements OnInit {
   protected briefsError = '';
   protected briefs: Brief[] = [];
 
+  protected dispatchesLoading = true;
+  protected dispatchesError = '';
+  protected dispatches: Dispatch[] = [];
+
   async ngOnInit(): Promise<void> {
     if (!this.env.getApiGatewayUrl()) {
       await this.env.loadConfig();
     }
-    await Promise.all([this.loadHealth(), this.loadRecentTasks(), this.loadBriefs()]);
+    this.eventBus.connect();
+    this.eventSub = this.eventBus.events$.subscribe((event: BusEvent) => {
+      if (event.type === 'dispatch.running' || event.type === 'dispatch.completed' || event.type === 'dispatch.failed') {
+        this.mergeDispatch(event.data as Dispatch);
+      }
+    });
+    await Promise.all([this.loadHealth(), this.loadRecentTasks(), this.loadBriefs(), this.loadDispatches()]);
+  }
+
+  ngOnDestroy(): void {
+    this.eventSub?.unsubscribe();
+    this.eventBus.disconnect();
+  }
+
+  private mergeDispatch(updated: Dispatch): void {
+    const idx = this.dispatches.findIndex(d => d.dispatch_id === updated.dispatch_id);
+    if (idx >= 0) {
+      this.dispatches = [
+        ...this.dispatches.slice(0, idx),
+        { ...this.dispatches[idx], ...updated },
+        ...this.dispatches.slice(idx + 1),
+      ];
+    } else {
+      this.dispatches = [updated, ...this.dispatches].slice(0, 20);
+    }
   }
 
   private async loadHealth(): Promise<void> {
@@ -340,6 +484,22 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  private async loadDispatches(): Promise<void> {
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/dispatches`, { credentials: 'include' });
+      if (!res.ok) {
+        this.dispatchesError = res.status === 401 ? 'Not authenticated' : 'Failed to load dispatches';
+      } else {
+        this.dispatches = (await res.json()) as Dispatch[];
+      }
+    } catch {
+      this.dispatchesError = 'Could not reach gateway';
+    } finally {
+      this.dispatchesLoading = false;
+    }
+  }
+
   private async loadBriefs(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
@@ -363,6 +523,12 @@ export class DashboardComponent implements OnInit {
 
   protected tasksJson(tasks: BriefTask[]): string {
     return JSON.stringify(tasks);
+  }
+
+  protected briefSlug(briefPath: string | undefined): string {
+    if (!briefPath) return '—';
+    const name = briefPath.split('/').pop() ?? briefPath;
+    return name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-[^-]+-/, '');
   }
 
   private deriveHotProjects(tasks: GtdTask[]): ProjectGroup[] {
