@@ -1,5 +1,5 @@
 {
   "showcaseUrl": "https://components.jeffcrosley.com",
   "apiGatewayUrl": "https://api.jeffcrosley.com",
-  "authentikIssuer": "http://104.131.79.117:9000/application/o/jeffapp/"
+  "authentikIssuer": "https://auth.jeffcrosley.com/application/o/jeffapp/"
 }

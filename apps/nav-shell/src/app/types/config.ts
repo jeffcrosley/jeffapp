@@ -18,7 +18,7 @@ export interface NavShellConfig {
 export const DEFAULT_DEV_CONFIG: NavShellConfig = {
 	showcaseUrl: 'http://localhost:4201',
 	apiGatewayUrl: 'http://localhost:3333',
-	authentikIssuer: 'http://104.131.79.117:9000/application/o/jeffapp/'
+	authentikIssuer: 'https://auth.jeffcrosley.com/application/o/jeffapp/'
 }
 
 /**

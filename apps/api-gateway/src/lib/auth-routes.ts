@@ -6,9 +6,9 @@ import { redisClient } from './session';
 
 const MCP_BASE = process.env.MCP_BASE_URL ?? 'https://mcp.jeffcrosley.com';
 const AUTHENTIK_ISSUER =
-  process.env['AUTHENTIK_ISSUER'] ?? 'http://104.131.79.117:9000/application/o/jeffapp/';
+  process.env['AUTHENTIK_ISSUER'] ?? 'https://auth.jeffcrosley.com/application/o/jeffapp/';
 const AUTHENTIK_JWKS_URI =
-  process.env['AUTHENTIK_JWKS_URI'] ?? 'http://104.131.79.117:9000/application/o/jeffapp/jwks/';
+  process.env['AUTHENTIK_JWKS_URI'] ?? 'https://auth.jeffcrosley.com/application/o/jeffapp/jwks/';
 const AUTHENTIK_CLIENT_ID = process.env['AUTHENTIK_CLIENT_ID'] ?? 'jeffapp';
 const AUTHENTIK_CLIENT_SECRET = process.env['AUTHENTIK_CLIENT_SECRET'] as string;
 // redirect_uri registered in Authentik — Angular /auth/callback receives the code and forwards to BFF

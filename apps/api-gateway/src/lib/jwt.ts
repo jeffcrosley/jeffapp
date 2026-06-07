@@ -2,10 +2,10 @@ import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
 import { Request, Response, NextFunction } from 'express';
 
 const AUTHENTIK_ISSUER =
-  process.env['AUTHENTIK_ISSUER'] ?? 'http://104.131.79.117:9000/application/o/jeffapp/';
+  process.env['AUTHENTIK_ISSUER'] ?? 'https://auth.jeffcrosley.com/application/o/jeffapp/';
 const AUTHENTIK_JWKS_URI =
   process.env['AUTHENTIK_JWKS_URI'] ??
-  'http://104.131.79.117:9000/application/o/jeffapp/jwks/';
+  'https://auth.jeffcrosley.com/application/o/jeffapp/jwks/';
 
 const jwks = createRemoteJWKSet(new URL(AUTHENTIK_JWKS_URI));
 
