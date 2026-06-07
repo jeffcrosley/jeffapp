@@ -373,18 +373,27 @@ app.post('/internal/dispatch-event', express.json(), (req, res) => {
 });
 
 if (require.main === module) {
-  Promise.all([
-    redisClient.connect(),
-    eventBusClient.connect(),
-  ])
+  // Session Redis is REQUIRED — the gateway cannot serve authenticated requests without it.
+  redisClient
+    .connect()
     .then(() => {
+      // Event bus Redis is OPTIONAL — SSE degrades gracefully if it is unavailable.
+      // A failure here must never take down auth or the rest of the gateway.
+      eventBusClient
+        .connect()
+        .catch((err) => {
+          console.warn(
+            'Event bus Redis unavailable — SSE disabled, gateway continuing:',
+            err?.message ?? err,
+          );
+        });
       app.listen(port, () => {
         console.log(`\n🚀 API Gateway is running on port ${port}`);
         console.log(`Access the health check at http://localhost:${port}/health`);
       });
     })
     .catch((err) => {
-      console.error('Failed to connect to Redis:', err);
+      console.error('Failed to connect to session Redis:', err);
       process.exit(1);
     });
 }
