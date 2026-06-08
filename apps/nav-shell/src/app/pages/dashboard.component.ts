@@ -70,6 +70,34 @@ interface ApiDispatch {
   return_doc?: string;
 }
 
+// ─── MR status types ──────────────────────────────────────────────────────────
+
+interface MrEntry {
+  title: string;
+  repo: string;
+  number: number;
+  url: string;
+  platform: 'github' | 'gitlab';
+  feature?: string;
+}
+
+interface MrWithStatus extends MrEntry {
+  status: 'draft' | 'open' | 'merged' | 'closed';
+  pipeline_status?: 'passing' | 'failing' | 'pending';
+}
+
+interface MrsResponse {
+  mrs: MrWithStatus[];
+  unavailable?: boolean;
+}
+
+interface MrGroup {
+  feature: string;
+  openMrs: MrWithStatus[];
+  mergedMrs: MrWithStatus[];
+  showMerged: boolean;
+}
+
 // ─── GTD work types ───────────────────────────────────────────────────────────
 
 interface GtdTask {
@@ -260,6 +288,62 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
 
           @if (workProjects.length === 0 && workUngrouped.length === 0) {
             <p class="muted">No open tasks.</p>
+          }
+        }
+      </div>
+
+      <!-- ── Open MRs ──────────────────────────────────────────────────── -->
+      <div class="dashboard-section">
+        <div class="section-title-row">
+          <h3>Open MRs</h3>
+          <button class="icon-refresh-btn" (click)="refreshMrs()" [disabled]="mrsLoading" title="Refresh MRs">↻</button>
+        </div>
+
+        @if (mrsLoading) {
+          <p class="muted">Loading MRs…</p>
+        }
+        @if (!mrsLoading && mrsError) {
+          <p class="muted error">{{ mrsError }}</p>
+        }
+        @if (!mrsLoading && !mrsError && mrsUnavailable) {
+          <p class="muted">MR status unavailable — GITHUB_TOKEN / GITLAB_TOKEN not configured.</p>
+        }
+        @if (!mrsLoading && !mrsError && !mrsUnavailable) {
+          @if (mrGroups.length === 0) {
+            <p class="muted">No open MRs.</p>
+          }
+          @for (group of mrGroups; track group.feature) {
+            <div class="mr-group">
+              <div class="mr-group-label">── {{ group.feature }}</div>
+              <div class="mr-list">
+                @for (mr of group.openMrs; track mr.url) {
+                  <a class="mr-row" [href]="mr.url" target="_blank" rel="noopener noreferrer">
+                    <span class="mr-title">{{ mr.title }}</span>
+                    <span class="mr-status-pill" [class]="'pill-' + mr.status">{{ mrStatusLabel(mr.status) }}</span>
+                    @if (mr.pipeline_status === 'passing') {
+                      <span class="pipeline-indicator pi-passing">✓</span>
+                    } @else if (mr.pipeline_status === 'failing') {
+                      <span class="pipeline-indicator pi-failing">✗</span>
+                    } @else if (mr.pipeline_status === 'pending') {
+                      <span class="pipeline-indicator pi-pending">~</span>
+                    }
+                  </a>
+                }
+                @if (group.mergedMrs.length > 0) {
+                  <button class="mr-merged-toggle" (click)="toggleMergedMrs(group.feature)">
+                    {{ group.showMerged ? 'hide merged' : group.mergedMrs.length + ' merged' }}
+                  </button>
+                  @if (group.showMerged) {
+                    @for (mr of group.mergedMrs; track mr.url) {
+                      <a class="mr-row mr-row-merged" [href]="mr.url" target="_blank" rel="noopener noreferrer">
+                        <span class="mr-title">{{ mr.title }}</span>
+                        <span class="mr-status-pill pill-merged">MERGED</span>
+                      </a>
+                    }
+                  }
+                }
+              </div>
+            </div>
           }
         }
       </div>
@@ -856,6 +940,136 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
           }
         }
 
+        // ─── Open MRs ──────────────────────────────────────────────────
+
+          .icon-refresh-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--color-text-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            line-height: 1;
+            transition: color 0.15s, background 0.15s;
+
+            &:hover:not(:disabled) {
+              color: var(--color-text-primary);
+              background: var(--color-bg-secondary);
+            }
+
+            &:disabled {
+              opacity: 0.4;
+              cursor: not-allowed;
+            }
+          }
+
+          .mr-group {
+            margin-bottom: 18px;
+          }
+
+          .mr-group-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            padding-left: 2px;
+          }
+
+          .mr-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .mr-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--color-bg-secondary);
+            border-radius: 6px;
+            text-decoration: none;
+            color: inherit;
+            font-size: 0.87rem;
+            transition: background 0.15s;
+
+            &:hover {
+              background: rgba(0, 0, 0, 0.05);
+            }
+
+            &.mr-row-merged {
+              opacity: 0.6;
+            }
+
+            .mr-title {
+              flex: 1;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              color: var(--color-text-secondary);
+            }
+
+            .mr-status-pill {
+              flex-shrink: 0;
+              font-size: 0.68rem;
+              font-weight: 700;
+              letter-spacing: 0.05em;
+              padding: 2px 8px;
+              border-radius: 10px;
+
+              &.pill-draft {
+                background: rgba(100, 116, 139, 0.14);
+                color: var(--color-text-muted);
+              }
+
+              &.pill-open {
+                background: rgba(59, 130, 246, 0.14);
+                color: var(--color-sapphire-600);
+              }
+
+              &.pill-merged {
+                background: rgba(5, 150, 105, 0.14);
+                color: var(--color-emerald-600);
+              }
+
+              &.pill-closed {
+                background: rgba(220, 38, 38, 0.14);
+                color: var(--color-ruby-600);
+              }
+            }
+
+            .pipeline-indicator {
+              flex-shrink: 0;
+              font-size: 0.8rem;
+              font-weight: 700;
+              width: 16px;
+              text-align: center;
+
+              &.pi-passing { color: var(--color-emerald-600); }
+              &.pi-failing { color: var(--color-ruby-600); }
+              &.pi-pending { color: var(--color-text-muted); }
+            }
+          }
+
+          .mr-merged-toggle {
+            background: transparent;
+            border: none;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            text-align: left;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+
+            &:hover {
+              color: var(--color-text-secondary);
+            }
+          }
+
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
@@ -1141,6 +1355,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected workUngrouped: GtdTask[] = [];
   protected collapsedProjects: Record<string, boolean> = {};
 
+  // Open MRs state
+  protected mrsLoading = true;
+  protected mrsError = '';
+  protected mrsUnavailable = false;
+  protected mrGroups: MrGroup[] = [];
+
   // Inbox state
   protected inboxLoading = true;
   protected inboxError = '';
@@ -1186,6 +1406,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     await Promise.all([
       this.loadDispatches(),
       this.loadWork(),
+      this.loadMrs(),
       this.loadInbox(),
     ]);
   }
@@ -1318,6 +1539,76 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // fail visible on next load
     } finally {
       this.inboxSubmitting = false;
+    }
+  }
+
+  // ─── Open MRs ────────────────────────────────────────────────────────────────
+
+  private async loadMrs(): Promise<void> {
+    this.mrsLoading = true;
+    this.mrsError = '';
+    this.mrsUnavailable = false;
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/mrs`, { credentials: 'include' });
+      if (!res.ok) {
+        this.mrsError = res.status === 401 ? 'Not authenticated' : 'Failed to load MRs';
+      } else {
+        const data = (await res.json()) as MrsResponse;
+        if (data.unavailable) {
+          this.mrsUnavailable = true;
+          this.mrGroups = [];
+        } else {
+          this.mrGroups = this.buildMrGroups(data.mrs ?? []);
+        }
+      }
+    } catch {
+      this.mrsError = 'Could not reach gateway';
+    } finally {
+      this.mrsLoading = false;
+    }
+  }
+
+  protected async refreshMrs(): Promise<void> {
+    await this.loadMrs();
+  }
+
+  protected toggleMergedMrs(feature: string): void {
+    this.mrGroups = this.mrGroups.map(g =>
+      g.feature === feature ? { ...g, showMerged: !g.showMerged } : g
+    );
+  }
+
+  private buildMrGroups(mrs: MrWithStatus[]): MrGroup[] {
+    const order: string[] = [];
+    const map = new Map<string, { open: MrWithStatus[]; merged: MrWithStatus[] }>();
+
+    for (const mr of mrs) {
+      const key = mr.feature ?? 'Other';
+      if (!map.has(key)) {
+        map.set(key, { open: [], merged: [] });
+        order.push(key);
+      }
+      const bucket = map.get(key)!;
+      if (mr.status === 'merged') {
+        bucket.merged.push(mr);
+      } else {
+        bucket.open.push(mr);
+      }
+    }
+
+    return order.map(feature => {
+      const { open, merged } = map.get(feature)!;
+      return { feature, openMrs: open, mergedMrs: merged, showMerged: false };
+    });
+  }
+
+  protected mrStatusLabel(status: MrWithStatus['status']): string {
+    switch (status) {
+      case 'draft': return 'DRAFT';
+      case 'open': return 'OPEN';
+      case 'merged': return 'MERGED';
+      case 'closed': return 'CLOSED';
     }
   }
 
