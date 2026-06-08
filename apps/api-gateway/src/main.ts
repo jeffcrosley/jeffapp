@@ -67,7 +67,33 @@ export async function getAccessToken(): Promise<string> {
 }
 
 async function getMcpSessionId(token: string): Promise<string> {
-  if (_sessionCache) return _sessionCache.sessionId;
+  if (_sessionCache) {
+    // Validate that the cached session is still alive. personal-mcp Render deploys
+    // take ~2 minutes and silently kill the old session — the 404 retry in mcpCall
+    // only catches one failure mode; a proactive ping here catches the rest.
+    try {
+      const ping = await fetch(`${MCP_BASE}/mcp`, {
+        method: 'POST',
+        headers: {
+          Accept: MCP_ACCEPT,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'mcp-session-id': _sessionCache.sessionId,
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 0, method: 'ping', params: {} }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (ping.ok || ping.status === 405) {
+        // 405 = method not supported but session is alive
+        return _sessionCache.sessionId;
+      }
+      // Non-ok status means session is dead — fall through to re-initialize
+      _sessionCache = null;
+    } catch {
+      // Timeout or network error — fall through to re-initialize
+      _sessionCache = null;
+    }
+  }
 
   const resp = await fetch(`${MCP_BASE}/mcp`, {
     method: 'POST',
@@ -139,6 +165,10 @@ export async function mcpCall(method: string, args: Record<string, unknown>, tok
     return doCall(await getMcpSessionId(token));
   }
 
+  if (!resp.ok) {
+    console.error('[mcpCall] Non-ok response for method:', method, 'status:', resp.status);
+  }
+
   return resp;
 }
 
@@ -166,8 +196,11 @@ function getR2Client(): S3Client {
 const R2_BUCKET = process.env['R2_BUCKET'] ?? 'jeffcrosley-gtd';
 const DISPATCH_PREFIX = 'factory/dispatches/';
 
-app.get('/api/dispatches', requireSession, async (_req, res) => {
+app.get('/api/dispatches', requireSession, async (req, res) => {
   try {
+    const sinceHours = parseInt(String(req.query['since_hours'] ?? '24'), 10);
+    const since = new Date(Date.now() - sinceHours * 60 * 60 * 1000).toISOString();
+
     const r2 = getR2Client();
     const list = await r2.send(
       new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: DISPATCH_PREFIX })
@@ -188,6 +221,7 @@ app.get('/api/dispatches', requireSession, async (_req, res) => {
 
     const sorted = dispatches
       .filter((d): d is Record<string, unknown> => d !== null)
+      .filter(d => !d['created_at'] || String(d['created_at']) >= since)
       .sort((a, b) => {
         const ta = String(a['created_at'] ?? '');
         const tb = String(b['created_at'] ?? '');
