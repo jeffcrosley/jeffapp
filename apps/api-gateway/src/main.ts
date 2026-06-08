@@ -202,6 +202,147 @@ app.get('/api/dispatches', requireSession, async (_req, res) => {
   }
 });
 
+// ─── Sessions (AI Workshop) ────────────────────────────────────────────────────
+
+interface DispatchRecord {
+  dispatch_id: string;
+  agent?: string;
+  model?: string;
+  account?: string;
+  status?: string;
+  session_name?: string;
+  created_at?: string;
+  claimed_at?: string;
+  completed_at?: string;
+  brief_path?: string;
+  return_doc_path?: string;
+  signal_sent?: boolean;
+  tokens_in?: number | null;
+  tokens_out?: number | null;
+  cost_usd?: number | null;
+  cost_estimated?: boolean;
+}
+
+async function fetchAllDispatchRecords(): Promise<DispatchRecord[]> {
+  const r2 = getR2Client();
+  const list = await r2.send(
+    new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: DISPATCH_PREFIX })
+  );
+  const objects = list.Contents ?? [];
+  const records = await Promise.all(
+    objects.map(async (obj) => {
+      if (!obj.Key) return null;
+      const data = await r2.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: obj.Key }));
+      const text = await data.Body?.transformToString();
+      if (!text) return null;
+      return JSON.parse(text) as DispatchRecord;
+    })
+  );
+  return records.filter((r): r is DispatchRecord => r !== null);
+}
+
+function toSession(d: DispatchRecord): Record<string, unknown> {
+  let duration_seconds: number | null = null;
+  if (d.claimed_at && d.completed_at) {
+    const diff = new Date(d.completed_at).getTime() - new Date(d.claimed_at).getTime();
+    if (!isNaN(diff) && diff >= 0) duration_seconds = Math.round(diff / 1000);
+  }
+
+  let brief_name: string | undefined;
+  if (d.brief_path) {
+    const filename = d.brief_path.split('/').pop() ?? '';
+    brief_name = filename.replace(/-brief\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-/, '');
+  }
+
+  return {
+    dispatch_id: d.dispatch_id,
+    agent: d.agent,
+    model: d.model,
+    account: d.account,
+    status: d.status,
+    session_name: d.session_name,
+    created_at: d.created_at,
+    completed_at: d.completed_at,
+    brief_path: d.brief_path,
+    brief_name,
+    return_doc_path: d.return_doc_path,
+    duration_seconds,
+    tokens_in: d.tokens_in ?? null,
+    tokens_out: d.tokens_out ?? null,
+    cost_usd: d.cost_usd ?? null,
+    cost_estimated: d.cost_estimated ?? false,
+    signal_sent: d.signal_sent,
+  };
+}
+
+app.get('/api/sessions/summary', requireSession, async (_req, res) => {
+  try {
+    const records = await fetchAllDispatchRecords();
+
+    const by_status: Record<string, number> = {};
+    const by_agent: Record<string, number> = {};
+    const by_model: Record<string, number> = {};
+    const by_account: Record<string, number> = {};
+    let total_cost_usd = 0;
+    let total_tokens_in = 0;
+    let total_tokens_out = 0;
+    let cost_is_estimated = false;
+
+    for (const r of records) {
+      if (r.status) by_status[r.status] = (by_status[r.status] ?? 0) + 1;
+      if (r.agent) by_agent[r.agent] = (by_agent[r.agent] ?? 0) + 1;
+      if (r.model) by_model[r.model] = (by_model[r.model] ?? 0) + 1;
+      if (r.account) by_account[r.account] = (by_account[r.account] ?? 0) + 1;
+      if (typeof r.cost_usd === 'number') total_cost_usd += r.cost_usd;
+      if (typeof r.tokens_in === 'number') total_tokens_in += r.tokens_in;
+      if (typeof r.tokens_out === 'number') total_tokens_out += r.tokens_out;
+      if (r.cost_estimated) cost_is_estimated = true;
+    }
+
+    res.json({
+      total_sessions: records.length,
+      by_status,
+      by_agent,
+      by_model,
+      by_account,
+      total_cost_usd,
+      total_tokens_in,
+      total_tokens_out,
+      cost_is_estimated,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to compute session summary', detail });
+  }
+});
+
+app.get('/api/sessions', requireSession, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(String(req.query['limit'] ?? '200'), 10) || 200, 1000);
+    const filterStatus = req.query['status'] as string | undefined;
+    const filterAgent = req.query['agent'] as string | undefined;
+    const filterAccount = req.query['account'] as string | undefined;
+    const filterModel = req.query['model'] as string | undefined;
+
+    let records = await fetchAllDispatchRecords();
+
+    if (filterStatus) records = records.filter((r) => r.status === filterStatus);
+    if (filterAgent) records = records.filter((r) => r.agent === filterAgent);
+    if (filterAccount) records = records.filter((r) => r.account === filterAccount);
+    if (filterModel) records = records.filter((r) => r.model === filterModel);
+
+    const sessions = records
+      .sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+      .slice(0, limit)
+      .map(toSession);
+
+    res.json({ sessions });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to list sessions', detail });
+  }
+});
+
 // ─── GTD helpers ───────────────────────────────────────────────────────────────
 
 function extractMcpText(parsed: unknown): string {
