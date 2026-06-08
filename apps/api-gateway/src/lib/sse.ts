@@ -41,7 +41,7 @@ export function registerSseRoute(app: Express): void {
 
     req.on('close', () => {
       clearInterval(ping);
-      sub.unsubscribe().finally(() => sub.quit().catch(() => {}));
+      sub.unsubscribe().finally(() => sub.quit().catch(() => void 0));
     });
   });
 }

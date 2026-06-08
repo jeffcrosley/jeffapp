@@ -4,12 +4,12 @@ services:
     env: node
     buildCommand: npm ci && npx nx build api-gateway --prod
     startCommand: node dist/apps/api-gateway/main.js
-    autoDeploy: true
+    autoDeploy: false
     branch: main
 
   - type: static
     name: nav-shell
     buildCommand: npm ci && npx nx build nav-shell --prod
     staticPublishPath: dist/apps/nav-shell/browser
-    autoDeploy: true
+    autoDeploy: false
     branch: main

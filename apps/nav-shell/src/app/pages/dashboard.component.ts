@@ -303,8 +303,8 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
 
     <!-- ── Dispatch detail modal ──────────────────────────────────────────── -->
     @if (selectedSession) {
-      <div class="modal-overlay" (click)="closeModal()" role="dialog" aria-modal="true">
-        <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeModal()" (keydown.escape)="closeModal()">
+        <div class="modal-content" tabindex="-1" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
           <button class="modal-close" (click)="closeModal()" aria-label="Close">&times;</button>
 
           <div class="modal-slug">{{ selectedSession.slug }}</div>

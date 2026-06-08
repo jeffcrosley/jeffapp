@@ -302,7 +302,7 @@ app.post('/internal/dispatch-event', express.json(), (req, res) => {
   }
   const { type, data } = req.body as { type?: string; data?: unknown };
   if (type) {
-    publishEvent('jeff:dispatch', type, data).catch(() => {});
+    publishEvent('jeff:dispatch', type, data).catch(() => void 0);
   }
   res.json({ ok: true });
 });

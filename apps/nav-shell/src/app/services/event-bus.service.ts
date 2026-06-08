@@ -32,7 +32,7 @@ export class EventBusService implements OnDestroy {
         const wrapper = JSON.parse(e.data) as { channel: string; payload: string };
         const event = JSON.parse(wrapper.payload) as BusEvent;
         this.events$.next({ ...event, channel: wrapper.channel });
-      } catch {}
+      } catch { /* intentional: non-fatal JSON parse error */ }
     };
 
     this.es.onerror = () => {
