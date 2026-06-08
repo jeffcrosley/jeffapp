@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core'
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core'
 import {
 	Router,
 	RouterModule
@@ -35,6 +35,10 @@ export class App {
 
 	protected navDrawerIsOpen =
 		this.drawerService.isOpen
+
+	protected navCollapsed = signal(
+		localStorage.getItem('jeffapp.navCollapsed') === 'true'
+	)
 
 	protected navigationLinks: NavLink[] = [
 		{
@@ -93,4 +97,9 @@ export class App {
 		this.drawerService.close()
 	onDrawerToggleRequested = () =>
 		this.drawerService.toggle()
+	onNavCollapseToggle = () => {
+		const next = !this.navCollapsed()
+		this.navCollapsed.set(next)
+		localStorage.setItem('jeffapp.navCollapsed', String(next))
+	}
 }

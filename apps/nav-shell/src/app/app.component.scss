@@ -52,6 +52,45 @@
 }
 
 // ============================================================================
+// Nav Restore Tab (shown when nav is collapsed on desktop)
+// ============================================================================
+.nav-restore-tab {
+	display: none;
+
+	@media (min-width: 1024px) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: fixed;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 1003;
+		width: 20px;
+		height: 48px;
+		background: var(--color-bg-secondary, #f8fafc);
+		border: 1px solid var(--color-border, #e0e0e0);
+		border-left: none;
+		border-radius: 0 6px 6px 0;
+		cursor: pointer;
+		color: var(--color-text-secondary, #555);
+		font-size: 1rem;
+		line-height: 1;
+		box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+
+		&:hover {
+			background: var(--color-hover, rgba(0, 0, 0, 0.05));
+			color: var(--color-text-primary, #000);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--color-focus, #0066cc);
+			outline-offset: 2px;
+		}
+	}
+}
+
+// ============================================================================
 // Main Content
 // ============================================================================
 .main-content {
@@ -62,10 +101,22 @@
 	bottom: 0;
 	overflow-y: auto;
 	background: var(--color-background, #f5f5f5);
+	padding: 24px;
 
 	// Desktop: account for drawer width
 	@media (min-width: 1024px) {
 		left: 280px;
+		transition: left 350ms ease;
+	}
+
+	&.nav-collapsed {
+		@media (min-width: 1024px) {
+			left: 0;
+		}
+	}
+
+	@media (max-width: 600px) {
+		padding: 16px;
 	}
 }
 

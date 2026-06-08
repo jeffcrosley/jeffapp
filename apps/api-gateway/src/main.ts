@@ -202,6 +202,97 @@ app.get('/api/dispatches', requireSession, async (_req, res) => {
   }
 });
 
+// ─── GTD helpers ───────────────────────────────────────────────────────────────
+
+function extractMcpText(parsed: unknown): string {
+  const p = parsed as { result?: { content?: Array<{ text?: string }> } };
+  return p?.result?.content?.[0]?.text ?? '';
+}
+
+// ─── GET /api/gtd/work — open tasks grouped by project ────────────────────────
+app.get('/api/gtd/work', requireSession, async (_req, res) => {
+  try {
+    const token = await getAccessToken();
+    const resp = await mcpCall('gtd_query_tasks', { status: 'todo', limit: 100 }, token);
+    if (!resp.ok) {
+      res.status(502).json({ error: 'GTD query failed', detail: resp.status });
+      return;
+    }
+    const parsed = await parseMcpResponse(resp);
+    const text = extractMcpText(parsed);
+    let rawTasks: unknown;
+    try { rawTasks = JSON.parse(text); } catch { rawTasks = []; }
+    const tasks = Array.isArray(rawTasks)
+      ? rawTasks
+      : ((rawTasks as { tasks?: unknown[] })?.tasks ?? []);
+
+    const projectMap: Record<string, Array<Record<string, unknown>>> = {};
+    const ungrouped: Array<Record<string, unknown>> = [];
+
+    for (const t of tasks as Array<Record<string, unknown>>) {
+      const project = t['project'] as string | undefined;
+      const item = {
+        id: t['id'] ?? '',
+        title: t['title'] ?? '',
+        claimed: t['claimed_by'] != null,
+        context: t['context'],
+        priority: t['priority'],
+      };
+      if (project) {
+        if (!projectMap[project]) projectMap[project] = [];
+        projectMap[project].push(item);
+      } else {
+        ungrouped.push(item);
+      }
+    }
+
+    const projects = Object.entries(projectMap).map(([name, taskList]) => ({ name, tasks: taskList }));
+    res.json({ projects, ungrouped });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to get work', detail });
+  }
+});
+
+// ─── GET /api/gtd/inbox — read inbox items ────────────────────────────────────
+app.get('/api/gtd/inbox', requireSession, async (_req, res) => {
+  try {
+    const token = await getAccessToken();
+    const resp = await mcpCall('fs_read_file', { path: '/home/jeffcrosley/Personal/GTD/inbox.md' }, token);
+    if (!resp.ok) {
+      res.status(502).json({ error: 'Failed to read inbox', detail: resp.status });
+      return;
+    }
+    const parsed = await parseMcpResponse(resp);
+    const text = extractMcpText(parsed);
+    const items = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+    res.json({ items });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to read inbox', detail });
+  }
+});
+
+// ─── POST /api/gtd/inbox — capture items to inbox ────────────────────────────
+app.post('/api/gtd/inbox', requireSession, express.json(), async (req, res) => {
+  try {
+    const { text } = req.body as { text?: string };
+    if (!text) {
+      res.status(400).json({ error: 'text is required' });
+      return;
+    }
+    const lines = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+    const token = await getAccessToken();
+    await Promise.all(
+      lines.map((line: string) => mcpCall('gtd_inbox_capture', { text: line }, token))
+    );
+    res.json({ added: lines.length });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to capture inbox', detail });
+  }
+});
+
 // ─── Internal webhook (dispatch worker → api-gateway → SSE) ───────────────────
 app.post('/internal/dispatch-event', express.json(), (req, res) => {
   const token = req.headers['x-internal-token'];

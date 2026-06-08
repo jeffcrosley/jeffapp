@@ -37,13 +37,18 @@ export class NavigationDrawerComponent {
 
 	links = input.required<NavLink[]>()
 	isOpen = input.required<boolean>()
+	collapsed = input<boolean>(false)
 
 	drawerToggleRequested = output<void>()
 	drawerCloseRequested = output<void>()
+	collapseToggleRequested = output<void>()
 
 	title = PORTFOLIO_TITLE
 	protected auth = inject(AuthService)
 
 	onClickHamburgerButton = (): void =>
 		this.drawerToggleRequested.emit()
+
+	onCollapseToggle = (): void =>
+		this.collapseToggleRequested.emit()
 }

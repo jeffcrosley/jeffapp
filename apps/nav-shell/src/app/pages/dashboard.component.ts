@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EnvironmentService } from '../services/environment.service';
 import { EventBusService, BusEvent } from '../services/event-bus.service';
@@ -32,7 +42,14 @@ interface DispatchSession {
   stage: DispatchStage;
   status: 'pending' | 'running' | 'complete' | 'failed';
   started_at?: string;
+  created_at?: string;
+  completed_at?: string;
   detail?: string;
+  error?: string;
+  session_name?: string;
+  model?: string;
+  account?: string;
+  return_doc?: string;
 }
 
 // ─── API snapshot shape (from GET /api/dispatches) ───────────────────────────
@@ -48,12 +65,37 @@ interface ApiDispatch {
   completed_at?: string;
   session_name?: string;
   error?: string;
+  model?: string;
+  account?: string;
+  return_doc?: string;
 }
+
+// ─── GTD work types ───────────────────────────────────────────────────────────
+
+interface GtdTask {
+  id: string;
+  title: string;
+  claimed: boolean;
+  context?: string;
+  priority?: string;
+}
+
+interface GtdProject {
+  name: string;
+  tasks: GtdTask[];
+}
+
+interface GtdWorkResponse {
+  projects: GtdProject[];
+  ungrouped: GtdTask[];
+}
+
+type StageFilter = 'all' | 'running' | 'done' | 'failed';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <section class="dashboard-container">
@@ -62,7 +104,7 @@ interface ApiDispatch {
         <p class="subtitle">In-progress dispatches</p>
       </div>
 
-      <!-- Work In Progress -->
+      <!-- ── Work In Progress ────────────────────────────────────────────── -->
       <div class="dashboard-section">
         <div class="section-title-row">
           <h3>Work In Progress <span class="section-hint">(recent 20)</span></h3>
@@ -74,19 +116,38 @@ interface ApiDispatch {
           }
         </div>
 
+        <!-- Stage filter -->
+        <div class="filter-bar">
+          @for (f of FILTERS; track f.key) {
+            <button
+              class="filter-btn"
+              [class.active]="activeFilter === f.key"
+              (click)="setFilter(f.key)"
+            >{{ f.label }}</button>
+          }
+        </div>
+
         @if (dispatchesLoading) {
           <p class="muted">Loading dispatches…</p>
         }
         @if (!dispatchesLoading && dispatchesError) {
           <p class="muted error">{{ dispatchesError }}</p>
         }
-        @if (!dispatchesLoading && !dispatchesError && sessions.length === 0) {
+        @if (!dispatchesLoading && !dispatchesError && filteredSessions.length === 0) {
           <p class="muted">No dispatches found.</p>
         }
-        @if (!dispatchesLoading && !dispatchesError && sessions.length > 0) {
+        @if (!dispatchesLoading && !dispatchesError && filteredSessions.length > 0) {
           <div class="dispatch-session-list">
-            @for (session of sessions; track session.dispatch_id) {
-              <div class="dispatch-session-card" [class]="'card-' + session.status">
+            @for (session of filteredSessions; track session.dispatch_id) {
+              <div
+                class="dispatch-session-card"
+                [class]="'card-' + session.status"
+                (click)="openModal(session)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="openModal(session)"
+                (keydown.space)="openModal(session)"
+              >
                 <div class="session-header">
                   <span class="agent-glyph" [title]="session.agent">{{ agentGlyph(session.agent) }}</span>
                   <span class="session-agent">{{ session.agent }}</span>
@@ -121,14 +182,211 @@ interface ApiDispatch {
           </div>
         }
       </div>
+
+      <!-- ── Available Work ──────────────────────────────────────────────── -->
+      <div class="dashboard-section">
+        <h3>Available Work</h3>
+
+        @if (workLoading) {
+          <p class="muted">Loading tasks…</p>
+        }
+        @if (!workLoading && workError) {
+          <p class="muted error">{{ workError }}</p>
+        }
+        @if (!workLoading && !workError) {
+          <!-- Projects -->
+          @for (project of workProjects; track project.name) {
+            <div class="work-project">
+              <button
+                class="project-header"
+                (click)="toggleProject(project.name)"
+                [attr.aria-expanded]="!isProjectCollapsed(project.name)"
+              >
+                <span class="project-chevron">{{ isProjectCollapsed(project.name) ? '▶' : '▼' }}</span>
+                <span class="project-name">{{ project.name }}</span>
+                <span class="project-count">{{ project.tasks.length }}</span>
+              </button>
+              @if (!isProjectCollapsed(project.name)) {
+                <ul class="task-list">
+                  @for (task of project.tasks; track task.id) {
+                    <li class="task-item">
+                      @if (task.claimed) {
+                        <span class="wip-dot" title="In progress"></span>
+                      }
+                      <span class="task-title">{{ task.title }}</span>
+                      @if (task.context) {
+                        <span class="context-tag">{{ task.context }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
+          <!-- Ungrouped -->
+          @if (workUngrouped.length > 0) {
+            <div class="work-project">
+              <button
+                class="project-header"
+                (click)="toggleProject('__ungrouped__')"
+                [attr.aria-expanded]="!isProjectCollapsed('__ungrouped__')"
+              >
+                <span class="project-chevron">{{ isProjectCollapsed('__ungrouped__') ? '▶' : '▼' }}</span>
+                <span class="project-name">Ungrouped</span>
+                <span class="project-count">{{ workUngrouped.length }}</span>
+              </button>
+              @if (!isProjectCollapsed('__ungrouped__')) {
+                <ul class="task-list">
+                  @for (task of workUngrouped; track task.id) {
+                    <li class="task-item">
+                      @if (task.claimed) {
+                        <span class="wip-dot" title="In progress"></span>
+                      }
+                      <span class="task-title">{{ task.title }}</span>
+                      @if (task.context) {
+                        <span class="context-tag">{{ task.context }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
+          @if (workProjects.length === 0 && workUngrouped.length === 0) {
+            <p class="muted">No open tasks.</p>
+          }
+        }
+      </div>
+
+      <!-- ── Inbox ───────────────────────────────────────────────────────── -->
+      <div class="dashboard-section">
+        <h3>Inbox <span class="section-hint">({{ inboxItems.length }})</span></h3>
+
+        @if (inboxLoading) {
+          <p class="muted">Loading inbox…</p>
+        }
+        @if (!inboxLoading && inboxError) {
+          <p class="muted error">{{ inboxError }}</p>
+        }
+        @if (!inboxLoading) {
+          @if (inboxItems.length > 0) {
+            <ul class="inbox-list">
+              @for (item of inboxItems; track $index) {
+                <li class="inbox-item">{{ item }}</li>
+              }
+            </ul>
+          } @else if (!inboxError) {
+            <p class="muted">Inbox is empty.</p>
+          }
+
+          <div class="inbox-compose">
+            <textarea
+              #inboxTextarea
+              class="inbox-textarea"
+              [value]="inboxInput"
+              (input)="onInboxInput($event)"
+              (keydown)="onInboxKeydown($event)"
+              placeholder="Add to inbox… (Enter to submit, Shift+Enter for new line)"
+              rows="1"
+            ></textarea>
+            <button
+              class="inbox-submit-btn"
+              (click)="submitInbox()"
+              [disabled]="inboxSubmitting || !inboxInput.trim()"
+            >{{ inboxSubmitting ? '…' : 'Add' }}</button>
+          </div>
+        }
+      </div>
     </section>
+
+    <!-- ── Dispatch detail modal ──────────────────────────────────────────── -->
+    @if (selectedSession) {
+      <div class="modal-overlay" (click)="closeModal()" role="dialog" aria-modal="true">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <button class="modal-close" (click)="closeModal()" aria-label="Close">&times;</button>
+
+          <div class="modal-slug">{{ selectedSession.slug }}</div>
+
+          <div class="modal-meta-row">
+            <span class="modal-agent-glyph">{{ agentGlyph(selectedSession.agent) }}</span>
+            <span class="modal-agent-name">{{ selectedSession.agent }}</span>
+            @if (selectedSession.model) {
+              <span class="modal-meta-pill">{{ selectedSession.model }}</span>
+            }
+            @if (selectedSession.account) {
+              <span class="modal-meta-pill">{{ selectedSession.account }}</span>
+            }
+            <span class="session-badge" [class]="'badge-' + selectedSession.status">
+              {{ statusLabel(selectedSession.status) }}
+            </span>
+          </div>
+
+          <div class="modal-info-grid">
+            @if (selectedSession.created_at) {
+              <div class="modal-info-row">
+                <span class="modal-info-label">Dispatched</span>
+                <span class="modal-info-value">
+                  {{ formatRelative(selectedSession.created_at) }}
+                  <span class="modal-info-abs">({{ formatAbsolute(selectedSession.created_at) }})</span>
+                </span>
+              </div>
+            }
+            <div class="modal-info-row">
+              <span class="modal-info-label">Duration</span>
+              <span class="modal-info-value">{{ formatModalDuration(selectedSession) }}</span>
+            </div>
+            @if (selectedSession.session_name) {
+              <div class="modal-info-row">
+                <span class="modal-info-label">Session</span>
+                <span class="modal-info-value">{{ selectedSession.session_name }}</span>
+              </div>
+            }
+            @if (selectedSession.return_doc) {
+              <div class="modal-info-row">
+                <span class="modal-info-label">Return doc</span>
+                <span class="modal-info-value modal-return-doc">{{ selectedSession.return_doc }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Stages -->
+          <div class="modal-stages">
+            @for (stage of STAGES; track stage) {
+              <div class="modal-stage-row">
+                <div class="modal-stage-dot"
+                     [class.completed]="isCompleted(selectedSession, stage)"
+                     [class.current]="isCurrent(selectedSession, stage)"
+                     [class.failed-at]="isFailedAt(selectedSession, stage)">
+                  @if (isFailedAt(selectedSession, stage)) {
+                    <span class="fail-x">✕</span>
+                  } @else if (isCompleted(selectedSession, stage)) {
+                    <span class="check">✓</span>
+                  }
+                </div>
+                <span class="modal-stage-label" [class.dim]="isFuture(selectedSession, stage)">
+                  {{ stageLabel(stage) }}
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (selectedSession.error) {
+            <div class="modal-error-callout">
+              <strong>Error:</strong> {{ selectedSession.error }}
+            </div>
+          }
+        </div>
+      </div>
+    }
   `,
   styles: [
     `
       .dashboard-container {
         max-width: 900px;
         margin: 0 auto;
-        padding: 20px 0;
+        padding: 24px 0;
 
         .dashboard-header {
           text-align: center;
@@ -202,7 +460,39 @@ interface ApiDispatch {
             }
           }
 
-          // ─── Dispatch session list ─────────────────────────────────────────
+          // ─── Stage filter bar ──────────────────────────────────────────
+
+          .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+          }
+
+          .filter-btn {
+            padding: 4px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--color-border-primary);
+            background: transparent;
+            color: var(--color-text-secondary);
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+            &:hover {
+              background: var(--color-bg-secondary);
+              color: var(--color-text-primary);
+            }
+
+            &.active {
+              background: var(--color-primary, #0066cc);
+              color: #fff;
+              border-color: var(--color-primary, #0066cc);
+            }
+          }
+
+          // ─── Dispatch session list ─────────────────────────────────────
 
           .dispatch-session-list {
             display: flex;
@@ -215,7 +505,17 @@ interface ApiDispatch {
             background: var(--color-bg-secondary);
             border-radius: 8px;
             border-left: 3px solid var(--color-border-primary);
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+
+            &:hover {
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+
+            &:focus-visible {
+              outline: 2px solid var(--color-primary, #0066cc);
+              outline-offset: 2px;
+            }
 
             &.card-running {
               border-left-color: var(--color-sapphire-600);
@@ -371,6 +671,171 @@ interface ApiDispatch {
               }
             }
           }
+
+          // ─── Available Work ────────────────────────────────────────────
+
+          .work-project {
+            margin-bottom: 12px;
+            background: var(--color-bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+
+          .project-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-align: left;
+            transition: background 0.15s;
+
+            &:hover {
+              background: rgba(0, 0, 0, 0.03);
+            }
+
+            .project-chevron {
+              font-size: 0.65rem;
+              color: var(--color-text-muted);
+              width: 12px;
+              flex-shrink: 0;
+            }
+
+            .project-name {
+              flex: 1;
+            }
+
+            .project-count {
+              font-size: 0.75rem;
+              font-weight: 500;
+              color: var(--color-text-muted);
+              background: var(--color-border-primary);
+              padding: 1px 8px;
+              border-radius: 10px;
+            }
+          }
+
+          .task-list {
+            list-style: none;
+            margin: 0;
+            padding: 0 0 8px 0;
+          }
+
+          .task-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px 7px 38px;
+            font-size: 0.87rem;
+            color: var(--color-text-secondary);
+
+            &:hover {
+              background: rgba(0, 0, 0, 0.02);
+            }
+
+            .task-title {
+              flex: 1;
+            }
+
+            .wip-dot {
+              width: 7px;
+              height: 7px;
+              border-radius: 50%;
+              background: var(--color-sapphire-600);
+              flex-shrink: 0;
+              animation: pulse 1.4s ease-in-out infinite;
+            }
+
+            .context-tag {
+              font-size: 0.72rem;
+              padding: 1px 7px;
+              border-radius: 10px;
+              background: rgba(100, 116, 139, 0.12);
+              color: var(--color-text-muted);
+              flex-shrink: 0;
+            }
+          }
+
+          // ─── Inbox ─────────────────────────────────────────────────────
+
+          .inbox-list {
+            list-style: none;
+            margin: 0 0 16px 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+
+          .inbox-item {
+            padding: 8px 14px;
+            background: var(--color-bg-secondary);
+            border-radius: 6px;
+            font-size: 0.88rem;
+            color: var(--color-text-secondary);
+            border-left: 2px solid var(--color-border-primary);
+          }
+
+          .inbox-compose {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-top: 4px;
+          }
+
+          .inbox-textarea {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid var(--color-border-primary);
+            border-radius: 6px;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-size: 0.88rem;
+            font-family: inherit;
+            resize: none;
+            overflow: hidden;
+            line-height: 1.5;
+            min-height: 38px;
+            transition: border-color 0.15s;
+
+            &::placeholder {
+              color: var(--color-text-muted);
+            }
+
+            &:focus {
+              outline: none;
+              border-color: var(--color-primary, #0066cc);
+            }
+          }
+
+          .inbox-submit-btn {
+            padding: 9px 16px;
+            background: var(--color-primary, #0066cc);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.15s;
+            min-height: 38px;
+
+            &:hover:not(:disabled) {
+              opacity: 0.85;
+            }
+
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+          }
         }
 
         @keyframes pulse {
@@ -390,13 +855,242 @@ interface ApiDispatch {
         }
 
         @media (max-width: 600px) {
-          padding: 20px 16px;
+          padding: 16px;
         }
+      }
+
+      // ── Modal ──────────────────────────────────────────────────────────────
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: fadeIn 0.15s ease;
+      }
+
+      .modal-content {
+        position: relative;
+        background: var(--color-bg-primary, #fff);
+        border-radius: 10px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 28px 28px 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.15s ease;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        font-size: 1.4rem;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 8px;
+        border-radius: 4px;
+
+        &:hover {
+          color: var(--color-text-primary);
+          background: var(--color-bg-secondary);
+        }
+      }
+
+      .modal-slug {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 12px;
+        padding-right: 32px;
+        word-break: break-all;
+      }
+
+      .modal-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+
+        .modal-agent-glyph {
+          font-size: 1.2rem;
+          opacity: 0.85;
+        }
+
+        .modal-agent-name {
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: var(--color-text-primary);
+        }
+
+        .modal-meta-pill {
+          font-size: 0.75rem;
+          padding: 2px 9px;
+          border-radius: 10px;
+          background: var(--color-bg-secondary);
+          color: var(--color-text-muted);
+          border: 1px solid var(--color-border-primary);
+        }
+
+        .session-badge {
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 0.72rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+
+          &.badge-running {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--color-sapphire-600);
+          }
+
+          &.badge-complete {
+            background: rgba(5, 150, 105, 0.12);
+            color: var(--color-emerald-600);
+          }
+
+          &.badge-failed {
+            background: rgba(220, 38, 38, 0.12);
+            color: var(--color-ruby-600);
+          }
+
+          &.badge-pending {
+            background: rgba(100, 116, 139, 0.12);
+            color: var(--color-text-muted);
+          }
+        }
+      }
+
+      .modal-info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 20px;
+        padding: 14px;
+        background: var(--color-bg-secondary);
+        border-radius: 8px;
+      }
+
+      .modal-info-row {
+        display: flex;
+        gap: 12px;
+        font-size: 0.87rem;
+
+        .modal-info-label {
+          color: var(--color-text-muted);
+          min-width: 80px;
+          flex-shrink: 0;
+        }
+
+        .modal-info-value {
+          color: var(--color-text-primary);
+          word-break: break-all;
+        }
+
+        .modal-info-abs {
+          color: var(--color-text-muted);
+          font-size: 0.82rem;
+          margin-left: 6px;
+        }
+
+        .modal-return-doc {
+          font-family: monospace;
+          font-size: 0.8rem;
+        }
+      }
+
+      .modal-stages {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .modal-stage-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .modal-stage-dot {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid var(--color-border-primary);
+          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.2s, border-color 0.2s;
+
+          &.completed {
+            background: var(--color-emerald-600);
+            border-color: var(--color-emerald-600);
+          }
+
+          &.current {
+            background: var(--color-sapphire-600);
+            border-color: var(--color-sapphire-600);
+            animation: dot-pulse 1.5s ease-in-out infinite;
+          }
+
+          &.failed-at {
+            background: var(--color-ruby-600);
+            border-color: var(--color-ruby-600);
+          }
+
+          .fail-x, .check {
+            font-size: 0.6rem;
+            color: #fff;
+            font-weight: 700;
+          }
+        }
+
+        .modal-stage-label {
+          font-size: 0.88rem;
+          color: var(--color-text-primary);
+
+          &.dim {
+            color: var(--color-text-muted);
+          }
+        }
+      }
+
+      .modal-error-callout {
+        background: rgba(220, 38, 38, 0.08);
+        border: 1px solid var(--color-ruby-600);
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        color: var(--color-ruby-600);
+        word-break: break-all;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+        from { transform: translateY(12px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
     `,
   ],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  @ViewChild('inboxTextarea') inboxTextareaRef!: ElementRef<HTMLTextAreaElement>;
+
   private env = inject(EnvironmentService);
   private eventBus = inject(EventBusService);
   private eventSub: Subscription | null = null;
@@ -404,11 +1098,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private hasConnectedOnce = false;
 
   protected readonly STAGES: readonly DispatchStage[] = DISPATCH_STAGES;
+  protected readonly FILTERS: { key: StageFilter; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'running', label: 'Running' },
+    { key: 'done', label: 'Done' },
+    { key: 'failed', label: 'Failed' },
+  ];
 
+  // WIP state
   protected dispatchesLoading = true;
   protected dispatchesError = '';
   protected sessions: DispatchSession[] = [];
   protected sseReconnecting = false;
+  protected activeFilter: StageFilter = 'all';
+
+  // Modal state
+  protected selectedSession: DispatchSession | null = null;
+
+  // Available Work state
+  protected workLoading = true;
+  protected workError = '';
+  protected workProjects: GtdProject[] = [];
+  protected workUngrouped: GtdTask[] = [];
+  protected collapsedProjects: Record<string, boolean> = {};
+
+  // Inbox state
+  protected inboxLoading = true;
+  protected inboxError = '';
+  protected inboxItems: string[] = [];
+  protected inboxInput = '';
+  protected inboxSubmitting = false;
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.selectedSession) {
+      this.selectedSession = null;
+    }
+  }
 
   async ngOnInit(): Promise<void> {
     if (!this.env.getApiGatewayUrl()) {
@@ -438,7 +1164,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
-    await this.loadDispatches();
+    await Promise.all([
+      this.loadDispatches(),
+      this.loadWork(),
+      this.loadInbox(),
+    ]);
   }
 
   ngOnDestroy(): void {
@@ -446,6 +1176,126 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sseConnSub?.unsubscribe();
     this.eventBus.disconnect();
   }
+
+  // ─── Stage filter ────────────────────────────────────────────────────────────
+
+  protected get filteredSessions(): DispatchSession[] {
+    switch (this.activeFilter) {
+      case 'running': return this.sessions.filter(s => s.status === 'running');
+      case 'done': return this.sessions.filter(s => s.status === 'complete');
+      case 'failed': return this.sessions.filter(s => s.status === 'failed');
+      default: return this.sessions;
+    }
+  }
+
+  protected setFilter(f: StageFilter): void {
+    this.activeFilter = f;
+  }
+
+  // ─── Modal ───────────────────────────────────────────────────────────────────
+
+  protected openModal(session: DispatchSession): void {
+    this.selectedSession = session;
+  }
+
+  protected closeModal(): void {
+    this.selectedSession = null;
+  }
+
+  // ─── Available Work ──────────────────────────────────────────────────────────
+
+  private async loadWork(): Promise<void> {
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/gtd/work`, { credentials: 'include' });
+      if (!res.ok) {
+        this.workError = res.status === 401 ? 'Not authenticated' : 'Failed to load tasks';
+      } else {
+        const data = (await res.json()) as GtdWorkResponse;
+        this.workProjects = data.projects ?? [];
+        this.workUngrouped = data.ungrouped ?? [];
+      }
+    } catch {
+      this.workError = 'Could not reach gateway';
+    } finally {
+      this.workLoading = false;
+    }
+  }
+
+  protected toggleProject(name: string): void {
+    this.collapsedProjects = {
+      ...this.collapsedProjects,
+      [name]: !this.collapsedProjects[name],
+    };
+  }
+
+  protected isProjectCollapsed(name: string): boolean {
+    return !!this.collapsedProjects[name];
+  }
+
+  // ─── Inbox ───────────────────────────────────────────────────────────────────
+
+  private async loadInbox(): Promise<void> {
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/gtd/inbox`, { credentials: 'include' });
+      if (!res.ok) {
+        this.inboxError = res.status === 401 ? 'Not authenticated' : 'Failed to load inbox';
+      } else {
+        const data = (await res.json()) as { items: string[] };
+        this.inboxItems = data.items ?? [];
+      }
+    } catch {
+      this.inboxError = 'Could not reach gateway';
+    } finally {
+      this.inboxLoading = false;
+    }
+  }
+
+  protected onInboxInput(event: Event): void {
+    const el = event.target as HTMLTextAreaElement;
+    this.inboxInput = el.value;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
+  protected onInboxKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void this.submitInbox();
+    }
+  }
+
+  protected async submitInbox(): Promise<void> {
+    const text = this.inboxInput.trim();
+    if (!text || this.inboxSubmitting) return;
+    this.inboxSubmitting = true;
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/gtd/inbox`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) {
+        this.inboxItems = [...lines.reverse(), ...this.inboxItems];
+        this.inboxInput = '';
+        const ta = this.inboxTextareaRef?.nativeElement;
+        if (ta) {
+          ta.value = '';
+          ta.style.height = 'auto';
+        }
+      }
+    } catch {
+      // fail visible on next load
+    } finally {
+      this.inboxSubmitting = false;
+    }
+  }
+
+  // ─── Dispatch lifecycle ──────────────────────────────────────────────────────
 
   private handleLifecycleEvent(d: Record<string, unknown>): void {
     const dispatch_id = d['dispatch_id'] as string;
@@ -480,6 +1330,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       status,
       detail,
       started_at: existing?.started_at ?? ts,
+      created_at: existing?.created_at ?? ts,
     };
 
     if (idx >= 0) {
@@ -531,6 +1382,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       stage,
       status,
       started_at: d.claimed_at ?? d.created_at,
+      created_at: d.created_at,
+      completed_at: d.completed_at,
+      error: d.error,
+      session_name: d.session_name,
+      model: d.model,
+      account: d.account,
+      return_doc: d.return_doc,
     };
   }
 
@@ -558,7 +1416,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Template helpers ───────────────────────────────────────────────────────
+  // ─── Template helpers ────────────────────────────────────────────────────────
 
   protected agentGlyph(agent: string): string {
     return AGENT_GLYPHS[agent.toLowerCase()] ?? '○';
@@ -611,5 +1469,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
+  }
+
+  protected formatAbsolute(iso: string): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  protected formatModalDuration(session: DispatchSession): string {
+    const start = session.created_at ? new Date(session.created_at).getTime() : null;
+    if (!start) return '—';
+    const end = session.completed_at ? new Date(session.completed_at).getTime() : Date.now();
+    const diffMs = end - start;
+    const seconds = Math.floor(diffMs / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) {
+      return session.status === 'running' ? `running for ${minutes}m` : `${minutes}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    const dur = `${hours}h ${rem}m`;
+    return session.status === 'running' ? `running for ${dur}` : dur;
   }
 }
