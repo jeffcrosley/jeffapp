@@ -1,12 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { EnvironmentService } from '../services/environment.service';
+import { EventBusService, BusEvent } from '../services/event-bus.service';
 
 const mockEnvService = {
   getApiGatewayUrl: () => 'http://localhost:3333',
   isLocalDevelopment: () => true,
   isProduction: () => false,
 };
+
+function makeMockEventBus() {
+  return {
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    events$: new Subject<BusEvent>(),
+    connected$: new BehaviorSubject<boolean>(false),
+  };
+}
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -17,7 +28,10 @@ describe('DashboardComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [{ provide: EnvironmentService, useValue: mockEnvService }],
+      providers: [
+        { provide: EnvironmentService, useValue: mockEnvService },
+        { provide: EventBusService, useValue: makeMockEventBus() },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
@@ -45,6 +59,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ briefs: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ([]),
         });
 
       fixture.detectChanges();
@@ -99,6 +118,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ briefs: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ([]),
         });
 
       fixture.detectChanges();
@@ -140,6 +164,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ briefs }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ([]),
         });
 
       fixture.detectChanges();
@@ -182,6 +211,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ briefs: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ([]),
         });
 
       fixture.detectChanges();
@@ -218,6 +252,11 @@ describe('DashboardComponent', () => {
           ok: true,
           status: 200,
           json: async () => ({ briefs: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ([]),
         });
 
       fixture.detectChanges();
@@ -244,7 +283,8 @@ describe('DashboardComponent', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
-        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) });
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ([]) });
 
       fixture.detectChanges();
       await fixture.whenStable();
@@ -263,7 +303,8 @@ describe('DashboardComponent', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
-        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs: [] }) });
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs: [] }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ([]) });
 
       fixture.detectChanges();
       await fixture.whenStable();
@@ -287,7 +328,8 @@ describe('DashboardComponent', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ reachable: true }) })
         .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ tasks: [] }) })
-        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) });
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ briefs }) })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ([]) });
 
       fixture.detectChanges();
       await fixture.whenStable();
