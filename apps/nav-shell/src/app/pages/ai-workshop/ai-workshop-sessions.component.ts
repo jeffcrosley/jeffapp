@@ -185,7 +185,7 @@ interface SessionSummary {
 
       <!-- Session Detail Drawer -->
       @if (selectedSession) {
-        <div class="drawer-backdrop" (click)="closeDetail()"></div>
+        <div class="drawer-backdrop" role="button" tabindex="0" (click)="closeDetail()" (keydown.enter)="closeDetail()" (keydown.escape)="closeDetail()" aria-label="Close detail drawer"></div>
         <aside class="detail-drawer" role="dialog" aria-label="Session detail">
           <header class="drawer-header">
             <h3>Session Detail</h3>
@@ -194,7 +194,7 @@ interface SessionSummary {
           <div class="drawer-body">
             <div class="detail-row">
               <span class="detail-label">Dispatch ID</span>
-              <span class="detail-value mono copyable" (click)="copy(selectedSession.dispatch_id)" title="Click to copy">{{ selectedSession.dispatch_id }}</span>
+              <span class="detail-value mono copyable" role="button" tabindex="0" (click)="copy(selectedSession.dispatch_id)" (keydown.enter)="copy(selectedSession.dispatch_id)" title="Click to copy">{{ selectedSession.dispatch_id }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Brief</span>
@@ -652,7 +652,7 @@ export class AiWorkshopSessionsComponent implements OnInit {
   }
 
   protected copy(text: string): void {
-    navigator.clipboard.writeText(text).catch(() => {});
+    navigator.clipboard.writeText(text).catch(() => void 0);
   }
 
   protected uniqueAgents(): string[] {
