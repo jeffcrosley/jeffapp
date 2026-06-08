@@ -7,6 +7,7 @@ import { HomeComponent } from './pages/home/home.component'
 import { authGuard } from './guards/auth.guard'
 import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component'
 import { TrafficLightPage } from './pages/traffic-light/traffic-light.page'
+import { GoBagPage } from './pages/go-bag/go-bag.page'
 
 export const appRoutes: Route[] = [
 	{
@@ -53,6 +54,19 @@ export const appRoutes: Route[] = [
 	{
 		path: 'traffic-light',
 		component: TrafficLightPage,
+		canActivate: [authGuard]
+	},
+	{
+		path: 'go-bag',
+		component: GoBagPage,
+		canActivate: [authGuard]
+	},
+	{
+		path: 'grandpa',
+		loadComponent: () =>
+			import('./pages/grandpa/grandpa.component').then(
+				(m) => m.GrandpaComponent
+			),
 		canActivate: [authGuard]
 	},
 	{

@@ -48,6 +48,16 @@ export class App {
 			status: 'wip'
 		},
 		{
+			label: '🧳 Go Bag',
+			route: '/go-bag',
+			status: 'wip'
+		},
+		{
+			label: '👴 Grandpa',
+			route: '/grandpa',
+			status: 'wip'
+		},
+		{
 			label: 'About',
 			route: '/about',
 			status: 'wip'
