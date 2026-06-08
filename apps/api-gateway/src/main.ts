@@ -284,7 +284,7 @@ app.post('/api/gtd/inbox', requireSession, express.json(), async (req, res) => {
     const lines = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
     const token = await getAccessToken();
     await Promise.all(
-      lines.map((line: string) => mcpCall('gtd_inbox_capture', { text: line }, token))
+      lines.map((line: string) => mcpCall('gtd_inbox_capture', { title: line, source: 'jeffapp-dashboard' }, token))
     );
     res.json({ added: lines.length });
   } catch (err) {
