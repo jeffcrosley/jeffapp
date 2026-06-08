@@ -20,12 +20,19 @@
 <aside
 	class="nav-drawer"
 	[class.open]="isOpen()"
+	[class.collapsed]="collapsed()"
 	role="navigation"
 	[attr.aria-label]="'Main navigation'"
 	[attr.aria-hidden]="!isOpen()"
 >
 	<header class="drawer-header">
 		<h1 class="portfolio-title">{{ title }}</h1>
+		<button
+			class="collapse-toggle"
+			(click)="onCollapseToggle()"
+			title="Collapse navigation"
+			aria-label="Collapse navigation"
+		>‹</button>
 	</header>
 	<nav
 		class="drawer-nav"

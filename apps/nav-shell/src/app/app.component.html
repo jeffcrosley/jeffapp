@@ -78,15 +78,25 @@
 <app-navigation-drawer
 	[links]="navigationLinks"
 	[isOpen]="navDrawerIsOpen()"
+	[collapsed]="navCollapsed()"
 	(drawerCloseRequested)="onDrawerCloseRequested()"
-	(drawerToggleRequested)="
-		onDrawerToggleRequested()
-	"
+	(drawerToggleRequested)="onDrawerToggleRequested()"
+	(collapseToggleRequested)="onNavCollapseToggle()"
 />
+
+@if (navCollapsed()) {
+	<button
+		class="nav-restore-tab"
+		(click)="onNavCollapseToggle()"
+		title="Open navigation"
+		aria-label="Open navigation"
+	>›</button>
+}
 
 <main
 	class="main-content"
 	[class.subapp-mode]="isSubappRoute()"
+	[class.nav-collapsed]="navCollapsed()"
 >
 	<router-outlet></router-outlet>
 </main>
