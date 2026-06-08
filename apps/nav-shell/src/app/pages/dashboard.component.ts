@@ -1127,6 +1127,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected dispatchesLoading = true;
   protected dispatchesError = '';
   protected sessions: DispatchSession[] = [];
+  private sseCache = new Map<string, DispatchSession>();
   protected sseReconnecting = false;
   protected activeFilter: StageFilter =
     (localStorage.getItem('jeffapp.dashboardFilter') as StageFilter) ?? 'all';
@@ -1171,15 +1172,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     this.eventSub = this.eventBus.events$.subscribe((event: BusEvent) => {
-      const d = event.data as Record<string, unknown>;
-      if (d && typeof d === 'object' && 'stage' in d && 'dispatch_id' in d) {
-        this.handleLifecycleEvent(d);
-      } else if (
-        event.type === 'dispatch.running' ||
-        event.type === 'dispatch.completed' ||
-        event.type === 'dispatch.failed'
-      ) {
-        this.mergeLegacyDispatch(event.data as ApiDispatch);
+      if (typeof event.type === 'string' && event.type.startsWith('dispatch.')) {
+        // stage lives on the outer event envelope (not inside event.data)
+        const outer = event as unknown as Record<string, unknown>;
+        const d = (event.data ?? {}) as Record<string, unknown>;
+        const merged: Record<string, unknown> = {
+          ...d,
+          stage: outer['stage'] ?? d['stage'],
+        };
+        if (!merged['status']) {
+          if (event.type === 'dispatch.completed' || event.type === 'dispatch.complete') {
+            merged['status'] = 'complete';
+          } else if (event.type === 'dispatch.failed') {
+            merged['status'] = 'failed';
+          } else if (event.type === 'dispatch.dispatched') {
+            merged['status'] = 'pending';
+          } else {
+            merged['status'] = 'running';
+          }
+        }
+        if (merged['dispatch_id']) {
+          this.handleLifecycleEvent(merged);
+        }
       }
     });
 
@@ -1237,9 +1251,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (!res.ok) {
         this.workError = res.status === 401 ? 'Not authenticated' : 'Failed to load tasks';
       } else {
-        const data = (await res.json()) as GtdWorkResponse;
-        this.workProjects = data.projects ?? [];
-        this.workUngrouped = data.ungrouped ?? [];
+        const data = (await res.json()) as GtdWorkResponse & { error?: string };
+        if (data.error) {
+          this.workError = 'Tasks unavailable — MCP session may have expired';
+        } else {
+          this.workProjects = data.projects ?? [];
+          this.workUngrouped = data.ungrouped ?? [];
+        }
       }
     } catch {
       this.workError = 'Could not reach gateway';
@@ -1268,8 +1286,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (!res.ok) {
         this.inboxError = res.status === 401 ? 'Not authenticated' : 'Failed to load inbox';
       } else {
-        const data = (await res.json()) as { items: string[] };
-        this.inboxItems = data.items ?? [];
+        const data = (await res.json()) as { items: string[]; error?: string };
+        if (data.error) {
+          this.inboxError = 'Inbox unavailable';
+        } else {
+          this.inboxItems = data.items ?? [];
+        }
       }
     } catch {
       this.inboxError = 'Could not reach gateway';
@@ -1359,15 +1381,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       created_at: existing?.created_at ?? ts,
     };
 
+    let sessionForCache: DispatchSession;
     if (idx >= 0) {
+      sessionForCache = { ...existing!, ...updated };
       this.sessions = [
         ...this.sessions.slice(0, idx),
-        { ...existing, ...updated },
+        sessionForCache,
         ...this.sessions.slice(idx + 1),
       ];
     } else {
+      sessionForCache = updated;
       this.sessions = [updated, ...this.sessions].slice(0, 20);
     }
+    this.sseCache.set(dispatch_id, sessionForCache);
   }
 
   private mergeLegacyDispatch(d: ApiDispatch): void {
@@ -1433,7 +1459,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
           res.status === 401 ? 'Not authenticated' : 'Failed to load dispatches';
       } else {
         const raw = (await res.json()) as ApiDispatch[];
-        this.sessions = raw.map(d => this.mapApiDispatch(d));
+        const r2Sessions = raw.map(d => this.mapApiDispatch(d));
+        // Merge SSE-observed states — SSE advances stage ahead of R2 writes
+        const r2Ids = new Set(r2Sessions.map(s => s.dispatch_id));
+        const merged = r2Sessions.map(s => {
+          const cached = this.sseCache.get(s.dispatch_id);
+          if (!cached) return s;
+          const r2Idx = DISPATCH_STAGES.indexOf(s.stage);
+          const sseIdx = DISPATCH_STAGES.indexOf(cached.stage);
+          return sseIdx > r2Idx ? { ...s, stage: cached.stage, status: cached.status } : s;
+        });
+        for (const [id, cached] of this.sseCache) {
+          if (!r2Ids.has(id)) merged.push(cached);
+        }
+        this.sessions = merged
+          .sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+          .slice(0, 20);
       }
     } catch {
       this.dispatchesError = 'Could not reach gateway';

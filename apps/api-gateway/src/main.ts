@@ -354,9 +354,15 @@ function extractMcpText(parsed: unknown): string {
 app.get('/api/gtd/work', requireSession, async (_req, res) => {
   try {
     const token = await getAccessToken();
-    const resp = await mcpCall('gtd_query_tasks', { status: 'todo', limit: 100 }, token);
+    const mcpTimeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('MCP timeout')), 5_000)
+    );
+    const resp = await Promise.race([
+      mcpCall('gtd_query_tasks', { status: 'todo', limit: 100 }, token),
+      mcpTimeout,
+    ]);
     if (!resp.ok) {
-      res.status(502).json({ error: 'GTD query failed', detail: resp.status });
+      res.json({ projects: [], ungrouped: [], error: 'unavailable' });
       return;
     }
     const parsed = await parseMcpResponse(resp);
@@ -389,9 +395,8 @@ app.get('/api/gtd/work', requireSession, async (_req, res) => {
 
     const projects = Object.entries(projectMap).map(([name, taskList]) => ({ name, tasks: taskList }));
     res.json({ projects, ungrouped });
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: 'Failed to get work', detail });
+  } catch {
+    res.json({ projects: [], ungrouped: [], error: 'unavailable' });
   }
 });
 
@@ -401,16 +406,15 @@ app.get('/api/gtd/inbox', requireSession, async (_req, res) => {
     const token = await getAccessToken();
     const resp = await mcpCall('fs_read_file', { path: '/home/jeffcrosley/Personal/GTD/inbox.md' }, token);
     if (!resp.ok) {
-      res.status(502).json({ error: 'Failed to read inbox', detail: resp.status });
+      res.json({ items: [], error: 'unavailable' });
       return;
     }
     const parsed = await parseMcpResponse(resp);
     const text = extractMcpText(parsed);
     const items = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
     res.json({ items });
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: 'Failed to read inbox', detail });
+  } catch {
+    res.json({ items: [], error: 'unavailable' });
   }
 });
 
