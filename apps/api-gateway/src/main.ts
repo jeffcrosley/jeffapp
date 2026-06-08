@@ -270,7 +270,10 @@ app.get('/api/gtd/briefs', async (req, res) => {
   try {
     const token = await getSessionMcpToken(req);
     const filenames = await mcpFsList('/home/jeffcrosley/Personal/GTD/briefs/', token);
-    const mdFiles = filenames.filter(f => f.endsWith('.md') && !f.startsWith('archive/'));
+    const mdFiles = filenames
+      .filter(f => f.endsWith('.md') && !f.startsWith('archive/'))
+      .sort((a, b) => b.localeCompare(a))
+      .slice(0, 10);
 
     const briefs = await Promise.all(
       mdFiles.map(async filename => {
