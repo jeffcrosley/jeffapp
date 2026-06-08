@@ -142,6 +142,7 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
               <div
                 class="dispatch-session-card"
                 [class]="'card-' + session.status"
+                [class.card-stale]="isStale(session)"
                 (click)="openModal(session)"
                 role="button"
                 tabindex="0"
@@ -156,6 +157,9 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
                     {{ statusLabel(session.status) }}
                   </span>
                   <span class="session-elapsed muted">{{ formatRelative(session.started_at ?? '') }}</span>
+                  @if (isStale(session)) {
+                    <span class="stale-badge">⚠ stale?</span>
+                  }
                 </div>
                 <div class="stepper">
                   @for (stage of STAGES; track stage; let last = $last) {
@@ -529,6 +533,11 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
               border-left-color: var(--color-ruby-600);
             }
 
+            &.card-stale {
+              border-left-color: var(--color-text-muted);
+              opacity: 0.72;
+            }
+
             .session-header {
               display: flex;
               align-items: center;
@@ -590,6 +599,15 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
 
               .session-elapsed {
                 font-size: 0.78rem;
+                flex-shrink: 0;
+              }
+
+              .stale-badge {
+                font-size: 0.68rem;
+                color: var(--color-text-muted);
+                padding: 1px 6px;
+                border: 1px solid var(--color-border-primary);
+                border-radius: 4px;
                 flex-shrink: 0;
               }
             }
@@ -1110,7 +1128,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected dispatchesError = '';
   protected sessions: DispatchSession[] = [];
   protected sseReconnecting = false;
-  protected activeFilter: StageFilter = 'all';
+  protected activeFilter: StageFilter =
+    (localStorage.getItem('jeffapp.dashboardFilter') as StageFilter) ?? 'all';
 
   // Modal state
   protected selectedSession: DispatchSession | null = null;
@@ -1179,6 +1198,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ─── Stage filter ────────────────────────────────────────────────────────────
 
+  protected isStale(session: DispatchSession): boolean {
+    if (session.status !== 'running') return false;
+    if (!session.created_at) return false;
+    return Date.now() - new Date(session.created_at).getTime() > 120 * 60 * 1000;
+  }
+
   protected get filteredSessions(): DispatchSession[] {
     switch (this.activeFilter) {
       case 'running': return this.sessions.filter(s => s.status === 'running');
@@ -1190,6 +1215,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected setFilter(f: StageFilter): void {
     this.activeFilter = f;
+    localStorage.setItem('jeffapp.dashboardFilter', f);
   }
 
   // ─── Modal ───────────────────────────────────────────────────────────────────
