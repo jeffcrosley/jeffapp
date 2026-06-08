@@ -70,6 +70,14 @@ export const appRoutes: Route[] = [
 		canActivate: [authGuard]
 	},
 	{
+		path: 'division-of-labor',
+		loadComponent: () =>
+			import('./pages/division-of-labor/division-of-labor.component').then(
+				(m) => m.DivisionOfLaborComponent
+			),
+		canActivate: [authGuard]
+	},
+	{
 		path: '**',
 		redirectTo: '/traffic-light'
 	}

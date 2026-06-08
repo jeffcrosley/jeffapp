@@ -1,0 +1,121 @@
+<section class="dol-shell">
+  <header class="dol-header">
+    <h1>⚖️ Division of Labor</h1>
+    <p class="dol-subtitle">Who does what, in each Family Mode</p>
+  </header>
+
+  <!-- Mode info strip -->
+  <div class="mode-strip">
+    @for (m of FAMILY_MODES; track m.mode) {
+      <div [class]="'mode-pill mode-pill-' + m.mode">
+        <span class="mode-emoji">{{ m.emoji }}</span>
+        <div class="mode-info">
+          <span class="mode-label">{{ m.label }}</span>
+          <span class="mode-desc">{{ m.description }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Mode tab bar -->
+  <div class="mode-tabs">
+    @for (m of FAMILY_MODES; track m.mode) {
+      <button
+        [class]="'mode-tab mode-tab-' + m.mode + (activeMode() === m.mode ? ' active' : '')"
+        (click)="setActiveMode(m.mode)"
+      >
+        <span>{{ m.emoji }}</span>
+        <span class="tab-label">{{ m.label }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Active mode context bar -->
+  <div class="active-mode-bar">
+    <span class="active-mode-label">
+      {{ activeModeInfo().emoji }} {{ activeModeInfo().label }} — {{ activeModeInfo().description }}
+    </span>
+  </div>
+
+  <!-- Categories -->
+  @for (cat of state().categories; track cat.id) {
+    <div class="category-card">
+      <h2 class="category-title">{{ cat.name }}</h2>
+
+      <div class="task-list">
+        @for (task of cat.tasks; track task.id) {
+          <div class="task-row">
+            <span class="task-name">{{ task.name }}</span>
+            <div class="task-controls">
+              <select
+                class="assignee-select"
+                [ngModel]="task.assignments[activeMode()]"
+                (ngModelChange)="setAssignment(cat.id, task.id, $event)"
+              >
+                @for (a of ASSIGNEES; track a.value) {
+                  <option [value]="a.value">{{ a.label }}</option>
+                }
+              </select>
+              <button
+                class="remove-task-btn"
+                (click)="removeTask(cat.id, task.id)"
+                title="Remove task"
+                aria-label="Remove task"
+              >×</button>
+            </div>
+          </div>
+        }
+
+        @if (addingToCategoryId() === cat.id) {
+          <div class="add-task-row">
+            <input
+              class="add-task-input"
+              type="text"
+              placeholder="Task name…"
+              [ngModel]="newTaskName()"
+              (ngModelChange)="newTaskName.set($event)"
+              (keydown.enter)="confirmAddTask(cat.id)"
+              (keydown.escape)="addingToCategoryId.set(null)"
+              autofocus
+            />
+            <button class="confirm-add-btn" (click)="confirmAddTask(cat.id)">Add</button>
+            <button class="cancel-add-btn" (click)="addingToCategoryId.set(null)">Cancel</button>
+          </div>
+        } @else {
+          <button class="add-task-btn" (click)="startAddTask(cat.id)">+ Add task</button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Add category -->
+  @if (showAddCategory()) {
+    <div class="add-category-row">
+      <input
+        class="add-category-input"
+        type="text"
+        placeholder="Category name…"
+        [ngModel]="newCategoryName()"
+        (ngModelChange)="newCategoryName.set($event)"
+        (keydown.enter)="confirmAddCategory()"
+        (keydown.escape)="showAddCategory.set(false)"
+        autofocus
+      />
+      <button class="confirm-add-btn" (click)="confirmAddCategory()">Add</button>
+      <button class="cancel-add-btn" (click)="showAddCategory.set(false)">Cancel</button>
+    </div>
+  } @else {
+    <button class="add-category-btn" (click)="showAddCategory.set(true)">+ Add category</button>
+  }
+
+  <!-- Export -->
+  <div class="export-section">
+    <button class="export-btn" (click)="exportAndCopy()">📋 Copy Markdown Export</button>
+    <p class="export-hint">Copies all modes — paste back to Jupiter to share results</p>
+  </div>
+
+  <!-- Toast -->
+  @if (toastVisible()) {
+    <div class="toast">✓ Copied to clipboard!</div>
+  }
+</section>
