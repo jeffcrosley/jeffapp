@@ -1,0 +1,242 @@
+.go-bag-shell {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 100vh;
+}
+
+// ── Header ──────────────────────────────────────────
+.gb-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 1.6rem;
+    margin: 0;
+  }
+}
+
+.trip-ready-badge {
+  background: #059669;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.gb-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+// ── Progress ─────────────────────────────────────────
+.gb-progress-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gb-progress-track {
+  height: 10px;
+  background: var(--color-border, #e0e0e0);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gb-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0e7490, #0891b2);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.gb-progress-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Section Cards ─────────────────────────────────────
+.gb-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gb-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+
+  &.all-done {
+    border-color: #059669;
+  }
+}
+
+.gb-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-primary);
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary, #0066cc);
+    outline-offset: -2px;
+  }
+
+  &:hover {
+    background: var(--color-hover, rgba(0, 0, 0, 0.04));
+  }
+}
+
+.gb-card-emoji {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.gb-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.gb-card-count {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.gb-chevron {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+// ── Items ────────────────────────────────────────────
+.gb-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+}
+
+.gb-item {
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.checked {
+    background: rgba(5, 150, 105, 0.06);
+
+    .gb-item-text {
+      color: var(--color-text-secondary);
+      text-decoration: line-through;
+    }
+  }
+}
+
+.gb-item-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  min-height: 44px; // touch target
+
+  &:hover {
+    background: var(--color-hover, rgba(0, 0, 0, 0.04));
+  }
+}
+
+.gb-checkbox {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #0891b2;
+  cursor: pointer;
+}
+
+.gb-item-text {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  transition: color 0.15s ease;
+}
+
+// ── Footer ───────────────────────────────────────────
+.gb-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.gb-reset-btn {
+  font-size: 0.85rem;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover, rgba(0, 0, 0, 0.05));
+    color: var(--color-text-primary);
+  }
+}
+
+.gb-footer-note {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+// ── Mobile ───────────────────────────────────────────
+@media (max-width: 480px) {
+  .go-bag-shell {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  .gb-card-title {
+    font-size: 0.9rem;
+  }
+
+  .gb-item-label {
+    padding: 0.7rem 0.85rem;
+  }
+}

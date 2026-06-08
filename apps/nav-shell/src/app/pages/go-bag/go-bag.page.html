@@ -1,0 +1,58 @@
+<section class="go-bag-shell">
+  <header class="gb-header">
+    <div class="gb-title-row">
+      <h1>🧳 Go Bag</h1>
+      @if (tripReady()) {
+        <span class="trip-ready-badge">✅ Trip Ready</span>
+      }
+    </div>
+    <p class="gb-subtitle">Fripp Island · July 1–18</p>
+  </header>
+
+  <div class="gb-progress-bar-wrap" [attr.aria-label]="completionPct() + '% complete'">
+    <div class="gb-progress-track">
+      <div class="gb-progress-fill" [style.width.%]="completionPct()"></div>
+    </div>
+    <span class="gb-progress-label">{{ checkedItems() }} / {{ totalItems() }} — {{ completionPct() }}%</span>
+  </div>
+
+  <div class="gb-sections">
+    @for (section of sections(); track section.id) {
+      <div class="gb-card" [class.all-done]="sectionChecked(section) === section.items.length">
+        <button
+          class="gb-card-header"
+          (click)="toggleSection(section.id)"
+          [attr.aria-expanded]="!section.collapsed"
+        >
+          <span class="gb-card-emoji">{{ section.emoji }}</span>
+          <span class="gb-card-title">{{ section.title }}</span>
+          <span class="gb-card-count">{{ sectionChecked(section) }}/{{ section.items.length }}</span>
+          <span class="gb-chevron" [class.open]="!section.collapsed">▾</span>
+        </button>
+
+        @if (!section.collapsed) {
+          <ul class="gb-items">
+            @for (item of section.items; track item.id) {
+              <li class="gb-item" [class.checked]="item.checked">
+                <label class="gb-item-label">
+                  <input
+                    type="checkbox"
+                    class="gb-checkbox"
+                    [checked]="item.checked"
+                    (change)="toggleItem(section.id, item.id)"
+                  />
+                  <span class="gb-item-text">{{ item.label }}</span>
+                </label>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </div>
+
+  <footer class="gb-footer">
+    <button class="gb-reset-btn" (click)="resetAll()">Reset all</button>
+    <p class="gb-footer-note">Saved locally to this device</p>
+  </footer>
+</section>
