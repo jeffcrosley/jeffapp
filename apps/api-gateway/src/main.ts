@@ -9,6 +9,7 @@ import { authRouter } from './lib/auth-routes';
 import { statusRouter } from './lib/status-routes';
 import { registerSseRoute } from './lib/sse';
 import { publishEvent } from './lib/publish';
+import { MR_CONFIG, MREntry } from './mrs-config';
 
 export const app = express();
 
@@ -416,6 +417,140 @@ app.get('/api/gtd/inbox', requireSession, async (_req, res) => {
   } catch {
     res.json({ items: [], error: 'unavailable' });
   }
+});
+
+// ─── MR Status Widget ─────────────────────────────────────────────────────────
+
+interface MRWithStatus extends MREntry {
+  status: 'draft' | 'open' | 'merged' | 'closed';
+  pipeline_status?: 'passing' | 'failing' | 'pending';
+}
+
+interface MRStatusCache {
+  data: MRWithStatus[];
+  expiresAt: number;
+}
+
+let mrStatusCache: MRStatusCache | null = null;
+const MR_CACHE_TTL = 60_000;
+
+const GL_HOST = process.env['GITLAB_HOST'] ?? 'https://gitlab.com';
+
+async function fetchGithubMRStatus(entry: MREntry, token: string): Promise<MRWithStatus> {
+  const resp = await fetch(`https://api.github.com/repos/${entry.repo}/pulls/${entry.number}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!resp.ok) return { ...entry, status: 'open' };
+  const pr = await resp.json() as Record<string, unknown>;
+
+  let status: MRWithStatus['status'];
+  if (pr['draft']) {
+    status = 'draft';
+  } else if (pr['state'] === 'closed') {
+    status = pr['merged_at'] ? 'merged' : 'closed';
+  } else {
+    status = 'open';
+  }
+
+  let pipeline_status: MRWithStatus['pipeline_status'];
+  const sha = (pr['head'] as Record<string, unknown> | null)?.['sha'] as string | undefined;
+  if (sha) {
+    const statusResp = await fetch(
+      `https://api.github.com/repos/${entry.repo}/commits/${sha}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      }
+    );
+    if (statusResp.ok) {
+      const sd = await statusResp.json() as Record<string, unknown>;
+      const state = sd['state'] as string | undefined;
+      if (state === 'success') pipeline_status = 'passing';
+      else if (state === 'failure' || state === 'error') pipeline_status = 'failing';
+      else if (state === 'pending') pipeline_status = 'pending';
+    }
+  }
+
+  return { ...entry, status, ...(pipeline_status ? { pipeline_status } : {}) };
+}
+
+async function fetchGitlabMRStatus(entry: MREntry, token: string): Promise<MRWithStatus> {
+  const encoded = encodeURIComponent(entry.repo);
+  const resp = await fetch(
+    `${GL_HOST}/api/v4/projects/${encoded}/merge_requests/${entry.number}`,
+    { headers: { 'PRIVATE-TOKEN': token } }
+  );
+  if (!resp.ok) return { ...entry, status: 'open' };
+  const mr = await resp.json() as Record<string, unknown>;
+
+  const mrState = mr['state'] as string;
+  let status: MRWithStatus['status'];
+  if (mrState === 'merged') {
+    status = 'merged';
+  } else if (mrState === 'closed') {
+    status = 'closed';
+  } else if (
+    mr['work_in_progress'] ||
+    (typeof mr['title'] === 'string' && /^draft:/i.test(mr['title']))
+  ) {
+    status = 'draft';
+  } else {
+    status = 'open';
+  }
+
+  let pipeline_status: MRWithStatus['pipeline_status'];
+  const pipeline = mr['head_pipeline'] as Record<string, unknown> | null | undefined;
+  if (pipeline) {
+    const pstate = pipeline['status'] as string | undefined;
+    if (pstate === 'success') pipeline_status = 'passing';
+    else if (pstate === 'failed' || pstate === 'canceled') pipeline_status = 'failing';
+    else if (pstate && ['pending', 'running', 'created', 'preparing', 'waiting_for_resource'].includes(pstate)) {
+      pipeline_status = 'pending';
+    }
+  }
+
+  return { ...entry, status, ...(pipeline_status ? { pipeline_status } : {}) };
+}
+
+app.get('/api/mrs', requireSession, async (_req, res) => {
+  const now = Date.now();
+  if (mrStatusCache && mrStatusCache.expiresAt > now) {
+    res.json({ mrs: mrStatusCache.data });
+    return;
+  }
+
+  const ghToken = process.env['GITHUB_TOKEN'];
+  const glToken = process.env['GITLAB_TOKEN'];
+
+  if (!ghToken && !glToken) {
+    res.json({ mrs: [], unavailable: true });
+    return;
+  }
+
+  const results = await Promise.all(
+    MR_CONFIG.map(async (entry) => {
+      try {
+        if (entry.platform === 'github') {
+          return ghToken ? fetchGithubMRStatus(entry, ghToken) : null;
+        } else {
+          return glToken ? fetchGitlabMRStatus(entry, glToken) : null;
+        }
+      } catch {
+        return { ...entry, status: 'open' as const };
+      }
+    })
+  );
+
+  const mrs = results.filter((r): r is MRWithStatus => r !== null);
+  mrStatusCache = { data: mrs, expiresAt: now + MR_CACHE_TTL };
+  res.json({ mrs });
 });
 
 // ─── POST /api/gtd/inbox — capture items to inbox ────────────────────────────
