@@ -62,6 +62,11 @@ export class App {
 			status: 'wip'
 		},
 		{
+			label: '⚖️ Division of Labor',
+			route: '/division-of-labor',
+			status: 'wip'
+		},
+		{
 			label: 'About',
 			route: '/about',
 			status: 'wip'
