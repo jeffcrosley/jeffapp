@@ -1,0 +1,195 @@
+<section class="grandpa-shell">
+  <header class="grandpa-header">
+    <span class="grandpa-icon">👴</span>
+    <div>
+      <h1>Grandpa</h1>
+      <p class="grandpa-subtitle">Coverage & Availability</p>
+    </div>
+  </header>
+
+  <!-- ── Section 1: Coverage Schedule ── -->
+  <div class="section-card">
+    <h2 class="section-title">Coverage Schedule</h2>
+
+    <div class="week-grid">
+      @for (day of schedule(); track day.date) {
+        <div class="day-cell" [class.today]="isToday(day.date)">
+          <div class="day-label">
+            <span class="day-name">{{ day.day }}</span>
+            @if (isToday(day.date)) {
+              <span class="today-badge">Today</span>
+            }
+          </div>
+          <div class="pickup-row">
+            <span class="pickup-label">3pm pickup</span>
+            <select
+              class="status-select"
+              [class]="'status-' + day.pickupStatus"
+              [ngModel]="day.pickupStatus"
+              (ngModelChange)="setPickupStatus(day.date, $event)"
+            >
+              <option value="confirmed">✅ Confirmed</option>
+              <option value="covered">🔄 Covered</option>
+              <option value="needs-arrangement">⚠️ Needs Arrangement</option>
+            </select>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (coverageRequests().length > 0) {
+      <div class="requests-list">
+        <h3 class="subsection-title">Ad-hoc Requests</h3>
+        @for (req of coverageRequests(); track req.id) {
+          <div class="request-item">
+            <div class="request-info">
+              <span class="request-date">{{ formatDate(req.date) }}</span>
+              <span class="request-desc">{{ req.description }}</span>
+            </div>
+            <button class="remove-btn" (click)="removeCoverageRequest(req.id)" aria-label="Remove request">×</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ── Section 2: Availability & Alerts ── -->
+  <div class="section-card">
+    <h2 class="section-title">Availability & Alerts</h2>
+
+    <div class="availability-row">
+      @for (opt of availabilityOptions; track opt.value) {
+        <button
+          class="avail-btn"
+          [class.active]="state().availability === opt.value"
+          [class]="'avail-btn avail-' + opt.value + (state().availability === opt.value ? ' active' : '')"
+          (click)="setAvailability(opt.value)"
+        >
+          <span class="avail-emoji">{{ opt.emoji }}</span>
+          <span class="avail-label">{{ opt.label }}</span>
+        </button>
+      }
+    </div>
+
+    @if (state().lastContact) {
+      <p class="last-contact">Last contact: {{ timeAgo(state().lastContact!) }}</p>
+    } @else {
+      <p class="last-contact muted">No contact recorded yet</p>
+    }
+
+    <div class="notes-field">
+      <label class="field-label" for="grandpa-notes">Notes</label>
+      <textarea
+        id="grandpa-notes"
+        class="notes-textarea"
+        placeholder="Any current context (e.g. has doctor's appointment Wed)"
+        [ngModel]="state().notes"
+        (ngModelChange)="saveNotes($event)"
+        rows="2"
+      ></textarea>
+    </div>
+
+    <div class="request-coverage-row">
+      <input
+        class="request-input"
+        type="text"
+        placeholder="Coverage request note (optional)"
+        [ngModel]="requestNote()"
+        (ngModelChange)="requestNote.set($event)"
+        (keydown.enter)="requestCoverage()"
+      />
+      <button class="request-btn" (click)="requestCoverage()">
+        Request Coverage
+      </button>
+    </div>
+    <p class="request-hint">Logged locally — notification will be wired in a future pass.</p>
+  </div>
+
+  <!-- ── Section 3: Activity Log ── -->
+  <div class="section-card">
+    <div class="section-title-row">
+      <h2 class="section-title">Activity Log</h2>
+      <button class="add-btn" (click)="showLogForm.set(!showLogForm())">
+        {{ showLogForm() ? 'Cancel' : '+ Add Entry' }}
+      </button>
+    </div>
+
+    @if (showLogForm()) {
+      <form class="log-form" (ngSubmit)="submitLogEntry()">
+        <div class="form-row">
+          <label class="field-label" for="entry-date">Date</label>
+          <input
+            id="entry-date"
+            class="form-input"
+            type="date"
+            [ngModel]="newLogEntry().date"
+            (ngModelChange)="updateNewEntry('date', $event)"
+            name="date"
+            required
+          />
+        </div>
+        <div class="form-row">
+          <label class="field-label" for="entry-type">Type</label>
+          <select
+            id="entry-type"
+            class="form-input"
+            [ngModel]="newLogEntry().type"
+            (ngModelChange)="updateNewEntry('type', $event)"
+            name="type"
+          >
+            @for (t of coverageTypes; track t) {
+              <option [value]="t">{{ coverageTypeLabels[t] }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="field-label" for="entry-duration">Duration</label>
+          <input
+            id="entry-duration"
+            class="form-input"
+            type="text"
+            placeholder="e.g. 1 hour, 3pm–5pm"
+            [ngModel]="newLogEntry().duration"
+            (ngModelChange)="updateNewEntry('duration', $event)"
+            name="duration"
+            required
+          />
+        </div>
+        <div class="form-row">
+          <label class="field-label" for="entry-notes">Notes</label>
+          <input
+            id="entry-notes"
+            class="form-input"
+            type="text"
+            placeholder="Optional notes"
+            [ngModel]="newLogEntry().notes"
+            (ngModelChange)="updateNewEntry('notes', $event)"
+            name="notes"
+          />
+        </div>
+        <button class="submit-btn" type="submit">Save Entry</button>
+      </form>
+    }
+
+    @if (activityLog().length === 0) {
+      <p class="empty-log">No activity logged yet.</p>
+    } @else {
+      <ul class="log-list">
+        @for (entry of activityLog(); track entry.id) {
+          <li class="log-item">
+            <div class="log-meta">
+              <span class="log-date">{{ formatDate(entry.date) }}</span>
+              <span class="log-type log-type-{{ entry.type }}">{{ coverageTypeLabels[entry.type] }}</span>
+            </div>
+            <div class="log-detail">
+              <span class="log-duration">{{ entry.duration }}</span>
+              @if (entry.notes) {
+                <span class="log-notes">{{ entry.notes }}</span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>
