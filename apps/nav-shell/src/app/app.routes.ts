@@ -70,6 +70,14 @@ export const appRoutes: Route[] = [
 		canActivate: [authGuard]
 	},
 	{
+		path: 'feature-requests',
+		loadComponent: () =>
+			import('./pages/feature-requests/feature-requests.component').then(
+				(m) => m.FeatureRequestsComponent
+			),
+		canActivate: [authGuard]
+	},
+	{
 		path: 'division-of-labor',
 		loadComponent: () =>
 			import('./pages/division-of-labor/division-of-labor.component').then(

@@ -62,6 +62,11 @@ export class App {
 			status: 'wip'
 		},
 		{
+			label: '✨ Feature Requests',
+			route: '/feature-requests',
+			status: 'wip'
+		},
+		{
 			label: '⚖️ Division of Labor',
 			route: '/division-of-labor',
 			status: 'wip'
