@@ -211,14 +211,19 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
                     <div class="stepper-step">
                       <div class="stepper-dot"
                            [class.completed]="isCompleted(session, stage)"
-                           [class.current]="isCurrent(session, stage)"
+                           [class.current]="isCurrent(session, stage) && session.status !== 'pending'"
+                           [class.pending-at]="session.status === 'pending' && stage === 'dispatched'"
                            [class.failed-at]="isFailedAt(session, stage)">
                         @if (isFailedAt(session, stage)) {
                           <span class="fail-x">✕</span>
                         }
                       </div>
                       <div class="stepper-label" [class.dim]="isFuture(session, stage)">
-                        {{ stageLabel(stage) }}
+                        @if (session.status === 'pending' && stage === 'dispatched') {
+                          <span class="waiting-label">Waiting to start</span>
+                        } @else {
+                          {{ stageLabel(stage) }}
+                        }
                       </div>
                     </div>
                     @if (!last) {
@@ -537,6 +542,26 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
               <strong>Error:</strong> {{ selectedSession.error }}
             </div>
           }
+
+          @if (selectedSession.session_name) {
+            <div class="modal-log-section">
+              <div class="modal-log-header">
+                <span class="modal-log-title">Session Log</span>
+                <button class="modal-log-refresh" (click)="refreshLog()" [disabled]="logLoading">
+                  ↻ Refresh
+                </button>
+              </div>
+              @if (logLoading) {
+                <p class="modal-log-muted">Loading log…</p>
+              } @else if (logError) {
+                <p class="modal-log-muted">{{ logError }}</p>
+              } @else if (!logContent) {
+                <p class="modal-log-muted">No log available</p>
+              } @else {
+                <pre class="modal-log-content">{{ lastLines(logContent, 100) }}</pre>
+              }
+            </div>
+          }
         </div>
       </div>
     }
@@ -689,6 +714,10 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
               border-left-color: var(--color-ruby-600);
             }
 
+            &.card-pending {
+              border-left-color: var(--color-text-muted);
+            }
+
             &.card-stale {
               border-left-color: var(--color-text-muted);
               opacity: 0.72;
@@ -810,6 +839,11 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
                     border-color: var(--color-ruby-600);
                   }
 
+                  &.pending-at {
+                    border-color: var(--color-text-muted);
+                    animation: border-pulse 1.5s ease-in-out infinite;
+                  }
+
                   .fail-x {
                     font-size: 0.55rem;
                     color: #fff;
@@ -827,6 +861,11 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
 
                   &.dim {
                     color: var(--color-text-disabled);
+                  }
+
+                  .waiting-label {
+                    color: var(--color-text-muted);
+                    animation: pulse 1.5s ease-in-out infinite;
                   }
                 }
               }
@@ -1152,6 +1191,11 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
           50% { box-shadow: 0 0 0 5px rgba(59, 130, 246, 0); }
         }
 
+        @keyframes border-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+
         @media (max-width: 768px) {
           .dashboard-header h2 {
             font-size: 2rem;
@@ -1380,6 +1424,69 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
         word-break: break-all;
       }
 
+      .modal-log-section {
+        margin-top: 20px;
+        border-top: 1px solid var(--color-border-primary);
+        padding-top: 16px;
+
+        .modal-log-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        }
+
+        .modal-log-title {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          letter-spacing: 0.02em;
+        }
+
+        .modal-log-refresh {
+          background: transparent;
+          border: 1px solid var(--color-border-primary);
+          border-radius: 4px;
+          padding: 3px 10px;
+          font-size: 0.78rem;
+          color: var(--color-text-muted);
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+
+          &:hover:not(:disabled) {
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+
+        .modal-log-muted {
+          font-size: 0.87rem;
+          color: var(--color-text-muted);
+          margin: 0;
+        }
+
+        .modal-log-content {
+          font-family: monospace;
+          font-size: 0.72rem;
+          color: var(--color-text-secondary);
+          background: var(--color-bg-secondary);
+          border-radius: 6px;
+          padding: 12px;
+          overflow-x: auto;
+          white-space: pre-wrap;
+          word-break: break-all;
+          max-height: 300px;
+          overflow-y: auto;
+          line-height: 1.5;
+          margin: 0;
+        }
+      }
+
       // ─── Service Health ─────────────────────────────────────────────────
 
       .health-timestamp {
@@ -1535,6 +1642,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Modal state
   protected selectedSession: DispatchSession | null = null;
+  protected logContent: string | null = null;
+  protected logLoading = false;
+  protected logError = '';
 
   // Available Work state
   protected workLoading = true;
@@ -1661,10 +1771,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected openModal(session: DispatchSession): void {
     this.selectedSession = session;
+    this.logContent = null;
+    this.logError = '';
+    if (session.session_name) {
+      void this.loadLog(session.session_name);
+    }
   }
 
   protected closeModal(): void {
     this.selectedSession = null;
+    this.logContent = null;
+    this.logError = '';
+  }
+
+  protected refreshLog(): void {
+    if (this.selectedSession?.session_name) {
+      void this.loadLog(this.selectedSession.session_name);
+    }
+  }
+
+  protected lastLines(text: string, n: number): string {
+    const lines = text.split('\n');
+    return lines.slice(-n).join('\n');
+  }
+
+  private async loadLog(sessionName: string): Promise<void> {
+    this.logLoading = true;
+    this.logError = '';
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(
+        `${base}/api/sessions/${encodeURIComponent(sessionName)}/logs`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) {
+        this.logError = res.status === 401 ? 'Not authenticated' : 'Failed to load log';
+      } else {
+        const data = (await res.json()) as { log: string; error?: string };
+        if (data.error) {
+          this.logError = 'Log unavailable';
+        } else {
+          this.logContent = data.log ?? '';
+        }
+      }
+    } catch {
+      this.logError = 'Could not reach gateway';
+    } finally {
+      this.logLoading = false;
+    }
   }
 
   // ─── Available Work ──────────────────────────────────────────────────────────
