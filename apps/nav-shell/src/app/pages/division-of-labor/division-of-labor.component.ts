@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core'
+import { Component, signal, computed, inject, ElementRef } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { FamilyMode, FAMILY_MODES, Assignee, ASSIGNEES } from '../../models/family-mode'
@@ -91,6 +91,8 @@ function saveState(state: DolState): void {
 	styleUrls: ['./division-of-labor.component.scss'],
 })
 export class DivisionOfLaborComponent {
+	private el = inject(ElementRef)
+
 	protected state = signal<DolState>(loadState())
 	protected activeMode = signal<FamilyMode>('green')
 	protected toastVisible = signal(false)
@@ -130,6 +132,16 @@ export class DivisionOfLaborComponent {
 	protected startAddTask(catId: string): void {
 		this.addingToCategoryId.set(catId)
 		this.newTaskName.set('')
+		setTimeout(() => {
+			(this.el.nativeElement.querySelector('.add-task-input') as HTMLInputElement | null)?.focus()
+		}, 0)
+	}
+
+	protected openAddCategory(): void {
+		this.showAddCategory.set(true)
+		setTimeout(() => {
+			(this.el.nativeElement.querySelector('.add-category-input') as HTMLInputElement | null)?.focus()
+		}, 0)
 	}
 
 	protected confirmAddTask(catId: string): void {
@@ -198,7 +210,7 @@ export class DivisionOfLaborComponent {
 		}
 
 		const markdown = lines.join('\n')
-		navigator.clipboard.writeText(markdown).catch(() => {})
+		navigator.clipboard.writeText(markdown).catch(() => undefined)
 		this.toastVisible.set(true)
 		setTimeout(() => this.toastVisible.set(false), 2000)
 	}

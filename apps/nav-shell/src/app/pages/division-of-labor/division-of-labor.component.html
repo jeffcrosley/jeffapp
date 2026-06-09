@@ -76,7 +76,6 @@
               (ngModelChange)="newTaskName.set($event)"
               (keydown.enter)="confirmAddTask(cat.id)"
               (keydown.escape)="addingToCategoryId.set(null)"
-              autofocus
             />
             <button class="confirm-add-btn" (click)="confirmAddTask(cat.id)">Add</button>
             <button class="cancel-add-btn" (click)="addingToCategoryId.set(null)">Cancel</button>
@@ -99,13 +98,12 @@
         (ngModelChange)="newCategoryName.set($event)"
         (keydown.enter)="confirmAddCategory()"
         (keydown.escape)="showAddCategory.set(false)"
-        autofocus
       />
       <button class="confirm-add-btn" (click)="confirmAddCategory()">Add</button>
       <button class="cancel-add-btn" (click)="showAddCategory.set(false)">Cancel</button>
     </div>
   } @else {
-    <button class="add-category-btn" (click)="showAddCategory.set(true)">+ Add category</button>
+    <button class="add-category-btn" (click)="openAddCategory()">+ Add category</button>
   }
 
   <!-- Export -->
