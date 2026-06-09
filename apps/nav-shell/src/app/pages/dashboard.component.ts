@@ -129,7 +129,7 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
     <section class="dashboard-container">
       <div class="dashboard-header">
         <h2>Dashboard</h2>
-        <p class="subtitle">In-progress dispatches</p>
+        <p class="subtitle">Recent activity</p>
       </div>
 
       <!-- ── Work In Progress ────────────────────────────────────────────── -->
@@ -1332,7 +1332,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly STAGES: readonly DispatchStage[] = DISPATCH_STAGES;
   protected readonly FILTERS: { key: StageFilter; label: string }[] = [
     { key: 'all', label: 'All' },
-    { key: 'running', label: 'Running' },
+    { key: 'running', label: 'Active' },
     { key: 'done', label: 'Done' },
     { key: 'failed', label: 'Failed' },
   ];
@@ -1434,14 +1434,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ─── Stage filter ────────────────────────────────────────────────────────────
 
   protected isStale(session: DispatchSession): boolean {
-    if (session.status !== 'running') return false;
     if (!session.created_at) return false;
-    return Date.now() - new Date(session.created_at).getTime() > 120 * 60 * 1000;
+    const age = Date.now() - new Date(session.created_at).getTime();
+    if (session.status === 'running') return age > 120 * 60 * 1000;
+    if (session.status === 'pending') return age > 10 * 60 * 1000;
+    return false;
   }
 
   protected get filteredSessions(): DispatchSession[] {
     switch (this.activeFilter) {
-      case 'running': return this.sessions.filter(s => s.status === 'running');
+      case 'running': return this.sessions.filter(s => s.status === 'running' || s.status === 'pending');
       case 'done': return this.sessions.filter(s => s.status === 'complete');
       case 'failed': return this.sessions.filter(s => s.status === 'failed');
       default: return this.sessions;
@@ -1744,7 +1746,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private async loadDispatches(): Promise<void> {
     try {
       const base = this.env.getApiGatewayUrl();
-      const res = await fetch(`${base}/api/dispatches`, { credentials: 'include' });
+      const res = await fetch(`${base}/api/dispatches?since_hours=24`, { credentials: 'include' });
       if (!res.ok) {
         this.dispatchesError =
           res.status === 401 ? 'Not authenticated' : 'Failed to load dispatches';
