@@ -380,6 +380,27 @@ app.get('/api/sessions', requireSession, async (req, res) => {
   }
 });
 
+// ─── Session log ───────────────────────────────────────────────────────────────
+
+app.get('/api/sessions/:sessionName/logs', requireSession, async (req, res) => {
+  const { sessionName } = req.params;
+  const logPath = `/Users/jeffcrosley/AIA/logs/${sessionName}.log`;
+  try {
+    const token = await getAccessToken();
+    const resp = await mcpCall('fs_read_file', { path: logPath }, token);
+    if (!resp.ok) {
+      res.json({ log: '', sessionName, error: 'unavailable' });
+      return;
+    }
+    const parsed = await parseMcpResponse(resp);
+    const text = extractMcpText(parsed);
+    res.json({ log: text ?? '', sessionName });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: 'Failed to read log', detail, sessionName });
+  }
+});
+
 // ─── GTD helpers ───────────────────────────────────────────────────────────────
 
 function extractMcpText(parsed: unknown): string {
@@ -395,7 +416,7 @@ app.get('/api/gtd/work', requireSession, async (_req, res) => {
       setTimeout(() => reject(new Error('MCP timeout')), 5_000)
     );
     const resp = await Promise.race([
-      mcpCall('gtd_query_tasks', { status: 'todo', limit: 100 }, token),
+      mcpCall('gtd_query_tasks', { status: 'todo', limit: 500 }, token),
       mcpTimeout,
     ]);
     if (!resp.ok) {
@@ -409,6 +430,9 @@ app.get('/api/gtd/work', requireSession, async (_req, res) => {
     const tasks = Array.isArray(rawTasks)
       ? rawTasks
       : ((rawTasks as { tasks?: unknown[] })?.tasks ?? []);
+    if ((tasks as unknown[]).length === 0) {
+      console.error('[gtd/work] gtd_query_tasks returned 0 tasks. raw text:', text?.slice(0, 500), 'parsed:', JSON.stringify(parsed)?.slice(0, 500));
+    }
 
     const projectMap: Record<string, Array<Record<string, unknown>>> = {};
     const ungrouped: Array<Record<string, unknown>> = [];
