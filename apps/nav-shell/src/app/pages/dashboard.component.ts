@@ -98,6 +98,23 @@ interface MrGroup {
   showMerged: boolean;
 }
 
+// ─── Service health types ─────────────────────────────────────────────────────
+
+interface ServiceHealth {
+  name: string;
+  category: 'infrastructure' | 'aia-services' | 'agent-ops';
+  status: 'healthy' | 'degraded' | 'down' | 'unknown';
+  latency_ms: number | null;
+  last_checked: string;
+  details?: string;
+}
+
+interface HealthResponse {
+  timestamp: string;
+  services: ServiceHealth[];
+  summary: { healthy: number; down: number; total: number };
+}
+
 // ─── GTD work types ───────────────────────────────────────────────────────────
 
 interface GtdTask {
@@ -385,6 +402,61 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
               [disabled]="inboxSubmitting || !inboxInput.trim()"
             >{{ inboxSubmitting ? '…' : 'Add' }}</button>
           </div>
+        }
+      </div>
+
+      <!-- ── Service Health ────────────────────────────────────────────── -->
+      <div class="dashboard-section">
+        <div class="section-title-row">
+          <h3>Service Health</h3>
+          @if (healthData) {
+            <span class="health-timestamp muted">checked {{ formatRelative(healthData.timestamp) }}</span>
+          }
+        </div>
+
+        @if (healthLoading) {
+          <p class="muted">Loading services…</p>
+        }
+        @if (!healthLoading && healthError) {
+          <p class="muted error">{{ healthError }}</p>
+        }
+        @if (!healthLoading && !healthError && healthData) {
+          <div class="health-summary">
+            <span class="summary-pill pill-healthy">{{ healthData.summary.healthy }} up</span>
+            <span class="summary-pill pill-down">{{ healthData.summary.down }} down</span>
+          </div>
+
+          @for (cat of HEALTH_CATEGORIES; track cat.key) {
+            @if (servicesByCategory(cat.key).length > 0) {
+              <div class="health-category">
+                <div class="health-category-label">{{ cat.label }}</div>
+                <div class="service-grid">
+                  @for (svc of servicesByCategory(cat.key); track svc.name) {
+                    <div
+                      class="service-card"
+                      [class.expanded]="isServiceExpanded(svc.name)"
+                      (click)="toggleServiceExpand(svc.name)"
+                      role="button"
+                      tabindex="0"
+                      (keydown.enter)="toggleServiceExpand(svc.name)"
+                      (keydown.space)="toggleServiceExpand(svc.name)"
+                    >
+                      <div class="service-card-main">
+                        <span class="service-dot" [class]="statusDotClass(svc.status)"></span>
+                        <span class="service-name">{{ svc.name }}</span>
+                        @if (svc.latency_ms !== null) {
+                          <span class="service-latency muted">{{ svc.latency_ms }}ms</span>
+                        }
+                      </div>
+                      @if (isServiceExpanded(svc.name) && svc.details) {
+                        <div class="service-details">{{ svc.details }}</div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
         }
       </div>
     </section>
@@ -1308,6 +1380,121 @@ type StageFilter = 'all' | 'running' | 'done' | 'failed';
         word-break: break-all;
       }
 
+      // ─── Service Health ─────────────────────────────────────────────────
+
+      .health-timestamp {
+        font-size: 0.78rem;
+      }
+
+      .health-summary {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .summary-pill {
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.78rem;
+        font-weight: 600;
+
+        &.pill-healthy {
+          background: rgba(5, 150, 105, 0.12);
+          color: var(--color-emerald-600);
+        }
+
+        &.pill-down {
+          background: rgba(220, 38, 38, 0.12);
+          color: var(--color-ruby-600);
+        }
+      }
+
+      .health-category {
+        margin-bottom: 16px;
+      }
+
+      .health-category-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-text-muted);
+        margin-bottom: 8px;
+      }
+
+      .service-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+
+        @media (max-width: 768px) {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 480px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .service-card {
+        padding: 10px 12px;
+        background: var(--color-bg-secondary);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: box-shadow 0.15s;
+
+        &:hover {
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--color-primary, #0066cc);
+          outline-offset: 2px;
+        }
+
+        .service-card-main {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .service-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+
+          &.dot-healthy { background: var(--color-emerald-600); }
+          &.dot-degraded { background: var(--color-topaz-600, #f59e0b); }
+          &.dot-down { background: var(--color-ruby-600); }
+          &.dot-unknown { background: var(--color-text-disabled, #9ca3af); }
+        }
+
+        .service-name {
+          font-size: 0.82rem;
+          font-weight: 500;
+          color: var(--color-text-primary);
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .service-latency {
+          font-size: 0.72rem;
+          flex-shrink: 0;
+        }
+
+        .service-details {
+          margin-top: 8px;
+          padding-top: 8px;
+          border-top: 1px solid var(--color-border-primary);
+          font-size: 0.75rem;
+          color: var(--color-ruby-600);
+          word-break: break-all;
+        }
+      }
+
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -1369,6 +1556,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected inboxInput = '';
   protected inboxSubmitting = false;
 
+  // Service health state
+  protected healthLoading = true;
+  protected healthError = '';
+  protected healthData: HealthResponse | null = null;
+  protected expandedServices: Record<string, boolean> = {};
+  private healthPollId: ReturnType<typeof setInterval> | null = null;
+
+  protected readonly HEALTH_CATEGORIES: { key: ServiceHealth['category']; label: string }[] = [
+    { key: 'infrastructure', label: 'Infrastructure' },
+    { key: 'aia-services', label: 'AIA Services' },
+    { key: 'agent-ops', label: 'Agent Ops' },
+  ];
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.selectedSession) {
@@ -1423,12 +1623,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadMrs(),
       this.loadInbox(),
     ]);
+    this.startHealthPoll();
   }
 
   ngOnDestroy(): void {
     this.eventSub?.unsubscribe();
     this.sseConnSub?.unsubscribe();
     this.eventBus.disconnect();
+    if (this.healthPollId !== null) clearInterval(this.healthPollId);
   }
 
   // ─── Stage filter ────────────────────────────────────────────────────────────
@@ -1839,6 +2041,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  // ─── Service health ──────────────────────────────────────────────────────────
+
+  private startHealthPoll(): void {
+    void this.loadHealthData();
+    this.healthPollId = setInterval(() => void this.loadHealthData(), 10_000);
+  }
+
+  private async loadHealthData(): Promise<void> {
+    try {
+      const base = this.env.getApiGatewayUrl();
+      const res = await fetch(`${base}/api/health/services`, { credentials: 'include' });
+      if (!res.ok) {
+        this.healthError = res.status === 401 ? 'Not authenticated' : 'Failed to load service health';
+      } else {
+        this.healthData = (await res.json()) as HealthResponse;
+        this.healthError = '';
+      }
+    } catch {
+      this.healthError = 'Could not reach gateway';
+    } finally {
+      this.healthLoading = false;
+    }
+  }
+
+  protected servicesByCategory(category: ServiceHealth['category']): ServiceHealth[] {
+    return this.healthData?.services.filter(s => s.category === category) ?? [];
+  }
+
+  protected toggleServiceExpand(name: string): void {
+    this.expandedServices = { ...this.expandedServices, [name]: !this.expandedServices[name] };
+  }
+
+  protected isServiceExpanded(name: string): boolean {
+    return !!this.expandedServices[name];
+  }
+
+  protected statusDotClass(status: ServiceHealth['status']): string {
+    const map: Record<string, string> = { healthy: 'dot-healthy', degraded: 'dot-degraded', down: 'dot-down', unknown: 'dot-unknown' };
+    return map[status] ?? 'dot-unknown';
   }
 
   protected formatModalDuration(session: DispatchSession): string {

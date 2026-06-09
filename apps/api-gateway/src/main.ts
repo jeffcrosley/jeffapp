@@ -10,6 +10,7 @@ import { statusRouter } from './lib/status-routes';
 import { registerSseRoute } from './lib/sse';
 import { publishEvent } from './lib/publish';
 import { MR_CONFIG, MREntry } from './mrs-config';
+import { healthRouter } from './lib/health-check';
 
 export const app = express();
 
@@ -21,6 +22,7 @@ app.use(cors({
 app.use(buildSessionMiddleware());
 app.use('/auth', express.json(), authRouter);
 app.use('/api/status', express.json(), statusRouter);
+app.use('/api/health', healthRouter);
 
 const port = process.env.PORT || 3333;
 
