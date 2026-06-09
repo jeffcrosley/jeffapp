@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core'
+import { Component, signal } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 
@@ -56,7 +56,14 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 				<div class="fr-list">
 					@for (req of requests(); track req.id) {
 						<div class="fr-card" [class.expanded]="expandedId() === req.id">
-							<div class="fr-card-top" (click)="toggleExpand(req.id)">
+							<div
+							class="fr-card-top"
+							role="button"
+							tabindex="0"
+							(click)="toggleExpand(req.id)"
+							(keydown.enter)="toggleExpand(req.id)"
+							(keydown.space)="$event.preventDefault(); toggleExpand(req.id)"
+						>
 								<div class="fr-card-main">
 									<span class="fr-title">{{ req.title }}</span>
 									@if (req.description && expandedId() !== req.id) {
