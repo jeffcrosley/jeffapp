@@ -1,38 +1,39 @@
-import { Component, signal } from '@angular/core'
+import { Component, OnInit, inject, signal } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
+import { EnvironmentService } from '../../services/environment.service'
 
-export type RequestStatus = 'submitted' | 'picked_up' | 'completed'
+export type RequestStatus = 'submitted' | 'picked_up' | 'completed' | 'declined'
 
 export interface FeatureRequest {
 	id: string
 	title: string
-	description: string
+	body: string | null
 	status: RequestStatus
+	created_at: string
+	updated_at: string
+	requester_id?: string
+	requester_name?: string
+	project?: string
+	priority?: number
+}
+
+interface LegacyRequest {
+	id: string
+	title: string
+	description: string
+	status: 'submitted' | 'picked_up' | 'completed'
 	created_at: string
 	updated_at: string
 }
 
 const STORAGE_KEY = 'sarah_feature_requests'
 
-function load(): FeatureRequest[] {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY)
-		if (raw) return JSON.parse(raw)
-	} catch {
-		// ignore
-	}
-	return []
-}
-
-function save(requests: FeatureRequest[]): void {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(requests))
-}
-
 const STATUS_LABELS: Record<RequestStatus, string> = {
 	submitted: 'Submitted',
 	picked_up: 'Picked Up',
 	completed: 'Completed',
+	declined: 'Declined',
 }
 
 @Component({
@@ -49,8 +50,20 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 				</div>
 			</header>
 
+			@if (offline()) {
+				<div class="fr-offline-banner">
+					Offline — changes saved locally and will sync when reconnected.
+				</div>
+			}
+
+			@if (error()) {
+				<div class="fr-error-banner">{{ error() }}</div>
+			}
+
 			<!-- ── Request list ── -->
-			@if (requests().length === 0) {
+			@if (loading()) {
+				<div class="fr-empty">Loading…</div>
+			} @else if (requests().length === 0) {
 				<div class="fr-empty">No requests yet — add one below</div>
 			} @else {
 				<div class="fr-list">
@@ -66,8 +79,8 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 						>
 								<div class="fr-card-main">
 									<span class="fr-title">{{ req.title }}</span>
-									@if (req.description && expandedId() !== req.id) {
-										<span class="fr-desc-preview">{{ req.description }}</span>
+									@if (req.body && expandedId() !== req.id) {
+										<span class="fr-desc-preview">{{ req.body }}</span>
 									}
 								</div>
 								<div class="fr-card-meta">
@@ -79,48 +92,41 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 
 							@if (expandedId() === req.id) {
 								<div class="fr-card-body">
-									<div class="fr-field">
-										<label class="fr-label" [for]="'title-' + req.id">Title</label>
-										<input
-											[id]="'title-' + req.id"
-											class="fr-input"
-											type="text"
-											[ngModel]="req.title"
-											(ngModelChange)="updateField(req.id, 'title', $event)"
-										/>
-									</div>
-									<div class="fr-field">
-										<label class="fr-label" [for]="'desc-' + req.id">Description</label>
-										<textarea
-											[id]="'desc-' + req.id"
-											class="fr-textarea"
-											rows="3"
-											[ngModel]="req.description"
-											(ngModelChange)="updateField(req.id, 'description', $event)"
-										></textarea>
-									</div>
-									<div class="fr-status-row">
-										<span class="fr-label">Status</span>
-										<div class="fr-status-btns">
-											@for (s of statusOptions; track s) {
-												<button
-													class="fr-status-btn fr-status-btn-{{ s }}"
-													[class.active]="req.status === s"
-													(click)="setStatus(req.id, s)"
-												>{{ statusLabels[s] }}</button>
-											}
+									@if (req.status === 'submitted') {
+										<div class="fr-field">
+											<label class="fr-label" [for]="'title-' + req.id">Title</label>
+											<input
+												[id]="'title-' + req.id"
+												class="fr-input"
+												type="text"
+												[ngModel]="req.title"
+												(ngModelChange)="localUpdate(req.id, 'title', $event)"
+												(blur)="saveField(req.id, 'title', $event)"
+											/>
 										</div>
-									</div>
-									<div class="fr-card-actions">
-										<button class="fr-delete-btn" (click)="confirmDelete(req.id)">Delete</button>
-									</div>
-									@if (deleteConfirmId() === req.id) {
-										<div class="fr-confirm">
-											<span>Delete this request?</span>
-											<button class="fr-confirm-yes" (click)="deleteRequest(req.id)">Yes, delete</button>
-											<button class="fr-confirm-no" (click)="deleteConfirmId.set(null)">Cancel</button>
+										<div class="fr-field">
+											<label class="fr-label" [for]="'desc-' + req.id">Description</label>
+											<textarea
+												[id]="'desc-' + req.id"
+												class="fr-textarea"
+												rows="3"
+												[ngModel]="req.body ?? ''"
+												(ngModelChange)="localUpdate(req.id, 'body', $event)"
+												(blur)="saveField(req.id, 'body', $event)"
+											></textarea>
 										</div>
+									} @else {
+										@if (req.body) {
+											<div class="fr-field">
+												<span class="fr-label">Description</span>
+												<p class="fr-body-text">{{ req.body }}</p>
+											</div>
+										}
 									}
+									<div class="fr-card-meta-detail">
+										<span class="fr-label">Submitted</span>
+										<span class="fr-date">{{ formatDate(req.created_at) }}</span>
+									</div>
 								</div>
 							}
 						</div>
@@ -150,12 +156,12 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 						class="fr-textarea"
 						rows="2"
 						placeholder="Optional details"
-						[ngModel]="newDescription()"
-						(ngModelChange)="newDescription.set($event)"
+						[ngModel]="newBody()"
+						(ngModelChange)="newBody.set($event)"
 					></textarea>
 				</div>
-				<button class="fr-submit-btn" [disabled]="!newTitle().trim()" (click)="submitNew()">
-					Add Request
+				<button class="fr-submit-btn" [disabled]="!newTitle().trim() || saving()" (click)="submitNew()">
+					{{ saving() ? 'Submitting…' : 'Add Request' }}
 				</button>
 			</div>
 		</section>
@@ -193,6 +199,25 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 			margin: 0;
 			font-size: 0.85rem;
 			color: var(--color-text-secondary);
+		}
+
+		/* ── Banners ── */
+		.fr-offline-banner {
+			font-size: 0.82rem;
+			padding: 0.5rem 0.75rem;
+			border-radius: 8px;
+			background: rgba(245, 158, 11, 0.1);
+			border: 1px solid rgba(245, 158, 11, 0.35);
+			color: #92400e;
+		}
+
+		.fr-error-banner {
+			font-size: 0.82rem;
+			padding: 0.5rem 0.75rem;
+			border-radius: 8px;
+			background: rgba(239, 68, 68, 0.1);
+			border: 1px solid rgba(239, 68, 68, 0.35);
+			color: var(--color-error, #e74c3c);
 		}
 
 		/* ── Empty state ── */
@@ -304,6 +329,12 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 				color: #047857;
 				border: 1px solid rgba(16, 185, 129, 0.3);
 			}
+
+			&.fr-pill-declined {
+				background: rgba(239, 68, 68, 0.1);
+				color: #991b1b;
+				border: 1px solid rgba(239, 68, 68, 0.3);
+			}
 		}
 
 		/* ── Expanded card body ── */
@@ -313,6 +344,19 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 			gap: 0.75rem;
 			padding: 0 1rem 1rem;
 			border-top: 1px solid var(--color-border);
+		}
+
+		.fr-card-meta-detail {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.fr-body-text {
+			font-size: 0.88rem;
+			color: var(--color-text-primary);
+			margin: 0;
+			line-height: 1.4;
 		}
 
 		.fr-field {
@@ -363,104 +407,6 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 			}
 		}
 
-		/* ── Status buttons ── */
-		.fr-status-row {
-			display: flex;
-			flex-direction: column;
-			gap: 0.4rem;
-		}
-
-		.fr-status-btns {
-			display: flex;
-			gap: 0.4rem;
-			flex-wrap: wrap;
-		}
-
-		.fr-status-btn {
-			font-size: 0.75rem;
-			font-weight: 600;
-			padding: 0.3rem 0.65rem;
-			border-radius: 20px;
-			cursor: pointer;
-			transition: all 0.15s;
-			border: 1px solid var(--color-border);
-			background: var(--color-background);
-			color: var(--color-text-secondary);
-
-			&.fr-status-btn-submitted.active {
-				background: var(--color-background);
-				color: var(--color-text-primary);
-				border-color: var(--color-text-secondary);
-			}
-
-			&.fr-status-btn-picked_up.active {
-				background: rgba(59, 130, 246, 0.12);
-				color: #1d4ed8;
-				border-color: rgba(59, 130, 246, 0.5);
-			}
-
-			&.fr-status-btn-completed.active {
-				background: rgba(16, 185, 129, 0.12);
-				color: #047857;
-				border-color: rgba(16, 185, 129, 0.5);
-			}
-		}
-
-		/* ── Card actions ── */
-		.fr-card-actions {
-			display: flex;
-			justify-content: flex-end;
-		}
-
-		.fr-delete-btn {
-			font-size: 0.78rem;
-			padding: 0.3rem 0.7rem;
-			border: 1px solid var(--color-border);
-			border-radius: 6px;
-			background: transparent;
-			color: var(--color-text-secondary);
-			cursor: pointer;
-
-			&:hover {
-				border-color: var(--color-error, #e74c3c);
-				color: var(--color-error, #e74c3c);
-			}
-		}
-
-		.fr-confirm {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			font-size: 0.82rem;
-			color: var(--color-text-primary);
-			background: var(--color-background);
-			border: 1px solid var(--color-border);
-			border-radius: 8px;
-			padding: 0.5rem 0.75rem;
-			flex-wrap: wrap;
-		}
-
-		.fr-confirm-yes {
-			font-size: 0.78rem;
-			font-weight: 600;
-			padding: 0.25rem 0.6rem;
-			border: none;
-			border-radius: 6px;
-			background: var(--color-error, #e74c3c);
-			color: #fff;
-			cursor: pointer;
-		}
-
-		.fr-confirm-no {
-			font-size: 0.78rem;
-			padding: 0.25rem 0.6rem;
-			border: 1px solid var(--color-border);
-			border-radius: 6px;
-			background: transparent;
-			color: var(--color-text-secondary);
-			cursor: pointer;
-		}
-
 		/* ── Add form card ── */
 		.fr-add-card {
 			background: var(--color-surface);
@@ -501,67 +447,178 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 		}
 	`],
 })
-export class FeatureRequestsComponent {
-	protected requests = signal<FeatureRequest[]>(load())
+export class FeatureRequestsComponent implements OnInit {
+	private env = inject(EnvironmentService)
+
+	protected requests = signal<FeatureRequest[]>([])
+	protected loading = signal(true)
+	protected offline = signal(false)
+	protected saving = signal(false)
+	protected error = signal<string | null>(null)
 	protected expandedId = signal<string | null>(null)
-	protected deleteConfirmId = signal<string | null>(null)
 	protected newTitle = signal('')
-	protected newDescription = signal('')
+	protected newBody = signal('')
 
 	readonly statusLabels = STATUS_LABELS
-	readonly statusOptions: RequestStatus[] = ['submitted', 'picked_up', 'completed']
+
+	async ngOnInit(): Promise<void> {
+		await this.loadFromApi()
+	}
+
+	private apiBase(): string {
+		return this.env.getApiGatewayUrl()
+	}
+
+	private async loadFromApi(): Promise<void> {
+		this.loading.set(true)
+		try {
+			const res = await fetch(`${this.apiBase()}/api/feature-requests`, { credentials: 'include' })
+			if (!res.ok) {
+				this.fallbackToLocalStorage()
+				return
+			}
+			const data = await res.json() as { items: FeatureRequest[]; total: number }
+
+			if (data.items.length === 0) {
+				const legacy = this.readLocalStorage()
+				if (legacy.length > 0) {
+					await this.migrateFromLocalStorage(legacy)
+					return
+				}
+			}
+
+			this.requests.set(data.items)
+			this.offline.set(false)
+		} catch {
+			this.fallbackToLocalStorage()
+		} finally {
+			this.loading.set(false)
+		}
+	}
+
+	private readLocalStorage(): LegacyRequest[] {
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY)
+			if (raw) return JSON.parse(raw) as LegacyRequest[]
+		} catch {
+			// ignore
+		}
+		return []
+	}
+
+	private fallbackToLocalStorage(): void {
+		const legacy = this.readLocalStorage()
+		this.requests.set(legacy.map(l => ({
+			id: l.id,
+			title: l.title,
+			body: l.description || null,
+			status: l.status,
+			created_at: l.created_at,
+			updated_at: l.updated_at,
+		})))
+		this.offline.set(true)
+		this.loading.set(false)
+	}
+
+	private async migrateFromLocalStorage(legacy: LegacyRequest[]): Promise<void> {
+		const migrated: FeatureRequest[] = []
+		for (const item of legacy) {
+			try {
+				const res = await fetch(`${this.apiBase()}/api/feature-requests`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ title: item.title, body: item.description || undefined }),
+				})
+				if (res.ok) migrated.push(await res.json() as FeatureRequest)
+			} catch {
+				// skip failed items
+			}
+		}
+		localStorage.removeItem(STORAGE_KEY)
+		this.requests.set(migrated)
+		this.loading.set(false)
+	}
+
+	protected async submitNew(): Promise<void> {
+		const title = this.newTitle().trim()
+		if (!title || this.saving()) return
+
+		this.saving.set(true)
+		this.error.set(null)
+
+		if (this.offline()) {
+			const now = new Date().toISOString()
+			this.requests.update(list => [{
+				id: crypto.randomUUID(),
+				title,
+				body: this.newBody().trim() || null,
+				status: 'submitted' as RequestStatus,
+				created_at: now,
+				updated_at: now,
+			}, ...list])
+			this.saveLocalStorage()
+			this.newTitle.set('')
+			this.newBody.set('')
+			this.saving.set(false)
+			return
+		}
+
+		try {
+			const res = await fetch(`${this.apiBase()}/api/feature-requests`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title, body: this.newBody().trim() || undefined }),
+			})
+			if (!res.ok) {
+				const err = await res.json() as { error?: string }
+				this.error.set(err.error ?? 'Failed to submit request')
+				return
+			}
+			const created = await res.json() as FeatureRequest
+			this.requests.update(list => [created, ...list])
+			this.newTitle.set('')
+			this.newBody.set('')
+		} catch {
+			this.error.set('Network error — request not saved')
+		} finally {
+			this.saving.set(false)
+		}
+	}
+
+	protected localUpdate(id: string, field: 'title' | 'body', value: string): void {
+		this.requests.update(list =>
+			list.map(r => r.id === id ? { ...r, [field]: value } : r)
+		)
+	}
+
+	protected async saveField(id: string, field: 'title' | 'body', event: FocusEvent): Promise<void> {
+		const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value
+
+		if (this.offline()) {
+			this.saveLocalStorage()
+			return
+		}
+
+		try {
+			const res = await fetch(`${this.apiBase()}/api/feature-requests/${id}`, {
+				method: 'PATCH',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ [field]: value }),
+			})
+			if (res.ok) {
+				const updated = await res.json() as FeatureRequest
+				this.requests.update(list => list.map(r => r.id === id ? updated : r))
+			}
+		} catch {
+			// local state already updated by localUpdate
+		}
+	}
 
 	protected toggleExpand(id: string): void {
-		if (this.expandedId() === id) {
-			this.expandedId.set(null)
-			this.deleteConfirmId.set(null)
-		} else {
-			this.expandedId.set(id)
-			this.deleteConfirmId.set(null)
-		}
-	}
-
-	protected updateField(id: string, field: 'title' | 'description', value: string): void {
-		this.mutate((list) =>
-			list.map((r) =>
-				r.id === id ? { ...r, [field]: value, updated_at: new Date().toISOString() } : r
-			)
-		)
-	}
-
-	protected setStatus(id: string, status: RequestStatus): void {
-		this.mutate((list) =>
-			list.map((r) =>
-				r.id === id ? { ...r, status, updated_at: new Date().toISOString() } : r
-			)
-		)
-	}
-
-	protected confirmDelete(id: string): void {
-		this.deleteConfirmId.set(id)
-	}
-
-	protected deleteRequest(id: string): void {
-		this.mutate((list) => list.filter((r) => r.id !== id))
-		this.expandedId.set(null)
-		this.deleteConfirmId.set(null)
-	}
-
-	protected submitNew(): void {
-		const title = this.newTitle().trim()
-		if (!title) return
-		const now = new Date().toISOString()
-		const req: FeatureRequest = {
-			id: crypto.randomUUID(),
-			title,
-			description: this.newDescription().trim(),
-			status: 'submitted',
-			created_at: now,
-			updated_at: now,
-		}
-		this.mutate((list) => [...list, req])
-		this.newTitle.set('')
-		this.newDescription.set('')
+		this.expandedId.set(this.expandedId() === id ? null : id)
 	}
 
 	protected formatDate(iso: string): string {
@@ -569,11 +626,15 @@ export class FeatureRequestsComponent {
 		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 	}
 
-	private mutate(fn: (list: FeatureRequest[]) => FeatureRequest[]): void {
-		this.requests.update((list) => {
-			const next = fn(list)
-			save(next)
-			return next
-		})
+	private saveLocalStorage(): void {
+		const data = this.requests().map(r => ({
+			id: r.id,
+			title: r.title,
+			description: r.body ?? '',
+			status: r.status,
+			created_at: r.created_at,
+			updated_at: r.updated_at,
+		}))
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 	}
 }

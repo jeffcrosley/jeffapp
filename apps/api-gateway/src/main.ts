@@ -11,6 +11,7 @@ import { registerSseRoute } from './lib/sse';
 import { publishEvent } from './lib/publish';
 import { MR_CONFIG, MREntry } from './mrs-config';
 import { healthRouter } from './lib/health-check';
+import { getPool } from './lib/db';
 
 export const app = express();
 
@@ -633,6 +634,143 @@ app.post('/api/gtd/inbox', requireSession, express.json(), async (req, res) => {
   }
 });
 
+// ─── Feature Requests ──────────────────────────────────────────────────────────
+
+async function initFeatureRequestsTable(): Promise<void> {
+  const pool = getPool();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS feature_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      project TEXT NOT NULL DEFAULT 'jeffapp',
+      requester_id TEXT NOT NULL,
+      requester_name TEXT,
+      title TEXT NOT NULL,
+      body TEXT,
+      status TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted','picked_up','completed','declined')),
+      priority INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_fr_requester ON feature_requests (requester_id);
+    CREATE INDEX IF NOT EXISTS idx_fr_status ON feature_requests (status);
+    CREATE INDEX IF NOT EXISTS idx_fr_created ON feature_requests (created_at DESC);
+  `);
+}
+
+app.post('/api/feature-requests', requireSession, express.json(), async (req, res) => {
+  const { title, body, project } = req.body as { title?: string; body?: string; project?: string };
+  if (!title?.trim()) {
+    res.status(400).json({ error: 'title is required' });
+    return;
+  }
+  const user = req.session.user!;
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO feature_requests (project, requester_id, requester_name, title, body)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [project ?? 'jeffapp', user.id, user.name ?? null, title.trim(), body?.trim() ?? null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to create feature request', detail });
+  }
+});
+
+app.get('/api/feature-requests', requireSession, async (req, res) => {
+  const user = req.session.user!;
+  try {
+    const pool = getPool();
+    const result = user.role === 'jeff_admin'
+      ? await pool.query(`SELECT * FROM feature_requests ORDER BY priority DESC, created_at DESC`)
+      : await pool.query(
+          `SELECT * FROM feature_requests WHERE requester_id = $1 ORDER BY created_at DESC`,
+          [user.id]
+        );
+    res.json({ items: result.rows, total: result.rowCount ?? 0, is_admin: user.role === 'jeff_admin' });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to list feature requests', detail });
+  }
+});
+
+const VALID_FR_STATUSES = ['submitted', 'picked_up', 'completed', 'declined'];
+
+app.patch('/api/feature-requests/:id', requireSession, express.json(), async (req, res) => {
+  const { id } = req.params;
+  const user = req.session.user!;
+  try {
+    const pool = getPool();
+    const existing = await pool.query('SELECT * FROM feature_requests WHERE id = $1', [id]);
+    if ((existing.rowCount ?? 0) === 0) {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+    const fr = existing.rows[0] as Record<string, unknown>;
+
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    let paramIdx = 1;
+
+    if (user.role === 'jeff_admin') {
+      const { status, priority } = req.body as { status?: string; priority?: number };
+      if (status !== undefined) {
+        if (!VALID_FR_STATUSES.includes(status)) {
+          res.status(400).json({ error: 'invalid_status' });
+          return;
+        }
+        setClauses.push(`status = $${paramIdx++}`);
+        values.push(status);
+      }
+      if (priority !== undefined) {
+        setClauses.push(`priority = $${paramIdx++}`);
+        values.push(priority);
+      }
+    } else {
+      if (fr['requester_id'] !== user.id) {
+        res.status(403).json({ error: 'forbidden' });
+        return;
+      }
+      if (fr['status'] !== 'submitted') {
+        res.status(403).json({ error: 'cannot_edit_after_pickup' });
+        return;
+      }
+      const { title, body } = req.body as { title?: string; body?: string };
+      if (title !== undefined) {
+        if (!title.trim()) {
+          res.status(400).json({ error: 'title cannot be empty' });
+          return;
+        }
+        setClauses.push(`title = $${paramIdx++}`);
+        values.push(title.trim());
+      }
+      if (body !== undefined) {
+        setClauses.push(`body = $${paramIdx++}`);
+        values.push(body.trim() || null);
+      }
+    }
+
+    if (setClauses.length === 0) {
+      res.status(400).json({ error: 'no_fields_to_update' });
+      return;
+    }
+
+    setClauses.push(`updated_at = now()`);
+    values.push(id);
+
+    const result = await pool.query(
+      `UPDATE feature_requests SET ${setClauses.join(', ')} WHERE id = $${paramIdx} RETURNING *`,
+      values
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Failed to update feature request', detail });
+  }
+});
+
 // ─── Internal webhook (dispatch worker → api-gateway → SSE) ───────────────────
 app.post('/internal/dispatch-event', express.json(), (req, res) => {
   const token = req.headers['x-internal-token'];
@@ -651,7 +789,7 @@ if (require.main === module) {
   // Session Redis is REQUIRED — the gateway cannot serve authenticated requests without it.
   redisClient
     .connect()
-    .then(() => {
+    .then(async () => {
       // Event bus Redis is OPTIONAL — SSE degrades gracefully if it is unavailable.
       // A failure here must never take down auth or the rest of the gateway.
       eventBusClient
@@ -662,6 +800,9 @@ if (require.main === module) {
             err?.message ?? err,
           );
         });
+      await initFeatureRequestsTable().catch((err: unknown) => {
+        console.warn('feature_requests table init warning:', err instanceof Error ? err.message : String(err));
+      });
       app.listen(port, () => {
         console.log(`\n🚀 API Gateway is running on port ${port}`);
         console.log(`Access the health check at http://localhost:${port}/health`);
