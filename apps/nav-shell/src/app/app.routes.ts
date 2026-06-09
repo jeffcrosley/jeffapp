@@ -86,6 +86,14 @@ export const appRoutes: Route[] = [
 		canActivate: [authGuard]
 	},
 	{
+		path: 'jeffbux',
+		loadComponent: () =>
+			import('./pages/jeffbux/jeffbux.component').then(
+				(m) => m.JeffbuxComponent
+			),
+		canActivate: [authGuard]
+	},
+	{
 		path: '**',
 		redirectTo: '/traffic-light'
 	}

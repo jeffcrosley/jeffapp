@@ -67,6 +67,11 @@ export class App {
 			status: 'wip'
 		},
 		{
+			label: '💰 JeffBux',
+			route: '/jeffbux',
+			status: 'wip'
+		},
+		{
 			label: '⚖️ Division of Labor',
 			route: '/division-of-labor',
 			status: 'wip'
